@@ -1,0 +1,210 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  CLIENT
+  ADMIN
+  DRIVER
+}
+
+enum OrderStatus {
+  PENDING
+  ASSIGNED
+  PICKED_UP
+  IN_TRANSIT
+  DELIVERED
+  COLLECTED
+  CANCELLED
+}
+
+enum DeliveryType {
+  STANDARD
+  EXPRESS
+  SAME_DAY
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+}
+
+enum RefundStatus {
+  PENDING
+  PROCESSED
+  REJECTED
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  phone     String?
+  password  String
+  role      Role     @default(CLIENT)
+  isActive        Boolean  @default(true)
+  commissionType  String   @default("PERCENTAGE") // PERCENTAGE | FIXED
+  commissionValue Float    @default(15)            // 15% or fixed $ amount
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  clientOrders   Order[]         @relation("ClientOrders")
+  driverOrders   Order[]         @relation("DriverOrders")
+  driverEarnings DriverEarning[]
+  tickets        Ticket[]
+  ticketMessages TicketMessage[]
+  refreshTokens  RefreshToken[]
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@map("refresh_tokens")
+}
+
+model Zone {
+  id          String        @id @default(uuid())
+  name        String        @unique
+  description String?
+  basePrice   Float         @default(0)
+  parentId    String?
+  parent      Zone?         @relation("ZoneChildren", fields: [parentId], references: [id], onDelete: Cascade)
+  children    Zone[]        @relation("ZoneChildren")
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  pricingRule PricingRule?
+  orders      Order[]
+
+  @@map("zones")
+}
+
+model PricingRule {
+  id                  String   @id @default(uuid())
+  zoneId              String   @unique
+  zone                Zone     @relation(fields: [zoneId], references: [id], onDelete: Cascade)
+  pricePerKg          Float    @default(1.0)
+  standardMultiplier  Float    @default(1.0)
+  expressMultiplier   Float    @default(1.5)
+  sameDayMultiplier   Float    @default(2.0)
+  driverPayout        Float?   // fixed driver payout for this zone (overrides commission)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@map("pricing_rules")
+}
+
+model Order {
+  id                 String       @id @default(uuid())
+  clientId           String
+  client             User         @relation("ClientOrders", fields: [clientId], references: [id])
+  driverId           String?
+  driver             User?        @relation("DriverOrders", fields: [driverId], references: [id])
+  recipientName      String?
+  recipientPhone     String?
+  pickupAddress      String
+  destination        String
+  packageDescription String
+  weight             Float
+  length             Float
+  width              Float
+  height             Float
+  deliveryType       DeliveryType @default(STANDARD)
+  status             OrderStatus  @default(PENDING)
+  totalPrice         Float
+  zoneId             String?
+  zone               Zone?        @relation(fields: [zoneId], references: [id])
+  notes              String?
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+
+  invoice       Invoice?
+  refund        Refund?
+  driverEarning DriverEarning?
+  tickets       Ticket[]
+
+  @@map("orders")
+}
+
+model Invoice {
+  id          String   @id @default(uuid())
+  orderId     String   @unique
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  pdfUrl      String?
+  generatedAt DateTime @default(now())
+
+  @@map("invoices")
+}
+
+model Refund {
+  id          String       @id @default(uuid())
+  orderId     String       @unique
+  order       Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  amount      Float
+  reason      String?
+  status      RefundStatus @default(PENDING)
+  processedAt DateTime?
+  createdAt   DateTime     @default(now())
+
+  @@map("refunds")
+}
+
+model DriverEarning {
+  id            String   @id @default(uuid())
+  driverId      String
+  driver        User     @relation(fields: [driverId], references: [id])
+  orderId       String   @unique
+  order         Order    @relation(fields: [orderId], references: [id])
+  amount        Float    // driver's cut
+  orderTotal    Float    @default(0)  // what client paid
+  companyProfit Float    @default(0)  // orderTotal - amount
+  commissionType  String @default("PERCENTAGE")
+  commissionValue Float  @default(15)
+  date          DateTime @default(now())
+
+  @@map("driver_earnings")
+}
+
+model Ticket {
+  id        String       @id @default(uuid())
+  clientId  String
+  client    User         @relation(fields: [clientId], references: [id])
+  orderId   String?
+  order     Order?       @relation(fields: [orderId], references: [id])
+  subject   String
+  status    TicketStatus @default(OPEN)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  messages TicketMessage[]
+
+  @@map("tickets")
+}
+
+model TicketMessage {
+  id        String   @id @default(uuid())
+  ticketId  String
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  senderId  String
+  sender    User     @relation(fields: [senderId], references: [id])
+  message   String
+  createdAt DateTime @default(now())
+
+  @@map("ticket_messages")
+}
