@@ -1,0 +1,286 @@
+"use client"
+
+import { useCallback, useEffect, useMemo, useState } from "react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import api from "@/lib/api"
+import { Search } from "lucide-react"
+import { connectSocket } from "@/lib/socket"
+import { useAuth } from "@/context/AuthContext"
+
+type Order = {
+  id: string
+  clientId: string
+  driverId: string | null
+  destination: string
+  status: string
+  deliveryType: string
+  totalPrice: number
+  createdAt: string
+  client?: { name?: string }
+}
+
+export default function AdminOrdersPage() {
+  const { user } = useAuth()
+  const [orders, setOrders] = useState<Order[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [search, setSearch] = useState("")
+  const [debouncedSearch, setDebouncedSearch] = useState("")
+  const [filterStatus, setFilterStatus] = useState("ALL")
+  const [drivers, setDrivers] = useState<any[]>([])
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [total, setTotal] = useState(0)
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search.trim())
+      setPage(1)
+    }, 350)
+
+    return () => clearTimeout(timer)
+  }, [search])
+
+  useEffect(() => {
+    fetchDrivers()
+  }, [])
+
+  const fetchOrders = useCallback(async (initial = false) => {
+    if (initial) setIsLoading(true)
+    else setIsRefreshing(true)
+
+    try {
+      const params: Record<string, string | number> = {
+        page,
+        limit: 20,
+      }
+
+      if (filterStatus !== "ALL") params.status = filterStatus
+      if (debouncedSearch) params.search = debouncedSearch
+
+      const { data } = await api.get('/orders', { params })
+      setOrders(data.orders || [])
+      setTotalPages(data.pagination?.totalPages || 1)
+      setTotal(data.pagination?.total || 0)
+    } catch (error) {
+      console.error(error)
+    } finally {
+      if (initial) setIsLoading(false)
+      else setIsRefreshing(false)
+    }
+  }, [debouncedSearch, filterStatus, page])
+
+  useEffect(() => {
+    fetchOrders(true)
+  }, [fetchOrders])
+
+  useEffect(() => {
+    if (!user) return
+    const socket = connectSocket()
+
+    socket.emit('join', { userId: user.id, role: user.role })
+
+    const handleRealtime = () => {
+      fetchOrders(false)
+    }
+
+    socket.on('order:created', handleRealtime)
+    socket.on('order:updated', handleRealtime)
+    socket.on('order:assigned', handleRealtime)
+    socket.on('order:statusUpdated', handleRealtime)
+    socket.on('order:cancelled', handleRealtime)
+
+    return () => {
+      socket.off('order:created', handleRealtime)
+      socket.off('order:updated', handleRealtime)
+      socket.off('order:assigned', handleRealtime)
+      socket.off('order:statusUpdated', handleRealtime)
+      socket.off('order:cancelled', handleRealtime)
+    }
+  }, [fetchOrders, user])
+
+  const fetchDrivers = async () => {
+    try {
+      const { data } = await api.get('/users/drivers/available')
+      setDrivers(data.drivers || [])
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  const updateOrderStatus = async (orderId: string, newStatus: string) => {
+    try {
+      await api.patch(`/orders/${orderId}/status`, { status: newStatus })
+      fetchOrders(false)
+    } catch(e: any) {
+      console.error(e.response?.data?.error || e.message)
+    }
+  }
+
+  const assignDriver = async (orderId: string, driverId: string) => {
+    if (!driverId) return
+    try {
+      await api.patch(`/orders/${orderId}/assign`, { driverId })
+      fetchOrders(false)
+    } catch(e: any) {
+      console.error(e.response?.data?.error || e.message)
+    }
+  }
+
+  const getDeliveryTypeLabel = (deliveryType: string) => {
+    switch (deliveryType) {
+      case "STANDARD":
+        return "عادي"
+      case "EXPRESS":
+        return "سريع"
+      case "SAME_DAY":
+        return "نفس اليوم"
+      default:
+        return deliveryType
+    }
+  }
+
+  const canGoPrev = page > 1
+  const canGoNext = page < totalPages
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold tracking-tight">إدارة الطلبات</h2>
+        <p className="text-muted-foreground">تابع جميع شحنات النظام، وعيّن السائقين، وأدر حالات الطلبات.</p>
+      </div>
+
+      <Card>
+        <CardHeader className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 border-b pb-4">
+          <div>
+            <CardTitle>طلبات النظام</CardTitle>
+            <CardDescription>
+              قائمة شاملة بجميع الشحنات. {isRefreshing ? "جاري التحديث..." : `الإجمالي: ${total}`}
+            </CardDescription>
+          </div>
+          
+          <div className="flex flex-col sm:flex-row gap-2 items-center px-6 pt-4 pb-0 w-full lg:w-auto self-end">
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="ابحث في الطلبات أو العملاء..."
+                className="pl-8"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+            <select 
+              className="flex h-10 w-full sm:w-[180px] items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background disabled:opacity-50"
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+            >
+              <option value="ALL">كل الحالات</option>
+              <option value="PENDING">قيد الانتظار</option>
+              <option value="ASSIGNED">تم التعيين</option>
+              <option value="IN_TRANSIT">قيد التوصيل</option>
+              <option value="DELIVERED">تم التسليم</option>
+            </select>
+          </div>
+        </CardHeader>
+
+        <CardContent className="pt-6">
+          <div className="rounded-md border overflow-x-auto min-h-[400px]">
+             <table className="w-full text-sm text-left">
+              <thead className="bg-muted/50 text-muted-foreground border-b uppercase text-[10px] tracking-wider font-semibold">
+                <tr>
+                  <th className="p-4">رقم الطلب والعميل</th>
+                  <th className="p-4">الوجهة</th>
+                  <th className="p-4">الحالة والسائق</th>
+                  <th className="p-4">المبلغ</th>
+                  <th className="p-4 text-right">الإجراءات</th>
+                </tr>
+              </thead>
+              <tbody>
+                {isLoading ? (
+                  <tr><td colSpan={5} className="p-8 text-center text-muted-foreground">جاري تحميل الطلبات...</td></tr>
+                ) : orders.length === 0 ? (
+                  <tr><td colSpan={5} className="p-8 text-center text-muted-foreground">لا توجد طلبات.</td></tr>
+                ) : (
+                  orders.map((order) => (
+                    <tr key={order.id} className="border-b transition-colors hover:bg-muted/40 last:border-0 group">
+                      <td className="p-4 align-top">
+                        <div className="font-medium text-primary">#{order.id.slice(0, 8)}</div>
+                        <div className="text-muted-foreground text-xs">{order.client?.name || "عميل غير معروف"}</div>
+                        <div className="text-muted-foreground text-[10px]">{new Date(order.createdAt).toLocaleDateString()}</div>
+                      </td>
+                      <td className="p-4 align-top max-w-[200px]">
+                        <div className="truncate font-medium" title={order.destination}>{order.destination}</div>
+                        <div className="text-muted-foreground text-xs">{getDeliveryTypeLabel(order.deliveryType)}</div>
+                      </td>
+                      <td className="p-4 align-top">
+                        <div className="mb-2">
+                           <select 
+                            className="text-xs p-1 rounded border bg-transparent"
+                            value={order.status}
+                            onChange={(e) => updateOrderStatus(order.id, e.target.value)}
+                           >
+                              <option value="PENDING">قيد الانتظار</option>
+                              <option value="ASSIGNED">تم التعيين</option>
+                              <option value="PICKED_UP">تم الاستلام</option>
+                              <option value="IN_TRANSIT">قيد التوصيل</option>
+                              <option value="DELIVERED">تم التسليم</option>
+                              <option value="CANCELLED">ملغي</option>
+                           </select>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <select 
+                            className="text-[10px] p-1 rounded border max-w-[120px] truncate"
+                            value={order.driverId || ""}
+                            onChange={(e) => assignDriver(order.id, e.target.value)}
+                           >
+                            <option value="" disabled>تعيين سائق...</option>
+                              {drivers.map((d: any) => (
+                                <option key={d.id} value={d.id}>{d.name}</option>
+                              ))}
+                           </select>
+                        </div>
+                      </td>
+                      <td className="p-4 align-top font-medium">${Number(order.totalPrice).toFixed(2)}</td>
+                      <td className="p-4 text-right align-top">
+                        <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Button variant="outline" size="sm" className="h-8 shadow-sm">
+                              عرض التفاصيل
+                            </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+          <div className="mt-4 flex items-center justify-between">
+            <p className="text-xs text-muted-foreground">
+              صفحة {page} من {totalPages}
+            </p>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={!canGoPrev}
+                onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+              >
+                السابق
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={!canGoNext}
+                onClick={() => setPage((prev) => prev + 1)}
+              >
+                التالي
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
