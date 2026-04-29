@@ -1,9 +1,7 @@
 "use client"
 
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState, type ComponentType } from "react"
 import { useSearchParams } from "next/navigation"
-import { BrowserMultiFormatReader } from "@zxing/library"
-import ShippingLabel from "@/components/ShippingLabel"
 import api from "@/lib/api"
 import { toast } from "sonner"
 import {
@@ -90,9 +88,18 @@ export default function WaybillPage() {
   const [cameraError,   setCameraError]   = useState("")
   const [scanning,      setScanning]      = useState(false)   // "actively reading"
   const [validationError, setValidationError] = useState("")
+  const [ShippingLabel, setShippingLabel] = useState<ComponentType<{ order: Order }> | null>(null)
 
   const videoRef   = useRef<HTMLVideoElement>(null)
-  const readerRef  = useRef<BrowserMultiFormatReader | null>(null)
+  const readerRef  = useRef<any>(null)
+  const labelRef   = useRef<ComponentType<{ order: Order }> | null>(null)
+
+  const ensureShippingLabel = useCallback(async () => {
+    if (labelRef.current) return
+    const mod = await import("@/components/ShippingLabel")
+    labelRef.current = mod.default as ComponentType<{ order: Order }>
+    setShippingLabel(() => labelRef.current)
+  }, [])
 
   /* ─── Fetch order by shipmentNumber only ─── */
   const fetchOrder = useCallback(async (query: string) => {
@@ -148,6 +155,7 @@ export default function WaybillPage() {
         toast.error(message)
         return
       }
+      await ensureShippingLabel()
       setOrder(detailOrder)
       toast.success("تم العثور على الطلب")
     } catch {
@@ -155,7 +163,7 @@ export default function WaybillPage() {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [ensureShippingLabel])
 
   /* ─── Start camera scanner ─── */
   const startScanner = useCallback(async () => {
@@ -165,6 +173,7 @@ export default function WaybillPage() {
     setScanning(true)
 
     try {
+      const { BrowserMultiFormatReader } = await import("@zxing/library")
       const reader = new BrowserMultiFormatReader()
       readerRef.current = reader
 
@@ -456,7 +465,13 @@ export default function WaybillPage() {
                 data-shipment-number={order.shipmentNumber}
                 style={{ width: "80mm", height: "130mm", boxShadow: "0 4px 32px rgba(0,0,0,0.18)" }}
               >
-                <ShippingLabel order={order} />
+                {ShippingLabel ? (
+                  <ShippingLabel order={order} />
+                ) : (
+                  <div className="shipping-label flex h-full w-full items-center justify-center bg-white text-sm font-semibold text-black">
+                    Loading label...
+                  </div>
+                )}
               </div>
             </div>
 

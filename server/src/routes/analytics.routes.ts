@@ -624,32 +624,40 @@ router.get('/dashboard', authenticate, requireRole('ADMIN'), async (req: AuthReq
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
     const [
-      totalOrders,
-      pendingOrders,
-      deliveredOrders,
-      cancelledOrders,
-      returnedOrders,
+      statusRows,
       revenueToday,
       revenueWeek,
       revenueMonth,
-      totalClients,
-      totalDrivers,
-      activeDrivers,
+      userRows,
+      openTickets,
       financial,
     ] = await Promise.all([
-      prisma.order.count(),
-      prisma.order.count({ where: { status: 'PENDING' } }),
-      prisma.order.count({ where: { status: { in: [...DELIVERED_STATUSES] } } }),
-      prisma.order.count({ where: { status: 'CANCELLED' } }),
-      prisma.order.count({ where: { status: 'RETURNED' } }),
+      prisma.order.groupBy({ by: ['status'], _count: { _all: true } }),
       prisma.order.aggregate({ where: { createdAt: { gte: todayStart }, status: { notIn: ['CANCELLED', 'RETURNED'] } }, _sum: { deliveryFee: true, addonsTotal: true } }),
       prisma.order.aggregate({ where: { createdAt: { gte: weekStart }, status: { notIn: ['CANCELLED', 'RETURNED'] } }, _sum: { deliveryFee: true, addonsTotal: true } }),
       prisma.order.aggregate({ where: { createdAt: { gte: monthStart }, status: { notIn: ['CANCELLED', 'RETURNED'] } }, _sum: { deliveryFee: true, addonsTotal: true } }),
-      prisma.user.count({ where: { role: 'CLIENT', isActive: true } }),
-      prisma.user.count({ where: { role: 'DRIVER' } }),
-      prisma.user.count({ where: { role: 'DRIVER', isActive: true } }),
+      prisma.user.groupBy({
+        by: ['role', 'isActive'],
+        where: { role: { in: ['CLIENT', 'DRIVER'] } },
+        _count: { _all: true },
+      }),
+      prisma.ticket.count({ where: { status: { in: ['OPEN', 'IN_PROGRESS'] } } }),
       buildFinancial({ startDate: monthStart, endDate: endOfDay(now) }),
     ]);
+
+    const orderStatusCounts = new Map(statusRows.map((row) => [row.status, row._count._all]));
+    const totalOrders = statusRows.reduce((sum, row) => sum + row._count._all, 0);
+    const pendingOrders = orderStatusCounts.get('PENDING') || 0;
+    const deliveredOrders = DELIVERED_STATUSES.reduce((sum, status) => sum + (orderStatusCounts.get(status) || 0), 0);
+    const cancelledOrders = orderStatusCounts.get('CANCELLED') || 0;
+    const returnedOrders = orderStatusCounts.get('RETURNED') || 0;
+    const userCount = (role: 'CLIENT' | 'DRIVER', isActive?: boolean) =>
+      userRows
+        .filter((row) => row.role === role && (isActive === undefined || row.isActive === isActive))
+        .reduce((sum, row) => sum + row._count._all, 0);
+    const totalClients = userCount('CLIENT', true);
+    const totalDrivers = userCount('DRIVER');
+    const activeDrivers = userCount('DRIVER', true);
 
     return res.json(setCache(cacheKey, {
       totalOrders,
@@ -663,6 +671,7 @@ router.get('/dashboard', authenticate, requireRole('ADMIN'), async (req: AuthReq
       totalClients,
       totalDrivers,
       activeDrivers,
+      openTickets,
       financial: financial.collection,
       owedToMerchants: financial.cards.owedToMerchants,
     }, TTL.dashboard));

@@ -1,10 +1,19 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import dynamic from "next/dynamic"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend } from "recharts"
 import api from "@/lib/api"
 import { Package, Users, DollarSign, Activity } from "lucide-react"
+
+const AdminRevenueChart = dynamic(() => import("@/components/admin/AdminRevenueChart"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-full w-full items-center justify-center text-muted-foreground">
+      Ø¬Ø§Ø±ÙŠ ØªØ­Ù…ÙŠÙ„ Ø§Ù„Ø±Ø³Ù… Ø§Ù„Ø¨ÙŠØ§Ù†ÙŠ...
+    </div>
+  ),
+})
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({
@@ -23,20 +32,18 @@ export default function AdminDashboard() {
   useEffect(() => {
     const fetchAnalytics = async () => {
       try {
-        const [dashRes, chartRes, ticketsRes, ordersRes] = await Promise.all([
+        const [dashRes, chartRes, ordersRes] = await Promise.all([
           api.get('/analytics/dashboard'),
           api.get('/analytics/charts'),
-          api.get('/tickets'),
           api.get('/orders', { params: { limit: 5 } }),
         ])
         const d = dashRes.data
-        const openTickets = (ticketsRes.data?.tickets || []).filter((t: any) => t.status === 'OPEN' || t.status === 'IN_PROGRESS').length
 
         setStats({
           totalOrders: d.totalOrders || 0,
           activeDrivers: d.activeDrivers || 0,
           totalRevenue: d.revenueMonth || 0,
-          pendingTickets: openTickets,
+          pendingTickets: d.openTickets ?? d.pendingTickets ?? 0,
           pendingOrders: d.pendingOrders || 0,
           deliveredOrders: d.deliveredOrders || 0,
           totalDrivers: d.totalDrivers || 0,
@@ -169,14 +176,7 @@ export default function AdminDashboard() {
             {isLoading ? (
                <div className="w-full h-full flex items-center justify-center text-muted-foreground">جاري تحميل الرسم البياني...</div>
             ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData}>
-                  <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
-                  <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `ج.م ${value}`} />
-                  <Tooltip cursor={{fill: 'transparent'}} contentStyle={{ borderRadius: '8px' }} />
-                  <Bar dataKey="revenue" fill="currentColor" radius={[4, 4, 0, 0]} className="fill-primary" />
-                </BarChart>
-              </ResponsiveContainer>
+              <AdminRevenueChart data={chartData} />
             )}
           </CardContent>
         </Card>

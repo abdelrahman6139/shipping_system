@@ -1,8 +1,8 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useState } from "react"
+import dynamic from "next/dynamic"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
 import api from "@/lib/api"
 import {
   Wallet, Truck, RefreshCw, TrendingUp, AlertTriangle,
@@ -11,6 +11,11 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 import { useAuth } from "@/context/AuthContext"
+
+const DriverEarningsChart = dynamic(() => import("@/components/driver/DriverEarningsChart"), {
+  ssr: false,
+  loading: () => <div className="flex h-full items-center justify-center text-sm text-muted-foreground">Loading chart...</div>,
+})
 
 /* ─────────────── TYPES ─────────────── */
 type Period = "all" | "day" | "week" | "month"
@@ -314,31 +319,7 @@ export default function DriverEarningsPage() {
               لا توجد بيانات في هذه الفترة.
             </div>
           ) : (
-            <ResponsiveContainer width="100%" height="100%" minWidth={280} minHeight={200}>
-              <BarChart data={chartData} barGap={4}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis
-                  dataKey="date"
-                  tickLine={false}
-                  axisLine={false}
-                  fontSize={11}
-                  tickFormatter={(v) => new Date(v).toLocaleDateString("ar-EG", { month: "short", day: "numeric" })}
-                />
-                <YAxis tickLine={false} axisLine={false} fontSize={11} tickFormatter={(v) => `ج.م ${v}`} />
-                <Tooltip
-                  cursor={{ fill: "rgba(0,0,0,0.04)" }}
-                  contentStyle={{ borderRadius: "10px", fontSize: "13px" }}
-                  formatter={(val, name) => [fmt(Number(val ?? 0)), name === "driverEarning" ? "حصة السائق" : "قيمة الطلب"]}
-                  labelFormatter={(l) => fmtDate(l)}
-                />
-                <Legend
-                  formatter={(v) => v === "driverEarning" ? "حصة السائق" : "قيمة الطلب"}
-                  wrapperStyle={{ fontSize: "12px" }}
-                />
-                <Bar dataKey="orderTotal"    fill="#93c5fd" radius={[4,4,0,0]} name="orderTotal" />
-                <Bar dataKey="driverEarning" fill="#34d399" radius={[4,4,0,0]} name="driverEarning" />
-              </BarChart>
-            </ResponsiveContainer>
+            <DriverEarningsChart data={chartData} />
           )}
         </div>
       </div>

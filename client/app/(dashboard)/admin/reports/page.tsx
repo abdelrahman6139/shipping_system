@@ -1,26 +1,11 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useState } from "react"
+import dynamic from "next/dynamic"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import {
-  Area,
-  AreaChart,
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  Line,
-  LineChart,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts"
 import api from "@/lib/api"
 import {
   AlertTriangle,
@@ -36,6 +21,18 @@ import {
   Truck,
   Users,
 } from "lucide-react"
+
+function ChartLoading() {
+  return <div className="flex h-full items-center justify-center text-sm text-muted-foreground">Loading chart...</div>
+}
+
+const PipelineAmountChart = dynamic(() => import("@/components/admin/ReportsCharts").then((mod) => mod.PipelineAmountChart), { ssr: false, loading: ChartLoading })
+const RevenueAreaChart = dynamic(() => import("@/components/admin/ReportsCharts").then((mod) => mod.RevenueAreaChart), { ssr: false, loading: ChartLoading })
+const StatusPieChart = dynamic(() => import("@/components/admin/ReportsCharts").then((mod) => mod.StatusPieChart), { ssr: false, loading: ChartLoading })
+const FunnelBarChart = dynamic(() => import("@/components/admin/ReportsCharts").then((mod) => mod.FunnelBarChart), { ssr: false, loading: ChartLoading })
+const ZoneRevenueBarChart = dynamic(() => import("@/components/admin/ReportsCharts").then((mod) => mod.ZoneRevenueBarChart), { ssr: false, loading: ChartLoading })
+const CancellationReturnLineChart = dynamic(() => import("@/components/admin/ReportsCharts").then((mod) => mod.CancellationReturnLineChart), { ssr: false, loading: ChartLoading })
+const TypeDistributionChart = dynamic(() => import("@/components/admin/ReportsCharts").then((mod) => mod.TypeDistributionChart), { ssr: false, loading: ChartLoading })
 
 const STATUS_LABELS: Record<string, string> = {
   PENDING: "قيد الانتظار",
@@ -77,14 +74,6 @@ const COLLECTION_COLORS: Record<string, string> = {
   DRIVER_COLLECTED: "#0ea5e9",
   COMPANY_RECEIVED: "#8b5cf6",
   SETTLED_TO_MERCHANT: "#10b981",
-}
-
-const tooltipStyle = {
-  borderRadius: "8px",
-  border: "1px solid hsl(var(--border))",
-  background: "hsl(var(--card))",
-  color: "hsl(var(--card-foreground))",
-  fontSize: "12px",
 }
 
 function formatMoney(value: number) {
@@ -298,19 +287,7 @@ export default function AdminReportsPage() {
               <CardDescription>Customer → Driver → Company → Merchant</CardDescription>
             </CardHeader>
             <CardContent className="h-[260px]">
-              {pipelineData.length === 0 ? <EmptyChart /> : (
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={pipelineData} margin={{ top: 8, right: 10, left: 0, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis dataKey="name" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-                    <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} tickFormatter={(value) => `${value}`} />
-                    <Tooltip contentStyle={tooltipStyle} formatter={(value: any) => [formatMoney(Number(value)), "المبلغ"]} />
-                    <Bar dataKey="amount" radius={[6, 6, 0, 0]}>
-                      {pipelineData.map((entry: any, index: number) => <Cell key={index} fill={entry.color} />)}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              )}
+              {pipelineData.length === 0 ? <EmptyChart /> : <PipelineAmountChart data={pipelineData} />}
             </CardContent>
           </Card>
           <Card className="lg:col-span-3">
@@ -343,23 +320,7 @@ export default function AdminReportsPage() {
             <CardDescription>بيانات جاهزة للتصدير لاحقا حسب الفترة المختارة</CardDescription>
           </CardHeader>
           <CardContent className="h-[300px]">
-            {revenueData.length === 0 ? <EmptyChart /> : (
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={revenueData} margin={{ top: 8, right: 10, left: 0, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="revenueFill" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.35} />
-                      <stop offset="95%" stopColor="#10b981" stopOpacity={0.02} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="name" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-                  <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-                  <Tooltip contentStyle={tooltipStyle} formatter={(value: any) => [formatMoney(Number(value)), "الإيراد"]} />
-                  <Area type="monotone" dataKey="revenue" stroke="#10b981" strokeWidth={2} fill="url(#revenueFill)" />
-                </AreaChart>
-              </ResponsiveContainer>
-            )}
+            {revenueData.length === 0 ? <EmptyChart /> : <RevenueAreaChart data={revenueData} />}
           </CardContent>
         </Card>
 
@@ -369,16 +330,7 @@ export default function AdminReportsPage() {
             <CardDescription>الحالة التشغيلية للشحنات</CardDescription>
           </CardHeader>
           <CardContent className="h-[300px]">
-            {statusData.length === 0 ? <EmptyChart /> : (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={statusData} cx="50%" cy="45%" outerRadius={88} dataKey="value" nameKey="name" labelLine={false} fontSize={10}>
-                    {statusData.map((entry: any, index: number) => <Cell key={index} fill={entry.color} />)}
-                  </Pie>
-                  <Tooltip contentStyle={tooltipStyle} />
-                </PieChart>
-              </ResponsiveContainer>
-            )}
+            {statusData.length === 0 ? <EmptyChart /> : <StatusPieChart data={statusData} />}
           </CardContent>
         </Card>
       </div>
@@ -389,16 +341,7 @@ export default function AdminReportsPage() {
             <CardTitle>قمع التسليم</CardTitle>
           </CardHeader>
           <CardContent className="h-[260px]">
-            {funnelData.length === 0 ? <EmptyChart /> : (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={funnelData} layout="vertical" margin={{ left: 8, right: 16 }}>
-                  <XAxis type="number" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-                  <YAxis type="category" dataKey="stage" width={86} tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-                  <Tooltip contentStyle={tooltipStyle} />
-                  <Bar dataKey="count" fill="#2563eb" radius={[0, 6, 6, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            )}
+            {funnelData.length === 0 ? <EmptyChart /> : <FunnelBarChart data={funnelData} />}
           </CardContent>
         </Card>
         <Card>
@@ -406,16 +349,7 @@ export default function AdminReportsPage() {
             <CardTitle>الإيراد حسب المنطقة</CardTitle>
           </CardHeader>
           <CardContent className="h-[260px]">
-            {zoneRevenue.length === 0 ? <EmptyChart /> : (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={zoneRevenue} margin={{ top: 8, right: 10, left: 0, bottom: 0 }}>
-                  <XAxis dataKey="zone" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
-                  <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-                  <Tooltip contentStyle={tooltipStyle} formatter={(value: any) => [formatMoney(Number(value)), "الإيراد"]} />
-                  <Bar dataKey="revenue" fill="#8b5cf6" radius={[6, 6, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            )}
+            {zoneRevenue.length === 0 ? <EmptyChart /> : <ZoneRevenueBarChart data={zoneRevenue} />}
           </CardContent>
         </Card>
         <Card>
@@ -423,18 +357,7 @@ export default function AdminReportsPage() {
             <CardTitle>الإلغاء والمرتجعات</CardTitle>
           </CardHeader>
           <CardContent className="h-[260px]">
-            {cancellationTrend.length === 0 ? <EmptyChart /> : (
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={cancellationTrend} margin={{ top: 8, right: 10, left: 0, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="name" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
-                  <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-                  <Tooltip contentStyle={tooltipStyle} />
-                  <Line type="monotone" dataKey="cancelled" name="ملغي" stroke="#ef4444" strokeWidth={2} dot={false} />
-                  <Line type="monotone" dataKey="returned" name="مرتجع" stroke="#a855f7" strokeWidth={2} dot={false} />
-                </LineChart>
-              </ResponsiveContainer>
-            )}
+            {cancellationTrend.length === 0 ? <EmptyChart /> : <CancellationReturnLineChart data={cancellationTrend} />}
           </CardContent>
         </Card>
       </div>
@@ -535,16 +458,7 @@ export default function AdminReportsPage() {
             <CardDescription>توزيع الطلبات حسب نوع الخدمة</CardDescription>
           </CardHeader>
           <CardContent className="h-[360px]">
-            {typeData.length === 0 ? <EmptyChart /> : (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={typeData} layout="vertical" margin={{ left: 8, right: 16 }}>
-                  <XAxis type="number" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-                  <YAxis type="category" dataKey="name" width={90} tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-                  <Tooltip contentStyle={tooltipStyle} />
-                  <Bar dataKey="count" fill="#0ea5e9" radius={[0, 6, 6, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            )}
+            {typeData.length === 0 ? <EmptyChart /> : <TypeDistributionChart data={typeData} />}
           </CardContent>
         </Card>
       </div>

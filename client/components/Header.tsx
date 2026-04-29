@@ -1,19 +1,11 @@
 "use client"
 
+import { useEffect, useRef, useState } from "react"
 import { useAuth } from "@/context/AuthContext"
 import { useLanguage } from "@/context/LanguageContext"
 import { Menu, Moon, Sun, UserCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useTheme } from "next-themes"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 
 interface HeaderProps {
   onMenuToggle: () => void
@@ -23,6 +15,30 @@ export default function Header({ onMenuToggle }: HeaderProps) {
   const { user, logout } = useAuth()
   const { setTheme, theme } = useTheme()
   const { language, setLanguage, t } = useLanguage()
+  const [accountOpen, setAccountOpen] = useState(false)
+  const accountMenuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!accountOpen) return
+
+    const closeOnOutsideClick = (event: MouseEvent) => {
+      if (!accountMenuRef.current?.contains(event.target as Node)) {
+        setAccountOpen(false)
+      }
+    }
+
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setAccountOpen(false)
+    }
+
+    document.addEventListener("mousedown", closeOnOutsideClick)
+    document.addEventListener("keydown", closeOnEscape)
+
+    return () => {
+      document.removeEventListener("mousedown", closeOnOutsideClick)
+      document.removeEventListener("keydown", closeOnEscape)
+    }
+  }, [accountOpen])
 
   if (!user) return null
 
@@ -81,32 +97,43 @@ export default function Header({ onMenuToggle }: HeaderProps) {
           {nextLanguageLabel}
         </Button>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 hover:bg-primary/20 transition-colors text-primary"
+        <div className="relative" ref={accountMenuRef}>
+          <button
+            type="button"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary transition-colors hover:bg-primary/20 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
             aria-label={accountMenuLabel}
+            aria-haspopup="menu"
+            aria-expanded={accountOpen}
             title={accountMenuLabel}
+            onClick={() => setAccountOpen((open) => !open)}
           >
             <UserCircle className="h-5 w-5" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuGroup>
-              <DropdownMenuLabel className="font-normal">
-                <div className="flex flex-col gap-1">
-                  <p className="text-sm font-semibold">{user.name}</p>
-                  <p className="text-xs text-muted-foreground truncate">{user.email}</p>
-                </div>
-              </DropdownMenuLabel>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              className="cursor-pointer text-red-500 focus:text-red-500 font-medium"
-              onClick={logout}
+          </button>
+
+          {accountOpen && (
+            <div
+              role="menu"
+              className="absolute end-0 top-11 z-50 w-56 rounded-lg border bg-popover p-1 text-popover-foreground shadow-md"
             >
-              {t("logout")}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+              <div className="px-2 py-2">
+                <p className="truncate text-sm font-semibold">{user.name}</p>
+                <p className="truncate text-xs text-muted-foreground">{user.email}</p>
+              </div>
+              <div className="-mx-1 my-1 h-px bg-border" />
+              <button
+                type="button"
+                role="menuitem"
+                className="flex w-full cursor-pointer items-center rounded-md px-2 py-1.5 text-sm font-medium text-red-500 transition-colors hover:bg-accent focus:bg-accent focus:outline-none"
+                onClick={() => {
+                  setAccountOpen(false)
+                  logout()
+                }}
+              >
+                {t("logout")}
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </header>
   )
