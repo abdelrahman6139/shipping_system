@@ -16,9 +16,11 @@ import { useAuth } from "@/context/AuthContext"
 export default function ClientTicketsPage() {
   const { user: currentUser } = useAuth()
   const [tickets, setTickets] = useState([])
+  const [orders, setOrders] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [subject, setSubject] = useState("")
   const [message, setMessage] = useState("")
+  const [orderId, setOrderId] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Thread dialog
@@ -47,7 +49,10 @@ export default function ClientTicketsPage() {
     }
   }
 
-  useEffect(() => { fetchTickets() }, [])
+  useEffect(() => {
+    fetchTickets()
+    fetchOrders()
+  }, [])
 
   const fetchTickets = async () => {
     try {
@@ -60,18 +65,33 @@ export default function ClientTicketsPage() {
     }
   }
 
+  const fetchOrders = async () => {
+    try {
+      const { data } = await api.get("/orders", { params: { limit: 50 } })
+      setOrders(data.orders || [])
+    } catch {}
+  }
+
+  const getErrorMessage = (error: any, fallback: string) => {
+    const raw = error?.response?.data?.error
+    if (typeof raw === "string") return raw
+    if (Array.isArray(raw)) return raw[0]?.message || fallback
+    return fallback
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!subject || !message) return
     setIsSubmitting(true)
     try {
-      await api.post('/tickets', { subject, message })
+      await api.post('/tickets', { subject, message, ...(orderId ? { orderId } : {}) })
       toast.success("تم إنشاء تذكرة الدعم بنجاح")
       setSubject("")
       setMessage("")
+      setOrderId("")
       fetchTickets()
     } catch (e: any) {
-      toast.error(e.response?.data?.error || "فشل إنشاء التذكرة")
+      toast.error(getErrorMessage(e, "فشل إنشاء التذكرة"))
     } finally {
       setIsSubmitting(false)
     }
@@ -174,6 +194,22 @@ export default function ClientTicketsPage() {
                     placeholder="مثال: تلف في الشحنة" 
                     required 
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="orderId">طلب مرتبط (اختياري)</Label>
+                  <select
+                    id="orderId"
+                    value={orderId}
+                    onChange={e => setOrderId(e.target.value)}
+                    className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
+                  >
+                    <option value="">بدون طلب مرتبط</option>
+                    {orders.map((order) => (
+                      <option key={order.id} value={order.id}>
+                        {(order.shipmentNumber || order.id.slice(0, 8))} - {order.destination}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="message">الرسالة</Label>
