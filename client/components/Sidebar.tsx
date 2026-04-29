@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { useAuth } from "@/context/AuthContext"
+import { useLanguage } from "@/context/LanguageContext"
 import { usePathname } from "next/navigation"
 import {
   LayoutDashboard, Package, Users, Map, Ticket,
@@ -16,38 +17,39 @@ interface SidebarProps {
 
 export default function Sidebar({ isMobileOpen, onMobileClose }: SidebarProps) {
   const { user, logout } = useAuth()
+  const { t } = useLanguage()
   const pathname = usePathname()
 
   if (!user) return null
 
   const adminLinks = [
-    { href: "/admin", label: "لوحة التحكم", icon: LayoutDashboard, exact: true },
-    { href: "/admin/orders", label: "الطلبات", icon: Package, exact: false },
-    { href: "/admin/waybill", label: "بوليصة الشحن", icon: ScanLine, exact: false },
-    { href: "/admin/users", label: "المستخدمون", icon: Users, exact: false },
-    { href: "/admin/zones", label: "المناطق والتسعير", icon: Map, exact: false },
-    { href: "/admin/tickets", label: "التذاكر", icon: Ticket, exact: false },
-    { href: "/admin/reports", label: "التقارير", icon: BarChart2, exact: false },
+    { href: "/admin", label: t("adminHome"), icon: LayoutDashboard, exact: true },
+    { href: "/admin/orders", label: t("adminOrders"), icon: Package, exact: false },
+    { href: "/admin/waybill", label: t("adminWaybill"), icon: ScanLine, exact: false },
+    { href: "/admin/users", label: t("adminUsers"), icon: Users, exact: false },
+    { href: "/admin/zones", label: t("adminZones"), icon: Map, exact: false },
+    { href: "/admin/tickets", label: t("adminTickets"), icon: Ticket, exact: false },
+    { href: "/admin/reports", label: t("adminReports"), icon: BarChart2, exact: false },
   ]
 
   const clientLinks = [
-    { href: "/client", label: "طلباتي", icon: Package, exact: true },
-    { href: "/client/new-order", label: "طلب جديد", icon: Plus, exact: false },
-    { href: "/client/orders", label: "سجل الطلبات", icon: LayoutDashboard, exact: false },
-    { href: "/client/tickets", label: "الدعم", icon: Ticket, exact: false },
+    { href: "/client", label: t("clientHome"), icon: Package, exact: true },
+    { href: "/client/new-order", label: t("clientNewOrder"), icon: Plus, exact: false },
+    { href: "/client/orders", label: t("clientOrders"), icon: LayoutDashboard, exact: false },
+    { href: "/client/tickets", label: t("clientTickets"), icon: Ticket, exact: false },
   ]
 
   const driverLinks = [
-    { href: "/driver", label: "عمليات التوصيل", icon: Truck, exact: true },
-    { href: "/driver/earnings", label: "الأرباح", icon: DollarSign, exact: false },
+    { href: "/driver", label: t("driverHome"), icon: Truck, exact: true },
+    { href: "/driver/earnings", label: t("driverEarnings"), icon: DollarSign, exact: false },
   ]
 
   const getSections = () => {
     if (user.role === "ADMIN") {
       return [
-        { label: "الإدارة", icon: Shield, links: adminLinks },
-        { label: "واجهة العميل", icon: Package, links: clientLinks },
-        { label: "واجهة السائق", icon: Truck, links: driverLinks },
+        { label: t("adminSection"), icon: Shield, links: adminLinks },
+        { label: t("clientSection"), icon: Package, links: clientLinks },
+        { label: t("driverSection"), icon: Truck, links: driverLinks },
       ]
     }
     if (user.role === "DRIVER") {
@@ -57,7 +59,7 @@ export default function Sidebar({ isMobileOpen, onMobileClose }: SidebarProps) {
   }
 
   const sections = getSections()
-  const roleLabel = user.role === "ADMIN" ? "مشرف" : user.role === "DRIVER" ? "سائق" : "عميل"
+  const roleLabel = user.role === "ADMIN" ? t("admin") : user.role === "DRIVER" ? t("driver") : t("client")
 
   const isActive = (href: string, exact: boolean) => {
     if (exact) return pathname === href
@@ -77,7 +79,7 @@ export default function Sidebar({ isMobileOpen, onMobileClose }: SidebarProps) {
         <button
           onClick={onMobileClose}
           className="md:hidden rounded-lg p-1.5 hover:bg-muted transition-colors"
-          aria-label="إغلاق القائمة"
+          aria-label={t("closeMenu")}
         >
           <X className="h-5 w-5" />
         </button>
@@ -139,7 +141,7 @@ export default function Sidebar({ isMobileOpen, onMobileClose }: SidebarProps) {
           className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-950/50 transition-all"
         >
           <LogOut className="h-4 w-4" />
-          تسجيل الخروج
+          {t("logout")}
         </button>
       </div>
     </div>
@@ -148,7 +150,7 @@ export default function Sidebar({ isMobileOpen, onMobileClose }: SidebarProps) {
   return (
     <>
       {/* Desktop Sidebar */}
-      <aside className="hidden md:flex w-64 flex-col border-r bg-card text-card-foreground shrink-0">
+      <aside className="hidden md:flex w-64 flex-col border-e bg-card text-card-foreground shrink-0">
         <SidebarContent />
       </aside>
 
