@@ -9,6 +9,9 @@ router.get('/earnings', authenticate, requireRole('DRIVER'), async (req: AuthReq
   try {
     const driverId = req.user!.userId;
     const period = typeof req.query.period === 'string' ? req.query.period : undefined;
+    const page  = Math.max(parseInt((req.query.page  as string) || '1',  10) || 1, 1);
+    const limit = Math.min(Math.max(parseInt((req.query.limit as string) || '20', 10) || 20, 1), 100);
+    const skip  = (page - 1) * limit;
 
     const now = new Date();
     let startDate: Date | undefined;
@@ -25,28 +28,60 @@ router.get('/earnings', authenticate, requireRole('DRIVER'), async (req: AuthReq
     const where: any = { driverId };
     if (startDate) where.date = { gte: startDate };
 
-    const earnings = await prisma.driverEarning.findMany({
-      where,
-      include: {
-        order: {
-          include: { client: { select: { name: true } }, zone: true },
+    const [total, earnings, totals, byDayRows] = await prisma.$transaction([
+      prisma.driverEarning.count({ where }),
+      prisma.driverEarning.findMany({
+        where,
+        select: {
+          id: true,
+          amount: true,
+          orderTotal: true,
+          companyProfit: true,
+          commissionType: true,
+          commissionValue: true,
+          date: true,
+          order: {
+            select: {
+              id: true,
+              shipmentNumber: true,
+              destination: true,
+              status: true,
+              collectionStatus: true,
+              client: { select: { name: true } },
+              zone: { select: { id: true, name: true } },
+            },
+          },
         },
-      },
-      orderBy: { date: 'desc' },
-    });
+        orderBy: { date: 'desc' },
+        skip,
+        take: limit,
+      }),
+      prisma.driverEarning.aggregate({
+        where,
+        _sum: { amount: true, orderTotal: true, companyProfit: true },
+        _count: true,
+        _avg: { amount: true },
+      }),
+      prisma.driverEarning.groupBy({
+        by: ['date'],
+        where,
+        _sum: { amount: true, orderTotal: true },
+        orderBy: { date: 'asc' },
+      }),
+    ]);
 
-    const totalDriverEarning  = earnings.reduce((sum, e) => sum + e.amount, 0);
-    const totalOrderValue     = earnings.reduce((sum, e) => sum + (e.orderTotal || 0), 0);
-    const totalCompanyProfit  = earnings.reduce((sum, e) => sum + (e.companyProfit || 0), 0);
-    const deliveriesCount     = earnings.length;
-    const averageEarning      = deliveriesCount > 0 ? totalDriverEarning / deliveriesCount : 0;
+    const totalDriverEarning  = totals._sum.amount || 0;
+    const totalOrderValue     = totals._sum.orderTotal || 0;
+    const totalCompanyProfit  = totals._sum.companyProfit || 0;
+    const deliveriesCount     = totals._count;
+    const averageEarning      = totals._avg.amount || 0;
 
     // Group by day for chart using stable YYYY-MM-DD keys.
-    const byDayMap = earnings.reduce((acc: Record<string, { driverEarning: number; orderTotal: number }>, e) => {
+    const byDayMap = byDayRows.reduce((acc: Record<string, { driverEarning: number; orderTotal: number }>, e) => {
       const day = new Date(e.date).toISOString().slice(0, 10);
       if (!acc[day]) acc[day] = { driverEarning: 0, orderTotal: 0 };
-      acc[day].driverEarning += e.amount;
-      acc[day].orderTotal    += e.orderTotal || 0;
+      acc[day].driverEarning += e._sum?.amount || 0;
+      acc[day].orderTotal    += e._sum?.orderTotal || 0;
       return acc;
     }, {});
 
@@ -63,6 +98,12 @@ router.get('/earnings', authenticate, requireRole('DRIVER'), async (req: AuthReq
       earnings,
       total: Math.round(totalDriverEarning * 100) / 100,
       byDay,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.max(Math.ceil(total / limit), 1),
+      },
       summary: {
         deliveriesCount,
         totalOrderValue:    Math.round(totalOrderValue    * 100) / 100,
@@ -82,15 +123,42 @@ router.get('/stats', authenticate, requireRole('DRIVER'), async (req: AuthReques
   try {
     const driverId = req.user!.userId;
 
-    const [totalDeliveries, pendingDeliveries, totalEarnings] = await Promise.all([
+    const [
+      totalDeliveries,
+      pendingDeliveries,
+      deliveredOrders,
+      cashCollected,
+      cashNotCollected,
+      totalEarnings,
+    ] = await Promise.all([
       prisma.order.count({ where: { driverId, status: { in: ['DELIVERED', 'COLLECTED'] } } }),
       prisma.order.count({ where: { driverId, status: { in: ['ASSIGNED', 'PICKED_UP', 'IN_TRANSIT'] } } }),
+      prisma.order.count({ where: { driverId, status: { in: ['DELIVERED', 'COLLECTED'] } } }),
+      prisma.order.aggregate({
+        where: { driverId, collectionStatus: { in: ['DRIVER_COLLECTED', 'COMPANY_RECEIVED', 'SETTLED_TO_MERCHANT'] } },
+        _sum: { totalPrice: true },
+        _count: true,
+      }),
+      prisma.order.aggregate({
+        where: { driverId, status: { in: ['DELIVERED', 'COLLECTED'] }, collectionStatus: 'NOT_COLLECTED' },
+        _sum: { totalPrice: true },
+        _count: true,
+      }),
       prisma.driverEarning.aggregate({ where: { driverId }, _sum: { amount: true } }),
     ]);
 
     return res.json({
       totalDeliveries,
       pendingDeliveries,
+      deliveredOrders,
+      cashCollected: {
+        count: cashCollected._count,
+        amount: cashCollected._sum.totalPrice || 0,
+      },
+      cashNotCollected: {
+        count: cashNotCollected._count,
+        amount: cashNotCollected._sum.totalPrice || 0,
+      },
       totalEarnings: totalEarnings._sum.amount || 0,
     });
   } catch {
