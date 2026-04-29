@@ -26,6 +26,11 @@ type Order = {
   packageDescription?: string
   notes?: string
   totalPrice: number
+  itemPrice?: number
+  deliveryFee?: number
+  addonsTotal?: number
+  grandTotal?: number
+  addons?: { name: string; amount: number }[]
   status: string
   deliveryType: string
   collectionStatus?: string
@@ -273,6 +278,12 @@ export default function DriverDashboard() {
   const fmtDate = (d: string) =>
     new Date(d).toLocaleDateString("ar-EG", { year: "numeric", month: "short", day: "numeric" })
 
+  const orderGrandTotal = (order: Pick<Order, "grandTotal" | "totalPrice">) =>
+    Number(order.grandTotal ?? order.totalPrice ?? 0)
+
+  const orderAddons = (order: Order) =>
+    Array.isArray(order.addons) ? order.addons : []
+
   /* ══════════════════════════ RENDER ══════════════════════════ */
   return (
     <div className="space-y-6 pb-10 max-w-4xl mx-auto">
@@ -414,7 +425,7 @@ export default function DriverDashboard() {
                     </span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="font-bold text-primary text-sm">ج.م {Number(order.totalPrice).toFixed(2)}</span>
+                    <span className="font-bold text-primary text-sm">ج.م {orderGrandTotal(order).toFixed(2)}</span>
                     <button
                       className="flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-medium bg-background hover:bg-muted transition-colors"
                       onClick={e => { e.stopPropagation(); openDetail(order.id) }}
@@ -565,11 +576,34 @@ export default function DriverDashboard() {
                 </div>
 
                 {/* Price */}
-                <div className="flex items-center justify-between rounded-lg bg-primary/5 border border-primary/20 px-4 py-3 mt-1">
-                  <span className="text-sm text-muted-foreground flex items-center gap-1.5">
-                    <DollarSign className="h-4 w-4 text-primary" /> قيمة الشحنة
-                  </span>
-                  <span className="text-2xl font-bold text-primary">ج.م {Number(selected.totalPrice).toFixed(2)}</span>
+                <div className="rounded-lg bg-primary/5 border border-primary/20 px-4 py-3 mt-1 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground flex items-center gap-1.5">
+                      <DollarSign className="h-4 w-4 text-primary" /> COD المطلوب تحصيله
+                    </span>
+                    <span className="text-2xl font-bold text-primary">ج.م {orderGrandTotal(selected).toFixed(2)}</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 border-t border-primary/10 pt-2 text-xs">
+                    <div className="flex justify-between gap-2">
+                      <span className="text-muted-foreground">سعر المنتج</span>
+                      <span className="font-semibold" dir="ltr">EGP {Number(selected.itemPrice || 0).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between gap-2">
+                      <span className="text-muted-foreground">الشحن</span>
+                      <span className="font-semibold" dir="ltr">EGP {Number(selected.deliveryFee || 0).toFixed(2)}</span>
+                    </div>
+                    {Number(selected.addonsTotal || 0) > 0 && (
+                      <div className="flex justify-between gap-2">
+                        <span className="text-muted-foreground">الإضافات</span>
+                        <span className="font-semibold" dir="ltr">EGP {Number(selected.addonsTotal || 0).toFixed(2)}</span>
+                      </div>
+                    )}
+                    {orderAddons(selected).length > 0 && (
+                      <div className="col-span-2 text-muted-foreground">
+                        {orderAddons(selected).map(addon => `${addon.name}: ${Number(addon.amount || 0).toFixed(2)}`).join("، ")}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 

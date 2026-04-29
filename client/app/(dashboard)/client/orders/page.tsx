@@ -27,6 +27,11 @@ type Order = {
   recipientPhone?: string
   packageDescription?: string
   totalPrice: number
+  itemPrice?: number
+  deliveryFee?: number
+  addonsTotal?: number
+  grandTotal?: number
+  addons?: { name: string; amount: number }[]
   status: string
   deliveryType: string
   collectionStatus?: string
@@ -244,6 +249,12 @@ export default function ClientOrdersPage() {
   const formatDate = (d: string) =>
     new Date(d).toLocaleDateString("ar-EG", { year: "numeric", month: "short", day: "numeric" })
 
+  const orderGrandTotal = (order: Pick<Order, "grandTotal" | "totalPrice">) =>
+    Number(order.grandTotal ?? order.totalPrice ?? 0)
+
+  const orderAddons = (order: Order) =>
+    Array.isArray(order.addons) ? order.addons : []
+
   /* ══════════════════════════ RENDER ══════════════════════════ */
   return (
     <div className="space-y-5 pb-10 max-w-5xl mx-auto">
@@ -347,7 +358,7 @@ export default function ClientOrdersPage() {
                       {formatDate(o.createdAt)}
                     </td>
                     <td className="px-4 py-3">
-                      <span className="font-bold text-primary">ج.م {o.totalPrice.toFixed(2)}</span>
+                      <span className="font-bold text-primary">ج.م {orderGrandTotal(o).toFixed(2)}</span>
                     </td>
                     <td className="px-4 py-3"><StatusPill status={o.status} /></td>
                     <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
@@ -407,7 +418,7 @@ export default function ClientOrdersPage() {
                 {/* Bottom */}
                 <div className="flex items-center justify-between border-t pt-2"
                   onClick={e => e.stopPropagation()}>
-                  <span className="text-lg font-bold text-primary">ج.م {o.totalPrice.toFixed(2)}</span>
+                  <span className="text-lg font-bold text-primary">ج.م {orderGrandTotal(o).toFixed(2)}</span>
                   <div className="flex gap-1">
                     <Button variant="outline" size="sm" className="h-8 text-xs gap-1"
                       onClick={e => { e.stopPropagation(); openDetail(o.id) }}>
@@ -520,11 +531,34 @@ export default function ClientOrdersPage() {
                 </div>
 
                 {/* Total price highlight */}
-                <div className="mt-2 flex items-center justify-between rounded-lg bg-primary/5 border border-primary/20 px-4 py-3">
-                  <span className="text-sm text-muted-foreground flex items-center gap-1.5">
-                    <DollarSign className="h-4 w-4 text-primary" /> إجمالي التكلفة
-                  </span>
-                  <span className="text-2xl font-bold text-primary">ج.م {Number(selected.totalPrice).toFixed(2)}</span>
+                <div className="mt-2 rounded-lg bg-primary/5 border border-primary/20 px-4 py-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground flex items-center gap-1.5">
+                      <DollarSign className="h-4 w-4 text-primary" /> إجمالي التحصيل COD
+                    </span>
+                    <span className="text-2xl font-bold text-primary">ج.م {orderGrandTotal(selected).toFixed(2)}</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 border-t border-primary/10 pt-2 text-xs">
+                    <div className="flex justify-between gap-2">
+                      <span className="text-muted-foreground">سعر المنتج</span>
+                      <span className="font-semibold" dir="ltr">EGP {Number(selected.itemPrice || 0).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between gap-2">
+                      <span className="text-muted-foreground">الشحن</span>
+                      <span className="font-semibold" dir="ltr">EGP {Number(selected.deliveryFee || 0).toFixed(2)}</span>
+                    </div>
+                    {Number(selected.addonsTotal || 0) > 0 && (
+                      <div className="flex justify-between gap-2">
+                        <span className="text-muted-foreground">الإضافات</span>
+                        <span className="font-semibold" dir="ltr">EGP {Number(selected.addonsTotal || 0).toFixed(2)}</span>
+                      </div>
+                    )}
+                    {orderAddons(selected).length > 0 && (
+                      <div className="col-span-2 text-muted-foreground">
+                        {orderAddons(selected).map(addon => `${addon.name}: ${Number(addon.amount || 0).toFixed(2)}`).join("، ")}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 

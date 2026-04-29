@@ -43,7 +43,20 @@ const DELIVERY_TYPES = [
   },
 ]
 
+const ADDONS = [
+  { id: "fragile_package", name: "تغليف قابل للكسر", amount: 15 },
+  { id: "express_handling", name: "مناولة سريعة", amount: 20 },
+  { id: "return_service", name: "خدمة إرجاع", amount: 25 },
+]
+
 const EGYPTIAN_PHONE_RE = /^(\+20|0020|0)?1[0125]\d{8}$/
+
+type PriceBreakdown = {
+  itemPrice: number
+  deliveryFee: number
+  addonsTotal: number
+  grandTotal: number
+}
 
 function StepHeader({ number, title }: { number: number; title: string }) {
   return (
@@ -66,10 +79,12 @@ export default function NewOrderPage() {
   const [isSubmitting, setIsSubmitting]       = useState(false)
   const [isPricing, setIsPricing]             = useState(false)
   const [calculatedPrice, setCalculatedPrice] = useState<number | null>(null)
+  const [priceBreakdown, setPriceBreakdown]   = useState<PriceBreakdown | null>(null)
   const [regions, setRegions]                 = useState<any[]>([])
   const [zonesLoading, setZonesLoading]       = useState(true)
   const [selectedRegionId, setSelectedRegionId]   = useState("")
   const [selectedSubAreaId, setSelectedSubAreaId] = useState("")
+  const [selectedAddons, setSelectedAddons]   = useState<string[]>([])
   const [errors, setErrors]                   = useState<Record<string, string>>({})
 
   const [form, setForm] = useState({
@@ -80,6 +95,7 @@ export default function NewOrderPage() {
     packageDescription: "",
     notes:              "",
     deliveryType:       "STANDARD",
+    itemPrice:          "",
   })
 
   /* ── Derived ── */
@@ -89,7 +105,11 @@ export default function NewOrderPage() {
   const selectedZoneObj: any = subAreas.length > 0
     ? subAreas.find((s: any) => s.id === selectedSubAreaId)
     : selectedRegion
-  const canCalculate = !!effectiveZoneId
+  const selectedAddonRows = ADDONS
+    .filter(addon => selectedAddons.includes(addon.id))
+    .map(({ name, amount }) => ({ name, amount }))
+  const itemPriceNumber = Number(form.itemPrice)
+  const canCalculate = !!effectiveZoneId && Number.isFinite(itemPriceNumber) && itemPriceNumber > 0
 
   /* ── Load zones ── */
   useEffect(() => {
@@ -106,15 +126,27 @@ export default function NewOrderPage() {
       .finally(() => setZonesLoading(false))
   }, [])
 
+  const resetPricing = () => {
+    setCalculatedPrice(null)
+    setPriceBreakdown(null)
+  }
+
   const set = (field: string, value: string) => {
     setForm(f => ({ ...f, [field]: value }))
-    if (field === "deliveryType") setCalculatedPrice(null)
+    if (field === "deliveryType" || field === "itemPrice") resetPricing()
     setErrors(e => ({ ...e, [field]: "" }))
+  }
+
+  const toggleAddon = (addonId: string) => {
+    setSelectedAddons(current =>
+      current.includes(addonId) ? current.filter(id => id !== addonId) : [...current, addonId]
+    )
+    resetPricing()
   }
 
   const handleRegionChange = (regionId: string) => {
     setSelectedRegionId(regionId)
-    setCalculatedPrice(null)
+    resetPricing()
     setErrors(e => ({ ...e, zoneId: "" }))
     const region = regions.find((r: any) => r.id === regionId)
     setSelectedSubAreaId(region?.children?.length > 0 ? region.children[0].id : "")
@@ -135,6 +167,8 @@ export default function NewOrderPage() {
     if (!form.pickupAddress.trim() || form.pickupAddress.trim().length < 5)
       e.pickupAddress = "أدخل عنوان الاستلام (5 أحرف على الأقل)"
     if (!effectiveZoneId) e.zoneId = "اختر منطقة التوصيل"
+    if (!Number.isFinite(itemPriceNumber) || itemPriceNumber <= 0)
+      e.itemPrice = "أدخل سعر المنتج بقيمة أكبر من صفر"
     return e
   }
 
@@ -144,13 +178,26 @@ export default function NewOrderPage() {
       setErrors(e => ({ ...e, zoneId: "اختر منطقة التوصيل" }))
       return
     }
+    if (!Number.isFinite(itemPriceNumber) || itemPriceNumber <= 0) {
+      setErrors(e => ({ ...e, itemPrice: "أدخل سعر المنتج بقيمة أكبر من صفر" }))
+      return
+    }
     setIsPricing(true)
     try {
       const { data } = await api.post("/orders/calculate-price", {
         deliveryType: form.deliveryType,
         zoneId:       effectiveZoneId,
+        itemPrice:    itemPriceNumber,
+        addons:       selectedAddonRows,
       })
-      setCalculatedPrice(data.price)
+      const breakdown = {
+        itemPrice:    Number(data.itemPrice || 0),
+        deliveryFee:  Number(data.deliveryFee || 0),
+        addonsTotal:  Number(data.addonsTotal || 0),
+        grandTotal:   Number(data.grandTotal ?? data.price ?? 0),
+      }
+      setPriceBreakdown(breakdown)
+      setCalculatedPrice(breakdown.grandTotal)
     } catch (err: any) {
       toast.error(err.response?.data?.error || "فشل احتساب السعر — تأكد من وجود قاعدة تسعير للمنطقة")
     } finally {
@@ -176,6 +223,8 @@ export default function NewOrderPage() {
         notes:              form.notes.trim()              || undefined,
         deliveryType:       form.deliveryType,
         zoneId:             effectiveZoneId,
+        itemPrice:          itemPriceNumber,
+        addons:             selectedAddonRows,
       })
       toast.success("تم إنشاء الطلب بنجاح!")
       router.push("/client/orders")
@@ -313,10 +362,66 @@ export default function NewOrderPage() {
             </CardContent>
           </Card>
 
-          {/* Section 3: خيارات التوصيل */}
+          {/* Section 3: قيمة المنتج والإضافات */}
           <Card>
             <CardHeader className="pb-3">
-              <StepHeader number={3} title="خيارات التوصيل" />
+              <StepHeader number={3} title="قيمة المنتج والإضافات" />
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="itemPrice" className="flex items-center gap-1.5 text-sm font-medium">
+                  <DollarSign className="h-3.5 w-3.5 text-primary" />
+                  سعر المنتج <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="itemPrice"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  dir="ltr"
+                  placeholder="500.00"
+                  value={form.itemPrice}
+                  onChange={e => set("itemPrice", e.target.value)}
+                  className={errors.itemPrice ? "border-red-500 focus-visible:ring-red-400" : ""}
+                />
+                <FieldError msg={errors.itemPrice} />
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">إضافات اختيارية</Label>
+                <div className="grid sm:grid-cols-3 gap-2">
+                  {ADDONS.map(addon => {
+                    const selected = selectedAddons.includes(addon.id)
+                    return (
+                      <button
+                        key={addon.id}
+                        type="button"
+                        onClick={() => toggleAddon(addon.id)}
+                        className={`rounded-xl border p-3 text-start transition-colors ${
+                          selected
+                            ? "border-primary bg-primary/5 text-primary"
+                            : "border-input bg-background hover:border-primary/40"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-sm font-semibold">{addon.name}</span>
+                          {selected && <CheckCircle className="h-4 w-4 shrink-0" />}
+                        </div>
+                        <span className="mt-1 block text-xs text-muted-foreground" dir="ltr">
+                          + EGP {addon.amount.toFixed(2)}
+                        </span>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Section 4: خيارات التوصيل */}
+          <Card>
+            <CardHeader className="pb-3">
+              <StepHeader number={4} title="خيارات التوصيل" />
             </CardHeader>
             <CardContent className="space-y-5">
 
@@ -330,7 +435,7 @@ export default function NewOrderPage() {
                       <button
                         key={dt.value}
                         type="button"
-                        onClick={() => { set("deliveryType", dt.value); setCalculatedPrice(null) }}
+                        onClick={() => set("deliveryType", dt.value)}
                         className={`relative flex flex-col items-start gap-2 rounded-xl border-2 p-3.5 transition-all text-left ${
                           isSelected
                             ? dt.selectedColor + " ring-2 ring-offset-1 ring-primary/30"
@@ -394,7 +499,7 @@ export default function NewOrderPage() {
                           value={selectedSubAreaId}
                           onChange={e => {
                             setSelectedSubAreaId(e.target.value)
-                            setCalculatedPrice(null)
+                            resetPricing()
                             setErrors(err => ({ ...err, zoneId: "" }))
                           }}
                           className={`flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${
@@ -441,11 +546,20 @@ export default function NewOrderPage() {
                 <div className="rounded-xl border bg-primary/5 p-4 text-center">
                   <p className="text-xs text-muted-foreground">إجمالي التكلفة</p>
                   <p className="text-3xl font-bold text-primary mt-1">ج.م {calculatedPrice.toFixed(2)}</p>
+                  {priceBreakdown && (
+                    <div className="mt-3 space-y-1 rounded-lg bg-background/80 p-2 text-xs">
+                      <div className="flex justify-between"><span>سعر المنتج</span><span dir="ltr">EGP {priceBreakdown.itemPrice.toFixed(2)}</span></div>
+                      <div className="flex justify-between"><span>الشحن</span><span dir="ltr">EGP {priceBreakdown.deliveryFee.toFixed(2)}</span></div>
+                      {priceBreakdown.addonsTotal > 0 && (
+                        <div className="flex justify-between"><span>الإضافات</span><span dir="ltr">EGP {priceBreakdown.addonsTotal.toFixed(2)}</span></div>
+                      )}
+                    </div>
+                  )}
                   <p className="text-xs text-green-600 dark:text-green-400 flex items-center justify-center gap-1 mt-1">
                     <CheckCircle className="h-3 w-3" /> السعر محتسب
                   </p>
                 </div>
-                <Button type="button" variant="outline" size="sm" className="w-full" onClick={() => setCalculatedPrice(null)}>
+                <Button type="button" variant="outline" size="sm" className="w-full" onClick={resetPricing}>
                   إعادة الاحتساب
                 </Button>
                 <Button type="submit" className="w-full gap-2" disabled={isSubmitting}>
@@ -492,6 +606,23 @@ export default function NewOrderPage() {
                   <span className="text-muted-foreground">نوع التوصيل</span>
                   <span className="font-medium">{DELIVERY_TYPES.find(d => d.value === form.deliveryType)?.label}</span>
                 </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">سعر المنتج</span>
+                  <span className="font-medium" dir="ltr">
+                    {itemPriceNumber > 0 ? `EGP ${itemPriceNumber.toFixed(2)}` : "—"}
+                  </span>
+                </div>
+                {selectedAddonRows.length > 0 && (
+                  <div className="rounded-lg bg-muted/40 px-3 py-2 space-y-1">
+                    <p className="text-xs font-semibold text-muted-foreground">الإضافات</p>
+                    {selectedAddonRows.map(addon => (
+                      <div key={addon.name} className="flex justify-between gap-2 text-xs">
+                        <span>{addon.name}</span>
+                        <span dir="ltr">EGP {addon.amount.toFixed(2)}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="border-t pt-4">
@@ -499,6 +630,15 @@ export default function NewOrderPage() {
                   <div className="text-center space-y-1">
                     <p className="text-xs text-muted-foreground">إجمالي التكلفة المقدرة</p>
                     <p className="text-4xl font-bold text-primary">ج.م {calculatedPrice.toFixed(2)}</p>
+                    {priceBreakdown && (
+                      <div className="mt-3 space-y-1 rounded-lg bg-muted/40 p-2 text-xs text-start">
+                        <div className="flex justify-between"><span>سعر المنتج</span><span dir="ltr">EGP {priceBreakdown.itemPrice.toFixed(2)}</span></div>
+                        <div className="flex justify-between"><span>الشحن</span><span dir="ltr">EGP {priceBreakdown.deliveryFee.toFixed(2)}</span></div>
+                        {priceBreakdown.addonsTotal > 0 && (
+                          <div className="flex justify-between"><span>الإضافات</span><span dir="ltr">EGP {priceBreakdown.addonsTotal.toFixed(2)}</span></div>
+                        )}
+                      </div>
+                    )}
                     <p className="text-xs text-green-600 dark:text-green-400 flex items-center justify-center gap-1 mt-1">
                       <CheckCircle className="h-3 w-3" /> السعر محتسب
                     </p>
@@ -525,7 +665,7 @@ export default function NewOrderPage() {
             </Button>
           ) : (
             <div className="space-y-2">
-              <Button type="button" variant="outline" size="sm" className="w-full" onClick={() => setCalculatedPrice(null)}>
+              <Button type="button" variant="outline" size="sm" className="w-full" onClick={resetPricing}>
                 إعادة احتساب السعر
               </Button>
               <Button type="submit" className="w-full gap-2" disabled={isSubmitting}>

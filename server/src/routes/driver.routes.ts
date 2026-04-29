@@ -136,12 +136,12 @@ router.get('/stats', authenticate, requireRole('DRIVER'), async (req: AuthReques
       prisma.order.count({ where: { driverId, status: { in: ['DELIVERED', 'COLLECTED'] } } }),
       prisma.order.aggregate({
         where: { driverId, collectionStatus: { in: ['DRIVER_COLLECTED', 'COMPANY_RECEIVED', 'SETTLED_TO_MERCHANT'] } },
-        _sum: { totalPrice: true },
+        _sum: { totalPrice: true, grandTotal: true },
         _count: true,
       }),
       prisma.order.aggregate({
         where: { driverId, status: { in: ['DELIVERED', 'COLLECTED'] }, collectionStatus: 'NOT_COLLECTED' },
-        _sum: { totalPrice: true },
+        _sum: { totalPrice: true, grandTotal: true },
         _count: true,
       }),
       prisma.driverEarning.aggregate({ where: { driverId }, _sum: { amount: true } }),
@@ -153,11 +153,11 @@ router.get('/stats', authenticate, requireRole('DRIVER'), async (req: AuthReques
       deliveredOrders,
       cashCollected: {
         count: cashCollected._count,
-        amount: cashCollected._sum.totalPrice || 0,
+        amount: cashCollected._sum.grandTotal || cashCollected._sum.totalPrice || 0,
       },
       cashNotCollected: {
         count: cashNotCollected._count,
-        amount: cashNotCollected._sum.totalPrice || 0,
+        amount: cashNotCollected._sum.grandTotal || cashNotCollected._sum.totalPrice || 0,
       },
       totalEarnings: totalEarnings._sum.amount || 0,
     });

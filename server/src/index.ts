@@ -18,6 +18,7 @@ import refundRoutes from "./routes/refund.routes";
 import analyticsRoutes from "./routes/analytics.routes";
 import driverRoutes from "./routes/driver.routes";
 import pricingRoutes from "./routes/pricing.routes";
+import exportRoutes from "./routes/export.routes";
 
 const app = express();
 const server = http.createServer(app);
@@ -73,6 +74,7 @@ app.use("/api/refunds", refundRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/driver", driverRoutes);
 app.use("/api/pricing-rules", pricingRoutes);
+app.use("/api/admin/export", exportRoutes);
 
 // Health check
 app.get("/api/health", (req, res) => {

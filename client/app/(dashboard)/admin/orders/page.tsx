@@ -34,6 +34,11 @@ type Order = {
   deliveryType: string
   collectionStatus?: string
   totalPrice: number
+  itemPrice?: number
+  deliveryFee?: number
+  addonsTotal?: number
+  grandTotal?: number
+  addons?: { name: string; amount: number }[]
   notes?: string
   cancellationReason?: string
   returnReason?: string
@@ -199,6 +204,7 @@ export default function AdminOrdersPage() {
   const [page, setPage]           = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [total, setTotal]         = useState(0)
+  const [exporting, setExporting] = useState(false)
 
   /* detail dialog */
   const [selected, setSelected]         = useState<Order | null>(null)
@@ -364,6 +370,34 @@ export default function AdminOrdersPage() {
     router.push(`/admin/waybill?shipmentNumber=${encodeURIComponent(order.shipmentNumber)}`)
   }
 
+  const orderGrandTotal = (order: Pick<Order, "grandTotal" | "totalPrice">) =>
+    Number(order.grandTotal ?? order.totalPrice ?? 0)
+
+  const orderAddons = (order: Order) =>
+    Array.isArray(order.addons) ? order.addons : []
+
+  const exportOrders = async () => {
+    setExporting(true)
+    try {
+      const params: Record<string, string> = {}
+      if (filterStatus !== "ALL") params.status = filterStatus
+      if (debSearch) params.search = debSearch
+      const res = await api.get("/admin/export/orders.xlsx", { params, responseType: "blob" })
+      const url = window.URL.createObjectURL(new Blob([res.data]))
+      const a = document.createElement("a")
+      a.href = url
+      a.download = `orders-report-${new Date().toISOString().slice(0, 10)}.xlsx`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      window.URL.revokeObjectURL(url)
+    } catch (e: any) {
+      toast.error(e.response?.data?.error || "فشل تصدير ملف Excel")
+    } finally {
+      setExporting(false)
+    }
+  }
+
   const fmtDate = (d: string) =>
     new Date(d).toLocaleDateString("ar-EG", { year: "numeric", month: "short", day: "numeric" })
 
@@ -377,10 +411,16 @@ export default function AdminOrdersPage() {
           <h1 className="text-2xl font-bold tracking-tight">إدارة الطلبات</h1>
           <p className="text-sm text-muted-foreground mt-0.5">تابع جميع الشحنات وعيّن السائقين وأدر الحالات</p>
         </div>
-        <Button variant="outline" size="sm" className="gap-1.5" onClick={() => { fetchOrders(); fetchStats() }} disabled={isRefresh}>
-          <RefreshCw className={`h-3.5 w-3.5 ${isRefresh ? "animate-spin" : ""}`} />
-          تحديث
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={exportOrders} disabled={exporting}>
+            {exporting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
+            تصدير Excel
+          </Button>
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => { fetchOrders(); fetchStats() }} disabled={isRefresh}>
+            <RefreshCw className={`h-3.5 w-3.5 ${isRefresh ? "animate-spin" : ""}`} />
+            تحديث
+          </Button>
+        </div>
       </div>
 
       {/* ── Stats strip ── */}
@@ -493,7 +533,7 @@ export default function AdminOrdersPage() {
                   <td className="px-4 py-3"><DeliveryPill type={o.deliveryType} /></td>
                   <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">{fmtDate(o.createdAt)}</td>
                   <td className="px-4 py-3">
-                    <span className="font-bold text-primary">ج.م {o.totalPrice.toFixed(2)}</span>
+                    <span className="font-bold text-primary">ج.م {orderGrandTotal(o).toFixed(2)}</span>
                   </td>
                   <td className="px-4 py-3"><StatusPill status={o.status} /></td>
                   <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
@@ -547,7 +587,7 @@ export default function AdminOrdersPage() {
               </div>
             </div>
             <div className="flex items-center justify-between border-t pt-2" onClick={e => e.stopPropagation()}>
-              <span className="text-lg font-bold text-primary">ج.م {o.totalPrice.toFixed(2)}</span>
+              <span className="text-lg font-bold text-primary">ج.م {orderGrandTotal(o).toFixed(2)}</span>
               <Button variant="outline" size="sm" className="h-8 text-xs gap-1" onClick={e => { e.stopPropagation(); openDetail(o.id) }}>
                 <Eye className="h-3.5 w-3.5" /> التفاصيل
               </Button>
@@ -834,11 +874,32 @@ export default function AdminOrdersPage() {
                 </div>
 
                 {/* Price */}
-                <div className="flex items-center justify-between rounded-lg bg-primary/5 border border-primary/20 px-4 py-3 mt-2">
-                  <span className="text-sm text-muted-foreground flex items-center gap-1.5">
-                    <DollarSign className="h-4 w-4 text-primary" /> إجمالي التكلفة
-                  </span>
-                  <span className="text-2xl font-bold text-primary">ج.م {Number(selected.totalPrice).toFixed(2)}</span>
+                <div className="rounded-lg bg-primary/5 border border-primary/20 px-4 py-3 mt-2 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground flex items-center gap-1.5">
+                      <DollarSign className="h-4 w-4 text-primary" /> إجمالي التحصيل COD
+                    </span>
+                    <span className="text-2xl font-bold text-primary">ج.م {orderGrandTotal(selected).toFixed(2)}</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 border-t border-primary/10 pt-2 text-xs">
+                    <div className="flex justify-between gap-2">
+                      <span className="text-muted-foreground">سعر المنتج</span>
+                      <span className="font-semibold" dir="ltr">EGP {Number(selected.itemPrice || 0).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between gap-2">
+                      <span className="text-muted-foreground">الشحن</span>
+                      <span className="font-semibold" dir="ltr">EGP {Number(selected.deliveryFee || 0).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between gap-2">
+                      <span className="text-muted-foreground">الإضافات</span>
+                      <span className="font-semibold" dir="ltr">EGP {Number(selected.addonsTotal || 0).toFixed(2)}</span>
+                    </div>
+                    {orderAddons(selected).length > 0 && (
+                      <div className="col-span-2 text-muted-foreground">
+                        {orderAddons(selected).map(addon => `${addon.name}: ${Number(addon.amount || 0).toFixed(2)}`).join("، ")}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 

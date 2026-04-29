@@ -160,7 +160,9 @@ export default function ClientDashboard() {
                     </div>
                     <div className="flex shrink-0 flex-col items-end gap-1">
                       <Badge variant="secondary" className={status.cls}>{status.label}</Badge>
-                      {order.totalPrice != null && <span className="text-xs font-semibold text-green-600">{money(order.totalPrice)}</span>}
+                      {(order.grandTotal ?? order.totalPrice) != null && (
+                        <span className="text-xs font-semibold text-green-600">{money(order.grandTotal ?? order.totalPrice)}</span>
+                      )}
                     </div>
                   </div>
                 )

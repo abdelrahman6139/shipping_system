@@ -18,6 +18,11 @@ type Order = {
   status?: string
   collectionStatus?: string
   totalPrice?: number
+  itemPrice?: number
+  deliveryFee?: number
+  addonsTotal?: number
+  grandTotal?: number
+  addons?: { name?: string; amount?: number }[]
   notes?: string
   createdAt?: string
   client?: { id?: string; name?: string; email?: string; phone?: string } | null
@@ -201,7 +206,11 @@ export default function ShippingLabel({ order }: ShippingLabelProps) {
   const packageDescription = safe(order.packageDescription)
   const notes = safe(order.notes)
   const createdAt = fmtDate(order.createdAt)
-  const cod = money(order.totalPrice)
+  const grandTotal = Number(order.grandTotal ?? order.totalPrice ?? 0)
+  const cod = money(grandTotal)
+  const itemPrice = money(order.itemPrice)
+  const deliveryFee = money(order.deliveryFee)
+  const addonsTotal = money(order.addonsTotal)
   const route = routeCode(zoneName)
 
   const qrValue = useMemo(
@@ -418,8 +427,8 @@ export default function ShippingLabel({ order }: ShippingLabelProps) {
         style={{
           border: "0.35mm solid #000",
           display: "grid",
-          gridTemplateRows: "1fr 1fr",
-          gap: "0.7mm",
+          gridTemplateRows: "auto auto auto",
+          gap: "0.45mm",
           padding: "1.2mm 1.5mm",
           fontSize: "6.7pt",
           fontWeight: 900,
@@ -431,6 +440,11 @@ export default function ShippingLabel({ order }: ShippingLabelProps) {
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1mm", minWidth: 0 }}>
           <Field label="Status"><span style={textClamp(1)}>{status}</span></Field>
           <Field label="Payment"><span style={textClamp(1)}>{collectionStatus}</span></Field>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0.8mm", minWidth: 0 }}>
+          <Field label="Item"><NoWrap value={itemPrice} size="6.5pt" weight={900} /></Field>
+          <Field label="Ship"><NoWrap value={deliveryFee} size="6.5pt" weight={900} /></Field>
+          <Field label="Add"><NoWrap value={addonsTotal} size="6.5pt" weight={900} /></Field>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "20mm 1fr", gap: "1mm", minWidth: 0 }}>
           <NoWrap value={createdAt} size="6.8pt" weight={900} />

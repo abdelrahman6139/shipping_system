@@ -10,6 +10,7 @@ import { useLanguage } from "@/context/LanguageContext"
 import {
   ChevronLeft,
   ChevronRight,
+  Download,
   Loader2,
   Pencil,
   Search,
@@ -45,6 +46,7 @@ const copy = {
     title: "إدارة المستخدمين",
     subtitle: "أدر حسابات العملاء والسائقين والمشرفين.",
     addUser: "إضافة مستخدم",
+    exportExcel: "تصدير Excel",
     search: "ابحث بالاسم أو البريد أو الهاتف...",
     all: "الكل",
     clients: "العملاء",
@@ -93,6 +95,7 @@ const copy = {
     title: "User Management",
     subtitle: "Manage client, driver, and admin accounts.",
     addUser: "Add User",
+    exportExcel: "Export Excel",
     search: "Search by name, email, or phone...",
     all: "All",
     clients: "Clients",
@@ -185,6 +188,7 @@ export default function AdminUsersPage() {
   const [debouncedSearch, setDebouncedSearch] = useState("")
   const [roleFilter, setRoleFilter] = useState("ALL")
   const [page, setPage] = useState(1)
+  const [exporting, setExporting] = useState(false)
 
   const [addOpen, setAddOpen] = useState(false)
   const [addLoading, setAddLoading] = useState(false)
@@ -280,6 +284,28 @@ export default function AdminUsersPage() {
 
   const orderCount = (user: UserRow) => user.role === "DRIVER" ? user._count.driverOrders : user._count.clientOrders
 
+  const exportUsers = async () => {
+    setExporting(true)
+    try {
+      const params: Record<string, string> = {}
+      if (roleFilter !== "ALL") params.role = roleFilter
+      if (debouncedSearch) params.search = debouncedSearch
+      const res = await api.get("/admin/export/users.xlsx", { params, responseType: "blob" })
+      const url = window.URL.createObjectURL(new Blob([res.data]))
+      const a = document.createElement("a")
+      a.href = url
+      a.download = `users-report-${new Date().toISOString().slice(0, 10)}.xlsx`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      window.URL.revokeObjectURL(url)
+    } catch {
+      toast.error(language === "ar" ? "فشل تصدير ملف Excel" : "Failed to export Excel")
+    } finally {
+      setExporting(false)
+    }
+  }
+
   return (
     <div className="mx-auto max-w-7xl space-y-6 pb-10" dir={dir}>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -287,9 +313,15 @@ export default function AdminUsersPage() {
           <h1 className="text-2xl font-bold tracking-tight">{t.title}</h1>
           <p className="mt-0.5 text-sm text-muted-foreground">{t.subtitle}</p>
         </div>
-        <Button className="shrink-0 gap-2" onClick={() => setAddOpen(true)}>
-          <UserPlus className="h-4 w-4" /> {t.addUser}
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" className="shrink-0 gap-2" onClick={exportUsers} disabled={exporting}>
+            {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+            {t.exportExcel}
+          </Button>
+          <Button className="shrink-0 gap-2" onClick={() => setAddOpen(true)}>
+            <UserPlus className="h-4 w-4" /> {t.addUser}
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row">

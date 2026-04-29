@@ -90,7 +90,7 @@ router.get('/client-dashboard', authenticate, requireRole('CLIENT'), async (req:
       prisma.order.groupBy({
         by: ['collectionStatus'],
         where: { clientId, status: { in: [...DELIVERED_STATUSES] } },
-        _sum: { totalPrice: true },
+        _sum: { totalPrice: true, itemPrice: true, grandTotal: true },
         _count: { _all: true },
       }),
       prisma.order.findMany({
@@ -103,6 +103,10 @@ router.get('/client-dashboard', authenticate, requireRole('CLIENT'), async (req:
           status: true,
           collectionStatus: true,
           totalPrice: true,
+          itemPrice: true,
+          deliveryFee: true,
+          addonsTotal: true,
+          grandTotal: true,
           createdAt: true,
         },
         orderBy: { createdAt: 'desc' },
@@ -111,9 +115,13 @@ router.get('/client-dashboard', authenticate, requireRole('CLIENT'), async (req:
     ]);
 
     const statusCounts = Object.fromEntries(statusRows.map((row) => [row.status, row._count._all]));
-    const collection = Object.fromEntries(COLLECTION_STATES.map((state) => [state, { count: 0, amount: 0 }])) as Record<string, { count: number; amount: number }>;
+    const collection = Object.fromEntries(COLLECTION_STATES.map((state) => [state, { count: 0, amount: 0, merchantAmount: 0 }])) as Record<string, { count: number; amount: number; merchantAmount: number }>;
     for (const row of collectionRows) {
-      collection[row.collectionStatus] = { count: row._count._all, amount: money(row._sum.totalPrice) };
+      collection[row.collectionStatus] = {
+        count: row._count._all,
+        amount: money(row._sum.grandTotal || row._sum.totalPrice),
+        merchantAmount: money(row._sum.itemPrice),
+      };
     }
 
     const payload = {
@@ -123,8 +131,8 @@ router.get('/client-dashboard', authenticate, requireRole('CLIENT'), async (req:
         inTransitOrders: (statusCounts.ASSIGNED || 0) + (statusCounts.PICKED_UP || 0) + (statusCounts.IN_TRANSIT || 0),
         deliveredShipments: (statusCounts.DELIVERED || 0) + (statusCounts.COLLECTED || 0),
         pendingCollectionAmount: collection.NOT_COLLECTED.amount,
-        amountNotSettledToMerchant: collection.DRIVER_COLLECTED.amount + collection.COMPANY_RECEIVED.amount,
-        amountSettledToMerchant: collection.SETTLED_TO_MERCHANT.amount,
+        amountNotSettledToMerchant: collection.DRIVER_COLLECTED.merchantAmount + collection.COMPANY_RECEIVED.merchantAmount,
+        amountSettledToMerchant: collection.SETTLED_TO_MERCHANT.merchantAmount,
       },
       latestOrders,
     };
@@ -151,7 +159,7 @@ async function buildFinancial(range: { startDate: Date; endDate: Date }) {
     prisma.order.groupBy({
       by: ['collectionStatus'],
       where,
-      _sum: { totalPrice: true },
+      _sum: { totalPrice: true, itemPrice: true, deliveryFee: true, addonsTotal: true, grandTotal: true },
       _count: { _all: true },
     }),
     prisma.driverEarning.aggregate({
@@ -165,20 +173,21 @@ async function buildFinancial(range: { startDate: Date; endDate: Date }) {
     }),
     prisma.order.aggregate({
       where: { ...orderDateWhere(range), status: { notIn: ['CANCELLED', 'RETURNED'] } },
-      _sum: { totalPrice: true },
+      _sum: { totalPrice: true, itemPrice: true, deliveryFee: true, addonsTotal: true, grandTotal: true },
       _count: true,
     }),
   ]);
 
   const collection = Object.fromEntries(
-    COLLECTION_STATES.map((state) => [state, { status: state, count: 0, amount: 0 }]),
-  ) as Record<string, { status: string; count: number; amount: number }>;
+    COLLECTION_STATES.map((state) => [state, { status: state, count: 0, amount: 0, merchantAmount: 0 }]),
+  ) as Record<string, { status: string; count: number; amount: number; merchantAmount: number }>;
 
   for (const row of collectionRows) {
     collection[row.collectionStatus] = {
       status: row.collectionStatus,
       count: row._count._all,
-      amount: money(row._sum.totalPrice),
+      amount: money(row._sum.grandTotal || row._sum.totalPrice),
+      merchantAmount: money(row._sum.itemPrice),
     };
   }
 
@@ -186,10 +195,14 @@ async function buildFinancial(range: { startDate: Date; endDate: Date }) {
     collection.DRIVER_COLLECTED.amount +
     collection.COMPANY_RECEIVED.amount +
     collection.SETTLED_TO_MERCHANT.amount;
-  const owedToMerchants = collection.DRIVER_COLLECTED.amount + collection.COMPANY_RECEIVED.amount;
+  const owedToMerchants = collection.DRIVER_COLLECTED.merchantAmount + collection.COMPANY_RECEIVED.merchantAmount;
+  const shippingRevenue = money(revenue._sum.deliveryFee) + money(revenue._sum.addonsTotal);
 
   return {
-    totalRevenue: money(revenue._sum.totalPrice),
+    totalRevenue: money(shippingRevenue),
+    shippingRevenue: money(shippingRevenue),
+    itemValue: money(revenue._sum.itemPrice),
+    codTotal: money(revenue._sum.grandTotal || revenue._sum.totalPrice),
     totalOrders: revenue._count,
     totalDriverPayout: money(earnings._sum.amount),
     companyProfit: money(earnings._sum.companyProfit),
@@ -204,7 +217,7 @@ async function buildFinancial(range: { startDate: Date; endDate: Date }) {
       collectedFromCustomers: money(collectedFromCustomers),
       withDrivers: collection.DRIVER_COLLECTED.amount,
       withCompany: collection.COMPANY_RECEIVED.amount,
-      settledToMerchants: collection.SETTLED_TO_MERCHANT.amount,
+      settledToMerchants: collection.SETTLED_TO_MERCHANT.merchantAmount,
       owedToMerchants: money(owedToMerchants),
     },
     pipeline: [
@@ -226,11 +239,12 @@ async function buildMerchantAnalytics(range: { startDate: Date; endDate: Date },
         u.email,
         u.phone,
         COUNT(o.id)::int AS "totalOrders",
-        COALESCE(SUM(o."totalPrice") FILTER (WHERE o.status::text NOT IN ('CANCELLED', 'RETURNED')), 0)::float AS "totalRevenue",
-        COALESCE(SUM(o."totalPrice") FILTER (WHERE o."collectionStatus"::text IN ('DRIVER_COLLECTED', 'COMPANY_RECEIVED', 'SETTLED_TO_MERCHANT')), 0)::float AS "collectedFromCustomers",
-        COALESCE(SUM(o."totalPrice") FILTER (WHERE o.status::text IN ('DELIVERED', 'COLLECTED') AND o."collectionStatus"::text = 'NOT_COLLECTED'), 0)::float AS "notCollected",
-        COALESCE(SUM(o."totalPrice") FILTER (WHERE o."collectionStatus"::text IN ('DRIVER_COLLECTED', 'COMPANY_RECEIVED')), 0)::float AS "owedToMerchant",
-        COALESCE(SUM(o."totalPrice") FILTER (WHERE o."collectionStatus"::text = 'SETTLED_TO_MERCHANT'), 0)::float AS "settledToMerchant",
+        COALESCE(SUM(COALESCE(o."deliveryFee", 0) + COALESCE(o."addonsTotal", 0)) FILTER (WHERE o.status::text NOT IN ('CANCELLED', 'RETURNED')), 0)::float AS "totalRevenue",
+        COALESCE(SUM(o."itemPrice") FILTER (WHERE o.status::text NOT IN ('CANCELLED', 'RETURNED')), 0)::float AS "itemValue",
+        COALESCE(SUM(COALESCE(o."grandTotal", o."totalPrice", 0)) FILTER (WHERE o."collectionStatus"::text IN ('DRIVER_COLLECTED', 'COMPANY_RECEIVED', 'SETTLED_TO_MERCHANT')), 0)::float AS "collectedFromCustomers",
+        COALESCE(SUM(COALESCE(o."grandTotal", o."totalPrice", 0)) FILTER (WHERE o.status::text IN ('DELIVERED', 'COLLECTED') AND o."collectionStatus"::text = 'NOT_COLLECTED'), 0)::float AS "notCollected",
+        COALESCE(SUM(o."itemPrice") FILTER (WHERE o."collectionStatus"::text IN ('DRIVER_COLLECTED', 'COMPANY_RECEIVED')), 0)::float AS "owedToMerchant",
+        COALESCE(SUM(o."itemPrice") FILTER (WHERE o."collectionStatus"::text = 'SETTLED_TO_MERCHANT'), 0)::float AS "settledToMerchant",
         COUNT(o.id) FILTER (WHERE o.status::text IN ('DELIVERED', 'COLLECTED'))::int AS "deliveredOrders",
         COUNT(o.id) FILTER (WHERE o.status::text = 'CANCELLED')::int AS "cancelledOrders",
         COUNT(o.id) FILTER (WHERE o.status::text = 'RETURNED')::int AS "returnedOrders"
@@ -253,13 +267,13 @@ async function buildMerchantAnalytics(range: { startDate: Date; endDate: Date },
           by: ['clientId', 'zoneId'],
           where: { clientId: { in: merchantIds }, ...orderDateWhere(range) },
           _count: { _all: true },
-          _sum: { totalPrice: true },
+          _sum: { deliveryFee: true, addonsTotal: true },
         }),
         prisma.order.groupBy({
           by: ['clientId', 'deliveryType'],
           where: { clientId: { in: merchantIds }, ...orderDateWhere(range) },
           _count: { _all: true },
-          _sum: { totalPrice: true },
+          _sum: { deliveryFee: true, addonsTotal: true },
         }),
         prisma.zone.findMany({ select: { id: true, name: true } }),
       ])
@@ -275,7 +289,7 @@ async function buildMerchantAnalytics(range: { startDate: Date; endDate: Date },
       zoneId: row.zoneId,
       zone: row.zoneId ? zoneNames.get(row.zoneId) || 'Unknown' : 'Unassigned',
       count: row._count._all,
-      revenue: money(row._sum.totalPrice),
+      revenue: money(row._sum.deliveryFee) + money(row._sum.addonsTotal),
     });
   }
 
@@ -284,7 +298,7 @@ async function buildMerchantAnalytics(range: { startDate: Date; endDate: Date },
     byType.get(row.clientId)!.push({
       deliveryType: row.deliveryType,
       count: row._count._all,
-      revenue: money(row._sum.totalPrice),
+      revenue: money(row._sum.deliveryFee) + money(row._sum.addonsTotal),
     });
   }
 
@@ -300,6 +314,7 @@ async function buildMerchantAnalytics(range: { startDate: Date; endDate: Date },
       phone: row.phone,
       totalOrders,
       totalRevenue: money(row.totalRevenue),
+      itemValue: money(row.itemValue),
       collectedFromCustomers: money(row.collectedFromCustomers),
       notCollected: money(row.notCollected),
       owedToMerchant: money(row.owedToMerchant),
@@ -333,8 +348,8 @@ async function buildDriverAnalytics(range: { startDate: Date; endDate: Date }, p
         COUNT(o.id) FILTER (WHERE o.status::text = 'RETURNED')::int AS "returnedShipments",
         COALESCE(AVG(EXTRACT(EPOCH FROM (o."updatedAt" - o."createdAt")) / 3600) FILTER (WHERE o.status::text IN ('DELIVERED', 'COLLECTED')), 0)::float AS "avgDeliveryHours",
         COALESCE(SUM(de.amount), 0)::float AS "earnings",
-        COALESCE(SUM(o."totalPrice") FILTER (WHERE o."collectionStatus"::text IN ('DRIVER_COLLECTED', 'COMPANY_RECEIVED', 'SETTLED_TO_MERCHANT')), 0)::float AS "cashCollected",
-        COALESCE(SUM(o."totalPrice") FILTER (WHERE o.status::text IN ('DELIVERED', 'COLLECTED') AND o."collectionStatus"::text = 'NOT_COLLECTED'), 0)::float AS "cashNotCollected"
+        COALESCE(SUM(COALESCE(o."grandTotal", o."totalPrice", 0)) FILTER (WHERE o."collectionStatus"::text IN ('DRIVER_COLLECTED', 'COMPANY_RECEIVED', 'SETTLED_TO_MERCHANT')), 0)::float AS "cashCollected",
+        COALESCE(SUM(COALESCE(o."grandTotal", o."totalPrice", 0)) FILTER (WHERE o.status::text IN ('DELIVERED', 'COLLECTED') AND o."collectionStatus"::text = 'NOT_COLLECTED'), 0)::float AS "cashNotCollected"
       FROM "users" u
       LEFT JOIN "orders" o
         ON o."driverId" = u.id
@@ -427,7 +442,7 @@ async function buildOrderAnalytics(range: { startDate: Date; endDate: Date }) {
     prisma.$queryRaw<any[]>`
       SELECT
         to_char(date_trunc('day', "createdAt"), 'YYYY-MM-DD') AS "date",
-        COALESCE(SUM("totalPrice") FILTER (WHERE status::text NOT IN ('CANCELLED', 'RETURNED')), 0)::float AS "revenue",
+        COALESCE(SUM(COALESCE("deliveryFee", 0) + COALESCE("addonsTotal", 0)) FILTER (WHERE status::text NOT IN ('CANCELLED', 'RETURNED')), 0)::float AS "revenue",
         COUNT(id)::int AS "orders"
       FROM "orders"
       WHERE "createdAt" >= ${range.startDate}
@@ -461,7 +476,7 @@ async function buildOrderAnalytics(range: { startDate: Date; endDate: Date }) {
       SELECT
         COALESCE(z.name, 'Unassigned') AS "zone",
         COUNT(o.id)::int AS "orders",
-        COALESCE(SUM(o."totalPrice") FILTER (WHERE o.status::text NOT IN ('CANCELLED', 'RETURNED')), 0)::float AS "revenue"
+        COALESCE(SUM(COALESCE(o."deliveryFee", 0) + COALESCE(o."addonsTotal", 0)) FILTER (WHERE o.status::text NOT IN ('CANCELLED', 'RETURNED')), 0)::float AS "revenue"
       FROM "orders" o
       LEFT JOIN "zones" z ON z.id = o."zoneId"
       WHERE o."createdAt" >= ${range.startDate}
@@ -556,6 +571,9 @@ async function buildBI(query: any) {
       totalDrivers: userCountMap.DRIVER || 0,
       totalAdmins: userCountMap.ADMIN || 0,
       totalRevenue: financial.totalRevenue,
+      shippingRevenue: financial.shippingRevenue,
+      itemValue: financial.itemValue,
+      codTotal: financial.codTotal,
       owedToMerchants: financial.cards.owedToMerchants,
       settledToMerchants: financial.cards.settledToMerchants,
     },
@@ -624,9 +642,9 @@ router.get('/dashboard', authenticate, requireRole('ADMIN'), async (req: AuthReq
       prisma.order.count({ where: { status: { in: [...DELIVERED_STATUSES] } } }),
       prisma.order.count({ where: { status: 'CANCELLED' } }),
       prisma.order.count({ where: { status: 'RETURNED' } }),
-      prisma.order.aggregate({ where: { createdAt: { gte: todayStart }, status: { notIn: ['CANCELLED', 'RETURNED'] } }, _sum: { totalPrice: true } }),
-      prisma.order.aggregate({ where: { createdAt: { gte: weekStart }, status: { notIn: ['CANCELLED', 'RETURNED'] } }, _sum: { totalPrice: true } }),
-      prisma.order.aggregate({ where: { createdAt: { gte: monthStart }, status: { notIn: ['CANCELLED', 'RETURNED'] } }, _sum: { totalPrice: true } }),
+      prisma.order.aggregate({ where: { createdAt: { gte: todayStart }, status: { notIn: ['CANCELLED', 'RETURNED'] } }, _sum: { deliveryFee: true, addonsTotal: true } }),
+      prisma.order.aggregate({ where: { createdAt: { gte: weekStart }, status: { notIn: ['CANCELLED', 'RETURNED'] } }, _sum: { deliveryFee: true, addonsTotal: true } }),
+      prisma.order.aggregate({ where: { createdAt: { gte: monthStart }, status: { notIn: ['CANCELLED', 'RETURNED'] } }, _sum: { deliveryFee: true, addonsTotal: true } }),
       prisma.user.count({ where: { role: 'CLIENT', isActive: true } }),
       prisma.user.count({ where: { role: 'DRIVER' } }),
       prisma.user.count({ where: { role: 'DRIVER', isActive: true } }),
@@ -639,9 +657,9 @@ router.get('/dashboard', authenticate, requireRole('ADMIN'), async (req: AuthReq
       deliveredOrders,
       cancelledOrders,
       returnedOrders,
-      revenueToday: money(revenueToday._sum.totalPrice),
-      revenueWeek: money(revenueWeek._sum.totalPrice),
-      revenueMonth: money(revenueMonth._sum.totalPrice),
+      revenueToday: money(revenueToday._sum.deliveryFee) + money(revenueToday._sum.addonsTotal),
+      revenueWeek: money(revenueWeek._sum.deliveryFee) + money(revenueWeek._sum.addonsTotal),
+      revenueMonth: money(revenueMonth._sum.deliveryFee) + money(revenueMonth._sum.addonsTotal),
       totalClients,
       totalDrivers,
       activeDrivers,
@@ -727,6 +745,10 @@ router.get('/driver/:id', authenticate, requireRole('ADMIN'), async (req, res) =
           shipmentNumber: true,
           status: true,
           totalPrice: true,
+          itemPrice: true,
+          deliveryFee: true,
+          addonsTotal: true,
+          grandTotal: true,
           deliveryType: true,
           createdAt: true,
           updatedAt: true,
@@ -783,6 +805,10 @@ router.get('/client/:id', authenticate, requireRole('ADMIN'), async (req, res) =
           shipmentNumber: true,
           status: true,
           totalPrice: true,
+          itemPrice: true,
+          deliveryFee: true,
+          addonsTotal: true,
+          grandTotal: true,
           deliveryType: true,
           createdAt: true,
           collectionStatus: true,
@@ -801,13 +827,13 @@ router.get('/client/:id', authenticate, requireRole('ADMIN'), async (req, res) =
     const returned = orders.filter((o) => o.status === 'RETURNED').length;
     const notCollected = orders
       .filter((o) => DELIVERED_STATUSES.includes(o.status as any) && o.collectionStatus === 'NOT_COLLECTED')
-      .reduce((sum, o) => sum + o.totalPrice, 0);
+      .reduce((sum, o) => sum + (o.grandTotal || o.totalPrice), 0);
     const unsettled = orders
       .filter((o) => ['DRIVER_COLLECTED', 'COMPANY_RECEIVED'].includes(o.collectionStatus))
-      .reduce((sum, o) => sum + o.totalPrice, 0);
+      .reduce((sum, o) => sum + o.itemPrice, 0);
     const settled = orders
       .filter((o) => o.collectionStatus === 'SETTLED_TO_MERCHANT')
-      .reduce((sum, o) => sum + o.totalPrice, 0);
+      .reduce((sum, o) => sum + o.itemPrice, 0);
 
     return res.json({
       client,

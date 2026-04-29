@@ -1,8 +1,10 @@
 import { Router } from 'express';
 import { z } from 'zod';
+import { DeliveryType } from '@prisma/client';
 import { authenticate, requireRole } from '../middleware/auth';
 import { prisma } from '../lib/prisma';
 import { deleteCacheByPrefix, getCache, setCache, TTL } from '../utils/cache';
+import { calculatePrice } from '../services/pricing.service';
 
 const router = Router();
 
@@ -37,6 +39,16 @@ function normalizePricingRule(data: z.infer<typeof pricingRuleSchema>) {
   };
 }
 
+function roundMoney(value: number) {
+  return Math.round(Number(value || 0) * 100) / 100;
+}
+
+function normalizeAddons(addons: Array<{ name: string; amount: number }>) {
+  return addons
+    .map((addon) => ({ name: addon.name.trim(), amount: roundMoney(addon.amount) }))
+    .filter((addon) => addon.name.length > 0 && addon.amount > 0);
+}
+
 // GET /api/pricing-rules
 router.get('/', authenticate, async (req, res) => {
   try {
@@ -47,6 +59,30 @@ router.get('/', authenticate, async (req, res) => {
     return res.json(setCache('pricing:rules', { rules }, TTL.staticData));
   } catch {
     return res.status(500).json({ error: 'Failed to fetch pricing rules' });
+  }
+});
+
+// POST /api/pricing-rules/estimate
+router.post('/estimate', authenticate, async (req, res) => {
+  try {
+    const parsed = z.object({
+      deliveryType: z.enum(['STANDARD', 'EXPRESS', 'SAME_DAY']),
+      zoneId: z.string().uuid(),
+      itemPrice: z.coerce.number().min(0).optional().default(0),
+      addons: z.array(z.object({
+        name: z.string().trim().min(1).max(80),
+        amount: z.coerce.number().min(0).max(100000),
+      })).optional().default([]),
+    }).parse(req.body);
+    const deliveryFee = await calculatePrice({ deliveryType: parsed.deliveryType as DeliveryType, zoneId: parsed.zoneId });
+    const normalizedAddons = normalizeAddons(parsed.addons);
+    const addonsTotal = roundMoney(normalizedAddons.reduce((sum, addon) => sum + addon.amount, 0));
+    const itemPrice = roundMoney(parsed.itemPrice);
+    const grandTotal = roundMoney(itemPrice + deliveryFee + addonsTotal);
+    return res.json({ itemPrice, deliveryFee, addons: normalizedAddons, addonsTotal, grandTotal, price: grandTotal });
+  } catch (err: any) {
+    if (err.name === 'ZodError') return res.status(400).json({ error: err.errors });
+    return res.status(400).json({ error: err.message || 'Failed to estimate price' });
   }
 });
 

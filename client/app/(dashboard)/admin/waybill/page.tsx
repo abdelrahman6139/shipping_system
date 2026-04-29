@@ -27,6 +27,11 @@ type Order = {
   status?: string
   collectionStatus?: string
   totalPrice?: number
+  itemPrice?: number
+  deliveryFee?: number
+  addonsTotal?: number
+  grandTotal?: number
+  addons?: { name?: string; amount?: number }[]
   notes?: string
   createdAt?: string
   client?: { id?: string; name?: string; email?: string; phone?: string } | null

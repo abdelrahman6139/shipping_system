@@ -38,6 +38,11 @@ const createOrderSchema = z.object({
   deliveryType:       z.enum(['STANDARD', 'EXPRESS', 'SAME_DAY']).default('STANDARD'),
   zoneId:             z.string().uuid('يجب اختيار منطقة صحيحة'),
   notes:              z.string().optional(),
+  itemPrice:          z.coerce.number().positive('سعر المنتج يجب أن يكون أكبر من صفر'),
+  addons:             z.array(z.object({
+    name:   z.string().trim().min(1).max(80),
+    amount: z.coerce.number().min(0).max(100000),
+  })).optional().default([]),
 });
 
 const updateStatusSchema = z.object({
@@ -65,6 +70,31 @@ function canDriverUpdateStatus(currentStatus: OrderStatus, nextStatus: OrderStat
   if (DRIVER_BLOCKED_TARGET_STATUSES.includes(nextStatus)) return false;
   if (currentStatus === nextStatus) return true;
   return DRIVER_STATUS_TRANSITIONS[currentStatus]?.includes(nextStatus) ?? false;
+}
+
+function roundMoney(value: number) {
+  return Math.round(Number(value || 0) * 100) / 100;
+}
+
+function normalizeAddons(addons: Array<{ name: string; amount: number }>) {
+  return addons
+    .map((addon) => ({ name: addon.name.trim(), amount: roundMoney(addon.amount) }))
+    .filter((addon) => addon.name.length > 0 && addon.amount > 0);
+}
+
+function getOrderPricing(itemPrice: number, deliveryFee: number, addons: Array<{ name: string; amount: number }>) {
+  const normalizedAddons = normalizeAddons(addons);
+  const addonsTotal = roundMoney(normalizedAddons.reduce((sum, addon) => sum + addon.amount, 0));
+  const roundedItemPrice = roundMoney(itemPrice);
+  const roundedDeliveryFee = roundMoney(deliveryFee);
+  const grandTotal = roundMoney(roundedItemPrice + roundedDeliveryFee + addonsTotal);
+  return {
+    itemPrice: roundedItemPrice,
+    deliveryFee: roundedDeliveryFee,
+    addons: normalizedAddons,
+    addonsTotal,
+    grandTotal,
+  };
 }
 
 function invalidateOrderCaches(shipmentNumber?: string | null) {
@@ -107,10 +137,20 @@ router.get('/track/:shipmentNumber', async (req, res) => {
 // POST /api/orders/calculate-price
 router.post('/calculate-price', authenticate, async (req: AuthRequest, res) => {
   try {
-    const { deliveryType, zoneId } = req.body;
-    const price = await calculatePrice({ deliveryType, zoneId });
-    return res.json({ price });
+    const parsed = z.object({
+      deliveryType: z.enum(['STANDARD', 'EXPRESS', 'SAME_DAY']),
+      zoneId:       z.string().uuid(),
+      itemPrice:    z.coerce.number().min(0).optional().default(0),
+      addons:       z.array(z.object({
+        name:   z.string().trim().min(1).max(80),
+        amount: z.coerce.number().min(0).max(100000),
+      })).optional().default([]),
+    }).parse(req.body);
+    const deliveryFee = await calculatePrice({ deliveryType: parsed.deliveryType as DeliveryType, zoneId: parsed.zoneId });
+    const pricing = getOrderPricing(parsed.itemPrice, deliveryFee, parsed.addons);
+    return res.json({ price: pricing.grandTotal, ...pricing });
   } catch (err: any) {
+    if (err.name === 'ZodError') return res.status(400).json({ error: err.errors });
     return res.status(400).json({ error: err.message });
   }
 });
@@ -161,7 +201,8 @@ router.get('/', authenticate, async (req: AuthRequest, res) => {
         where,
         select: {
           id: true, shipmentNumber: true, status: true, deliveryType: true,
-          collectionStatus: true, totalPrice: true, createdAt: true, updatedAt: true,
+          collectionStatus: true, totalPrice: true, itemPrice: true, deliveryFee: true,
+          addonsTotal: true, grandTotal: true, addons: true, createdAt: true, updatedAt: true,
           recipientName: true, recipientPhone: true,
           pickupAddress: true, destination: true, packageDescription: true, notes: true,
           cancellationReason: true, returnReason: true, returnFrom: true,
@@ -218,7 +259,8 @@ router.get('/:id', authenticate, async (req: AuthRequest, res) => {
 router.post('/', authenticate, requireRole('CLIENT', 'ADMIN'), async (req: AuthRequest, res) => {
   try {
     const data     = createOrderSchema.parse(req.body);
-    const price    = await calculatePrice({ deliveryType: data.deliveryType as DeliveryType, zoneId: data.zoneId });
+    const deliveryFee = await calculatePrice({ deliveryType: data.deliveryType as DeliveryType, zoneId: data.zoneId });
+    const pricing = getOrderPricing(data.itemPrice, deliveryFee, data.addons);
     const clientId = req.user?.role === 'CLIENT' ? req.user.userId : (req.body.clientId || req.user?.userId);
 
     let shipmentNumber = generateShipmentNumber();
@@ -230,10 +272,22 @@ router.post('/', authenticate, requireRole('CLIENT', 'ADMIN'), async (req: AuthR
 
     const order = await prisma.order.create({
       data: {
-        ...data,
+        recipientName:      data.recipientName,
+        recipientPhone:     data.recipientPhone,
+        pickupAddress:      data.pickupAddress,
+        destination:        data.destination,
+        packageDescription: data.packageDescription,
+        deliveryType:       data.deliveryType as DeliveryType,
+        zoneId:             data.zoneId,
+        notes:              data.notes,
         shipmentNumber,
         clientId: clientId!,
-        totalPrice: price,
+        itemPrice: pricing.itemPrice,
+        deliveryFee: pricing.deliveryFee,
+        addons: pricing.addons,
+        addonsTotal: pricing.addonsTotal,
+        grandTotal: pricing.grandTotal,
+        totalPrice: pricing.grandTotal,
         collectionStatus: 'NOT_COLLECTED',
       },
       include: {
@@ -253,7 +307,7 @@ router.post('/', authenticate, requireRole('CLIENT', 'ADMIN'), async (req: AuthR
       io.to(`user:${order.clientId}`).emit('order:created', order);
     }
 
-    return res.status(201).json({ order, price });
+    return res.status(201).json({ order, price: pricing.grandTotal, pricing });
   } catch (err: any) {
     if (err.name === 'ZodError') return res.status(400).json({ error: err.errors });
     return res.status(500).json({ error: err.message || 'فشل في إنشاء الطلب' });
@@ -271,18 +325,43 @@ router.put('/:id', authenticate, async (req: AuthRequest, res) => {
       if (order.status !== 'PENDING')         return res.status(400).json({ error: 'يمكن تعديل الطلبات المعلقة فقط' });
     }
 
-    const { pickupAddress, destination, packageDescription, deliveryType, zoneId, notes } = req.body;
-    let totalPrice = order.totalPrice;
-    if (deliveryType || zoneId) {
-      totalPrice = await calculatePrice({
+    const { pickupAddress, destination, packageDescription, deliveryType, zoneId, notes, itemPrice, addons } = req.body;
+    let pricing: ReturnType<typeof getOrderPricing> | null = null;
+    if (deliveryType || zoneId || itemPrice !== undefined || addons !== undefined) {
+      const parsedAddons = addons !== undefined
+        ? z.array(z.object({
+            name:   z.string().trim().min(1).max(80),
+            amount: z.coerce.number().min(0).max(100000),
+          })).parse(addons)
+        : ((Array.isArray(order.addons) ? order.addons : []) as Array<{ name: string; amount: number }>);
+      const nextItemPrice = itemPrice !== undefined
+        ? z.coerce.number().positive('سعر المنتج يجب أن يكون أكبر من صفر').parse(itemPrice)
+        : Number(order.itemPrice || 0);
+      const deliveryFee = await calculatePrice({
         deliveryType: (deliveryType || order.deliveryType) as DeliveryType,
         zoneId:       zoneId || order.zoneId!,
       });
+      pricing = getOrderPricing(nextItemPrice, deliveryFee, parsedAddons);
     }
 
     const updated = await prisma.order.update({
       where:   { id: req.params.id },
-      data:    { pickupAddress, destination, packageDescription, deliveryType, zoneId, notes, totalPrice },
+      data:    {
+        pickupAddress,
+        destination,
+        packageDescription,
+        deliveryType,
+        zoneId,
+        notes,
+        ...(pricing ? {
+          itemPrice: pricing.itemPrice,
+          deliveryFee: pricing.deliveryFee,
+          addons: pricing.addons,
+          addonsTotal: pricing.addonsTotal,
+          grandTotal: pricing.grandTotal,
+          totalPrice: pricing.grandTotal,
+        } : {}),
+      },
       include: {
         client: { select: { id: true, name: true, email: true } },
         zone:   true,
@@ -350,11 +429,12 @@ router.patch('/:id/status', authenticate, requireRole('DRIVER', 'ADMIN'), async 
     // Create driver earning when delivered
     if (status === 'DELIVERED' && order.driverId) {
       const { amount, commissionType, commissionValue } = await getDriverEarningAmount(
-        order.totalPrice,
+        order.deliveryFee || order.totalPrice,
         order.driverId,
         order.zoneId ?? undefined
       );
-      const companyProfit = Math.round((order.totalPrice - amount) * 100) / 100;
+      const shippingRevenue = (order.deliveryFee || 0) + (order.addonsTotal || 0);
+      const companyProfit = Math.round((shippingRevenue - amount) * 100) / 100;
       await prisma.driverEarning.upsert({
         where:  { orderId: order.id },
         update: { amount, orderTotal: order.totalPrice, companyProfit, commissionType, commissionValue },

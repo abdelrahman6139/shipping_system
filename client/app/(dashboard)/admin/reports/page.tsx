@@ -28,7 +28,9 @@ import {
   BarChart2,
   CheckCircle,
   Clock,
+  Download,
   DollarSign,
+  Loader2,
   Package,
   RefreshCw,
   Truck,
@@ -115,6 +117,7 @@ export default function AdminReportsPage() {
   const [endDate, setEndDate] = useState("")
   const [isLoading, setIsLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [isExporting, setIsExporting] = useState(false)
 
   const fetchData = useCallback(async (showLoader = false) => {
     if (showLoader) setIsLoading(true)
@@ -136,6 +139,31 @@ export default function AdminReportsPage() {
   useEffect(() => {
     fetchData(true)
   }, [fetchData])
+
+  const exportReports = async () => {
+    setIsExporting(true)
+    try {
+      const params: Record<string, string | number> = { range }
+      if (range === "custom") {
+        if (startDate) params.startDate = startDate
+        if (endDate) params.endDate = endDate
+      }
+      const res = await api.get("/admin/export/reports.xlsx", { params, responseType: "blob" })
+      const url = window.URL.createObjectURL(new Blob([res.data]))
+      const a = document.createElement("a")
+      a.href = url
+      a.download = `reports-${new Date().toISOString().slice(0, 10)}.xlsx`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      window.URL.revokeObjectURL(url)
+    } catch {
+      // Keep export errors visible without changing report data.
+      alert("فشل تصدير ملف Excel")
+    } finally {
+      setIsExporting(false)
+    }
+  }
 
   const revenueData = useMemo(() => (data?.orderAnalytics?.revenueByDay || []).map((row: any) => ({
     name: new Date(row.date).toLocaleDateString("ar-EG", { month: "short", day: "numeric" }),
@@ -235,11 +263,16 @@ export default function AdminReportsPage() {
           <Button variant="outline" size="sm" onClick={() => fetchData()} disabled={isRefreshing} className="gap-2">
             <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} /> تحديث
           </Button>
+          <Button variant="outline" size="sm" onClick={exportReports} disabled={isExporting} className="gap-2">
+            {isExporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+            تصدير Excel
+          </Button>
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-        <KpiCard title="إجمالي الإيراد" value={formatMoney(data?.summary?.totalRevenue)} icon={DollarSign} tone="text-emerald-600" />
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
+        <KpiCard title="إيراد الشحن" value={formatMoney(data?.summary?.shippingRevenue ?? data?.summary?.totalRevenue)} hint="الشحن + الإضافات فقط" icon={DollarSign} tone="text-emerald-600" />
+        <KpiCard title="قيمة المنتجات" value={formatMoney(data?.summary?.itemValue)} hint="ليست إيراد شحن" icon={Package} tone="text-orange-600" />
         <KpiCard title="مستحق للتجار" value={formatMoney(data?.summary?.owedToMerchants)} hint="مبالغ حصلت ولم تسو بعد" icon={Banknote} tone="text-sky-600" />
         <KpiCard title="مسوى للتجار" value={formatMoney(data?.summary?.settledToMerchants)} icon={CheckCircle} tone="text-green-600" />
         <KpiCard title="إجمالي الطلبات" value={data?.summary?.totalOrders || 0} icon={Package} tone="text-primary" />

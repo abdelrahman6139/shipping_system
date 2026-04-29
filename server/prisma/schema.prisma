@@ -137,6 +137,11 @@ model Order {
   deliveryType         DeliveryType     @default(STANDARD)
   status               OrderStatus      @default(PENDING)
   totalPrice           Float
+  itemPrice            Float            @default(0)
+  deliveryFee          Float            @default(0)
+  addonsTotal          Float            @default(0)
+  grandTotal           Float            @default(0)
+  addons               Json             @default("[]")
   zoneId               String?
   zone                 Zone?            @relation(fields: [zoneId], references: [id])
   notes                String?
