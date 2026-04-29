@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import { useAuth } from "@/context/AuthContext"
+import { useLanguage } from "@/context/LanguageContext"
 import Sidebar from "@/components/Sidebar"
 import Header from "@/components/Header"
 import Link from "next/link"
@@ -15,6 +16,7 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   const { user, isLoading } = useAuth()
+  const { t, dir } = useLanguage()
   const router = useRouter()
   const pathname = usePathname()
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
@@ -35,7 +37,7 @@ export default function DashboardLayout({
       <div className="flex h-screen w-full items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
           <div className="h-10 w-10 rounded-full border-4 border-primary border-t-transparent animate-spin" />
-          <p className="text-sm text-muted-foreground">جاري التحميل...</p>
+          <p className="text-sm text-muted-foreground">{t("loading")}</p>
         </div>
       </div>
     )
@@ -44,23 +46,23 @@ export default function DashboardLayout({
   const getMobileLinks = () => {
     if (user.role === "ADMIN") {
       return [
-        { href: "/admin", label: "الرئيسية", icon: Shield },
-        { href: "/admin/orders", label: "الطلبات", icon: Package },
-        { href: "/admin/users", label: "المستخدمون", icon: Users },
-        { href: "/admin/tickets", label: "التذاكر", icon: Ticket },
+        { href: "/admin", label: t("home"), icon: Shield },
+        { href: "/admin/orders", label: t("adminOrders"), icon: Package },
+        { href: "/admin/users", label: t("adminUsers"), icon: Users },
+        { href: "/admin/tickets", label: t("adminTickets"), icon: Ticket },
       ]
     }
     if (user.role === "DRIVER") {
       return [
-        { href: "/driver", label: "التوصيل", icon: Truck },
-        { href: "/driver/earnings", label: "الأرباح", icon: DollarSign },
+        { href: "/driver", label: t("delivery"), icon: Truck },
+        { href: "/driver/earnings", label: t("driverEarnings"), icon: DollarSign },
       ]
     }
     return [
-      { href: "/client", label: "الرئيسية", icon: Package },
-      { href: "/client/new-order", label: "طلب جديد", icon: Plus },
-      { href: "/client/orders", label: "طلباتي", icon: LayoutDashboard },
-      { href: "/client/tickets", label: "الدعم", icon: Ticket },
+      { href: "/client", label: t("home"), icon: Package },
+      { href: "/client/new-order", label: t("clientNewOrder"), icon: Plus },
+      { href: "/client/orders", label: t("clientHome"), icon: LayoutDashboard },
+      { href: "/client/tickets", label: t("clientTickets"), icon: Ticket },
     ]
   }
 
@@ -74,7 +76,7 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
+    <div className="flex h-screen overflow-hidden bg-background" dir={dir}>
       <Sidebar isMobileOpen={isSidebarOpen} onMobileClose={() => setIsSidebarOpen(false)} />
       <div className="flex flex-1 flex-col overflow-hidden min-w-0">
         <Header onMenuToggle={() => setIsSidebarOpen((prev) => !prev)} />
