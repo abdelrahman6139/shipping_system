@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 import api from "@/lib/api"
-import { Search, MessageSquare, CheckCircle, Clock, Send, User } from "lucide-react"
+import { Search, MessageSquare, CheckCircle, Clock, Send, User, ChevronLeft, ChevronRight } from "lucide-react"
 import { toast } from "sonner"
 import { useAuth } from "@/context/AuthContext"
 
@@ -17,6 +17,9 @@ export default function AdminTicketsPage() {
   const [tickets, setTickets] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [search, setSearch] = useState("")
+  const [debouncedSearch, setDebouncedSearch] = useState("")
+  const [page, setPage] = useState(1)
+  const [pagination, setPagination] = useState({ page: 1, limit: 20, total: 0, totalPages: 1, hasNext: false, hasPrev: false })
 
   // Reply dialog
   const [replyOpen, setReplyOpen] = useState(false)
@@ -26,18 +29,30 @@ export default function AdminTicketsPage() {
   const [replyLoading, setReplyLoading] = useState(false)
   const [messagesLoading, setMessagesLoading] = useState(false)
 
-  useEffect(() => { fetchTickets() }, [])
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setDebouncedSearch(search.trim())
+      setPage(1)
+    }, 350)
+    return () => clearTimeout(timeout)
+  }, [search])
 
-  const fetchTickets = async () => {
+  const fetchTickets = useCallback(async () => {
+    setIsLoading(true)
     try {
-      const { data } = await api.get('/tickets')
+      const params: Record<string, string | number> = { page, limit: 20 }
+      if (debouncedSearch) params.search = debouncedSearch
+      const { data } = await api.get('/tickets', { params })
       setTickets(data.tickets || [])
+      setPagination(data.pagination || { page, limit: 20, total: 0, totalPages: 1, hasNext: false, hasPrev: false })
     } catch (e) {
       console.error(e)
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [debouncedSearch, page])
+
+  useEffect(() => { fetchTickets() }, [fetchTickets])
 
   const updateTicketStatus = async (id: string, status: string) => {
     try {
@@ -85,11 +100,6 @@ export default function AdminTicketsPage() {
     }
   }
 
-  const filteredTickets = tickets.filter((t: any) =>
-    t.subject.toLowerCase().includes(search.toLowerCase()) ||
-    t.client?.name?.toLowerCase().includes(search.toLowerCase())
-  )
-
   const getStatusBadge = (status: string) => {
     switch(status) {
       case 'OPEN': return <Badge variant="destructive" className="bg-red-100 text-red-800 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-500"><Clock className="w-3 h-3 mr-1"/> مفتوحة</Badge>
@@ -112,7 +122,7 @@ export default function AdminTicketsPage() {
         <CardHeader className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
           <div>
             <CardTitle>استفسارات العملاء</CardTitle>
-            <CardDescription>جميع التذاكر ({filteredTickets.length})</CardDescription>
+            <CardDescription>جميع التذاكر ({pagination.total})</CardDescription>
           </div>
           <div className="relative w-full sm:w-64">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -133,7 +143,7 @@ export default function AdminTicketsPage() {
               <tbody>
                 {isLoading ? (
                   <tr><td colSpan={4} className="p-8 text-center text-muted-foreground">جاري تحميل التذاكر...</td></tr>
-                ) : filteredTickets.length === 0 ? (
+                ) : tickets.length === 0 ? (
                   <tr><td colSpan={4} className="p-8 text-center text-muted-foreground">
                     <div className="flex flex-col items-center">
                       <MessageSquare className="w-10 h-10 opacity-20 mb-2" />
@@ -141,13 +151,13 @@ export default function AdminTicketsPage() {
                     </div>
                   </td></tr>
                 ) : (
-                  filteredTickets.map((t: any) => (
+                  tickets.map((t: any) => (
                     <tr key={t.id} className="border-b transition-colors hover:bg-muted/40 last:border-0">
                       <td className="p-4 align-top">
                         <div className="font-medium text-[15px]">{t.subject}</div>
                         <div className="text-muted-foreground text-xs mt-1">#{t.id.slice(0,8)} • {new Date(t.createdAt).toLocaleDateString()}</div>
-                        {t.messages && t.messages.length > 0 && (
-                          <div className="text-muted-foreground text-xs mt-1">{t.messages.length} رسائل</div>
+                        {((t._count?.messages || t.messages?.length || 0) > 0) && (
+                          <div className="text-muted-foreground text-xs mt-1">{t._count?.messages || t.messages.length} رسائل</div>
                         )}
                       </td>
                       <td className="p-4 align-top">
@@ -173,6 +183,19 @@ export default function AdminTicketsPage() {
               </tbody>
             </table>
           </div>
+          {pagination.totalPages > 1 && (
+            <div className="mt-4 flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">صفحة {pagination.page} من {pagination.totalPages}</p>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" disabled={!pagination.hasPrev} onClick={() => setPage((value) => Math.max(value - 1, 1))}>
+                  <ChevronRight className="ml-1 h-4 w-4" /> السابق
+                </Button>
+                <Button variant="outline" size="sm" disabled={!pagination.hasNext} onClick={() => setPage((value) => value + 1)}>
+                  التالي <ChevronLeft className="mr-1 h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
