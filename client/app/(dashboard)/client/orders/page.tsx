@@ -14,12 +14,13 @@ import {
   Download, FileText, Search, MapPin, Truck, Calendar,
   DollarSign, Package, Phone, User, Plus, Loader2,
   CheckCircle2, Clock, Boxes, XCircle, ChevronLeft, ChevronRight,
-  Building2, Ruler, StickyNote, Filter, Banknote, PackageCheck,
+  Building2, StickyNote, Filter, Banknote, PackageCheck,
 } from "lucide-react"
 
 /* ─────────────────────────── TYPES ─────────────────────────── */
 type Order = {
   id: string
+  shipmentNumber?: string
   destination: string
   pickupAddress: string
   recipientName?: string
@@ -28,10 +29,9 @@ type Order = {
   totalPrice: number
   status: string
   deliveryType: string
-  weight: number
-  length?: number
-  width?: number
-  height?: number
+  collectionStatus?: string
+  cancellationReason?: string
+  returnReason?: string
   notes?: string
   createdAt: string
   zone?: { name: string }
@@ -46,9 +46,10 @@ const STATUS_CFG: Record<string, { label: string; bg: string; text: string; dot:
   ASSIGNED:   { label: "تم التعيين",         bg: "bg-blue-50    dark:bg-blue-900/20",    text: "text-blue-700    dark:text-blue-400",    dot: "bg-blue-400",     icon: Truck,        step: 1 },
   PICKED_UP:  { label: "تم الاستلام",        bg: "bg-violet-50  dark:bg-violet-900/20",  text: "text-violet-700  dark:text-violet-400",  dot: "bg-violet-400",   icon: Boxes,        step: 2 },
   IN_TRANSIT: { label: "جاري التوصيل",       bg: "bg-indigo-50  dark:bg-indigo-900/20",  text: "text-indigo-700  dark:text-indigo-400",  dot: "bg-indigo-400",   icon: Truck,        step: 3 },
-  DELIVERED:  { label: "في انتظار التحصيل", bg: "bg-orange-50  dark:bg-orange-900/20",  text: "text-orange-700  dark:text-orange-400",  dot: "bg-orange-500",   icon: PackageCheck, step: 4 },
-  COLLECTED:  { label: "تم التحصيل",        bg: "bg-emerald-50 dark:bg-emerald-900/20", text: "text-emerald-700 dark:text-emerald-400", dot: "bg-emerald-500",  icon: Banknote,     step: 4 },
+  DELIVERED:  { label: "تم التسليم",        bg: "bg-emerald-50 dark:bg-emerald-900/20", text: "text-emerald-700 dark:text-emerald-400", dot: "bg-emerald-500", icon: PackageCheck, step: 4 },
+  COLLECTED:  { label: "تم التسليم",        bg: "bg-emerald-50 dark:bg-emerald-900/20", text: "text-emerald-700 dark:text-emerald-400", dot: "bg-emerald-500", icon: PackageCheck, step: 4 },
   CANCELLED:  { label: "ملغي",              bg: "bg-red-50     dark:bg-red-900/20",     text: "text-red-700     dark:text-red-400",     dot: "bg-red-500",      icon: XCircle,      step: -1 },
+  RETURNED:   { label: "مرتجع",             bg: "bg-purple-50  dark:bg-purple-900/20",  text: "text-purple-700  dark:text-purple-400",  dot: "bg-purple-500",   icon: XCircle,      step: -1 },
 }
 
 const DELIVERY_LABEL: Record<string, string> = {
@@ -66,10 +67,16 @@ const STATUS_FILTERS = [
   { value: "ASSIGNED",   label: "معيّن" },
   { value: "PICKED_UP",  label: "استُلم" },
   { value: "IN_TRANSIT", label: "في الطريق" },
-  { value: "DELIVERED",  label: "لم يُحصَّل" },
-  { value: "COLLECTED",  label: "تم التحصيل" },
+  { value: "DELIVERED",  label: "تم التسليم" },
   { value: "CANCELLED",  label: "ملغي" },
 ]
+
+const COLLECTION_LABEL: Record<string, { title: string; detail: string; cls: string }> = {
+  NOT_COLLECTED: { title: "لم يحصل من العميل بعد", detail: "لا توجد مبالغ جاهزة للتسوية مع التاجر.", cls: "text-orange-700 dark:text-orange-400" },
+  DRIVER_COLLECTED: { title: "السائق حصل من العميل", detail: "المبلغ لم يصل للشركة ولم يسو للتاجر بعد.", cls: "text-sky-700 dark:text-sky-400" },
+  COMPANY_RECEIVED: { title: "الشركة استلمت المبلغ", detail: "المبلغ في انتظار التسوية مع التاجر.", cls: "text-violet-700 dark:text-violet-400" },
+  SETTLED_TO_MERCHANT: { title: "تمت التسوية مع التاجر", detail: "تم دفع مستحقات هذه الشحنة للتاجر.", cls: "text-emerald-700 dark:text-emerald-400" },
+}
 
 /* ─────────────────────────── COMPONENTS ────────────────────── */
 function StatusPill({ status }: { status: string }) {
@@ -202,7 +209,7 @@ export default function ClientOrdersPage() {
     const socket = connectSocket()
     socket.emit("join", { userId: user.id, role: user.role })
     const refresh = () => fetchOrders()
-    const events = ["order:created","order:updated","order:assigned","order:statusUpdated","order:cancelled"]
+    const events = ["order:created","order:updated","order:assigned","order:statusUpdated","order:collectionUpdated","order:cancelled"]
     events.forEach(e => socket.on(e, refresh))
     return () => events.forEach(e => socket.off(e, refresh))
   }, [fetchOrders, user])
@@ -465,41 +472,22 @@ export default function ClientOrdersPage() {
                 <Timeline status={selected.status} />
               </div>
 
-              {/* Cash Collection Status - read-only for client */}
-              {(selected.status === "DELIVERED" || selected.status === "COLLECTED") && (
-                <div className={`rounded-xl border p-4 flex items-center gap-3 ${
-                  selected.status === "COLLECTED"
-                    ? "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-900"
-                    : "bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-900"
-                }`}>
-                  <div className={`h-10 w-10 rounded-full flex items-center justify-center shrink-0 ${
-                    selected.status === "COLLECTED"
-                      ? "bg-emerald-100 dark:bg-emerald-900/40"
-                      : "bg-orange-100 dark:bg-orange-900/40"
-                  }`}>
-                    <Banknote className={`h-5 w-5 ${
-                      selected.status === "COLLECTED" ? "text-emerald-600 dark:text-emerald-400" : "text-orange-600 dark:text-orange-400"
-                    }`} />
+              {/* Collection / merchant settlement status */}
+              {selected.status === "DELIVERED" && (() => {
+                const c = COLLECTION_LABEL[selected.collectionStatus || "NOT_COLLECTED"]
+                return (
+                  <div className="flex items-center gap-3 rounded-xl border bg-muted/30 p-4">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-background">
+                      <Banknote className={`h-5 w-5 ${c?.cls || "text-muted-foreground"}`} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">التحصيل والتسوية</p>
+                      <p className={`text-sm font-semibold ${c?.cls || ""}`}>{c?.title || selected.collectionStatus}</p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">{c?.detail}</p>
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">التحصيل المالي</p>
-                    <p className={`text-sm font-semibold ${
-                      selected.status === "COLLECTED"
-                        ? "text-emerald-700 dark:text-emerald-400"
-                        : "text-orange-700 dark:text-orange-400"
-                    }`}>
-                      {selected.status === "COLLECTED"
-                        ? "✓ تم استلام مبلغ الشحنة"
-                        : "في انتظار استلام مبلغ الشحنة"}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {selected.status === "COLLECTED"
-                        ? "تم تحصيل مبلغ شحنتك بنجاح"
-                        : "لم يتم تحصيل مبلغ شحنتك بعد"}
-                    </p>
-                  </div>
-                </div>
-              )}
+                )
+              })()}
 
               {/* Recipient card */}
               <div className="rounded-xl border p-4 bg-muted/30 space-y-3">
@@ -520,9 +508,9 @@ export default function ClientOrdersPage() {
                   <InfoRow icon={<MapPin className="h-4 w-4 text-green-500" />} label="عنوان الاستلام" value={selected.pickupAddress} />
                   <InfoRow icon={<Building2 className="h-4 w-4 text-muted-foreground" />} label="المنطقة" value={selected.zone?.name || "—"} />
                   <InfoRow icon={<Truck className="h-4 w-4 text-muted-foreground" />} label="نوع التوصيل" value={DELIVERY_LABEL[selected.deliveryType] || selected.deliveryType} />
-                  <InfoRow icon={<Package className="h-4 w-4 text-muted-foreground" />} label="الوزن" value={`${selected.weight} كغ`} />
-                  <InfoRow icon={<Ruler className="h-4 w-4 text-muted-foreground" />} label="الأبعاد"
-                    value={selected.length ? `${selected.length}×${selected.width}×${selected.height} cm` : "—"} dir="ltr" />
+                  {selected.shipmentNumber && (
+                    <InfoRow icon={<Package className="h-4 w-4 text-primary" />} label="رقم الشحنة" value={selected.shipmentNumber} />
+                  )}
                   <InfoRow icon={<Calendar className="h-4 w-4 text-muted-foreground" />} label="التاريخ" value={formatDate(selected.createdAt)} />
                   {selected.packageDescription && (
                     <div className="sm:col-span-2">
