@@ -12,25 +12,23 @@ import {
   Package, MapPin, Truck, CheckCircle2, Clock, Boxes,
   Navigation, Phone, User, Calendar, DollarSign, Banknote,
   PackageCheck, XCircle, Loader2, Search, RefreshCw,
-  Building2, Ruler, StickyNote, ChevronLeft, ChevronRight, Eye,
+  Building2, StickyNote, ChevronLeft, ChevronRight, Eye,
 } from "lucide-react"
 
 /* ─────────────── TYPES ─────────────── */
 type Order = {
   id: string
+  shipmentNumber?: string
   destination: string
   pickupAddress: string
   recipientName?: string
   recipientPhone?: string
   packageDescription?: string
-  weight?: number
-  length?: number
-  width?: number
-  height?: number
   notes?: string
   totalPrice: number
   status: string
   deliveryType: string
+  collectionStatus?: string
   createdAt: string
   updatedAt?: string
   client?: { name?: string; phone?: string; email?: string }
@@ -43,8 +41,8 @@ const STATUS_CFG: Record<string, { label: string; bg: string; text: string; icon
   ASSIGNED:   { label: "تم التعيين",           bg: "bg-blue-50    dark:bg-blue-900/20",    text: "text-blue-700    dark:text-blue-400",    icon: Truck },
   PICKED_UP:  { label: "تم الاستلام",          bg: "bg-violet-50  dark:bg-violet-900/20",  text: "text-violet-700  dark:text-violet-400",  icon: Boxes },
   IN_TRANSIT: { label: "جاري التوصيل",         bg: "bg-indigo-50  dark:bg-indigo-900/20",  text: "text-indigo-700  dark:text-indigo-400",  icon: Truck },
-  DELIVERED:  { label: "في انتظار التحصيل",    bg: "bg-orange-50  dark:bg-orange-900/20",  text: "text-orange-700  dark:text-orange-400",  icon: PackageCheck },
-  COLLECTED:  { label: "تم التحصيل",           bg: "bg-emerald-50 dark:bg-emerald-900/20", text: "text-emerald-700 dark:text-emerald-400", icon: Banknote },
+  DELIVERED:  { label: "تم التسليم",           bg: "bg-emerald-50 dark:bg-emerald-900/20", text: "text-emerald-700 dark:text-emerald-400", icon: PackageCheck },
+  COLLECTED:  { label: "تم التسليم",           bg: "bg-emerald-50 dark:bg-emerald-900/20", text: "text-emerald-700 dark:text-emerald-400", icon: PackageCheck },
   CANCELLED:  { label: "ملغي",                 bg: "bg-red-50     dark:bg-red-900/20",     text: "text-red-700     dark:text-red-400",     icon: XCircle },
 }
 
@@ -59,8 +57,7 @@ const FILTER_TABS = [
   { value: "ASSIGNED",   label: "معيّن" },
   { value: "PICKED_UP",  label: "استُلم" },
   { value: "IN_TRANSIT", label: "في الطريق" },
-  { value: "DELIVERED",  label: "لم يُحصَّل" },
-  { value: "COLLECTED",  label: "تم التحصيل" },
+  { value: "DELIVERED",  label: "تم التسليم" },
 ]
 
 /* ─────────────── COMPONENTS ─────────── */
@@ -120,7 +117,7 @@ export default function DriverDashboard() {
   const [total, setTotal]         = useState(0)
 
   /* stats */
-  const [stats, setStats] = useState({ active: 0, delivered: 0, collected: 0 })
+  const [stats, setStats] = useState({ active: 0, delivered: 0, cashCollected: 0, cashNotCollected: 0 })
 
   /* detail dialog */
   const [selected, setSelected]         = useState<Order | null>(null)
@@ -154,15 +151,12 @@ export default function DriverDashboard() {
   /* fetch stats */
   const fetchStats = useCallback(async () => {
     try {
-      const [activeRes, deliveredRes, collectedRes] = await Promise.all([
-        api.get("/orders", { params: { status: "IN_TRANSIT", limit: 1 } }),
-        api.get("/orders", { params: { status: "DELIVERED",  limit: 1 } }),
-        api.get("/orders", { params: { status: "COLLECTED",  limit: 1 } }),
-      ])
+      const { data } = await api.get("/driver/stats")
       setStats({
-        active:    activeRes.data.pagination?.total || 0,
-        delivered: deliveredRes.data.pagination?.total || 0,
-        collected: collectedRes.data.pagination?.total || 0,
+        active: data.pendingDeliveries || 0,
+        delivered: data.deliveredOrders || 0,
+        cashCollected: data.cashCollected?.amount || 0,
+        cashNotCollected: data.cashNotCollected?.amount || 0,
       })
     } catch {}
   }, [])
@@ -175,7 +169,7 @@ export default function DriverDashboard() {
     const socket = connectSocket()
     socket.emit("join", { userId: user.id, role: user.role })
     const refresh = () => { fetchOrders(); fetchStats() }
-    const evts = ["order:assigned","order:updated","order:statusUpdated","order:cancelled"]
+    const evts = ["order:assigned","order:updated","order:statusUpdated","order:collectionUpdated","order:cancelled"]
     evts.forEach(e => socket.on(e, refresh))
     return () => evts.forEach(e => socket.off(e, refresh))
   }, [fetchOrders, fetchStats, user])
@@ -202,6 +196,19 @@ export default function DriverDashboard() {
       setSelected(data.order)
       fetchOrders(); fetchStats()
     } catch (e: any) { toast.error(e.response?.data?.error || "فشل تحديث الحالة") }
+    finally { setStatusUpd(false) }
+  }
+
+  const markDriverCollected = async () => {
+    if (!selected) return
+    setStatusUpd(true)
+    try {
+      await api.patch(`/orders/${selected.id}/status`, { status: "DELIVERED", collectionStatus: "DRIVER_COLLECTED" })
+      toast.success("تم تسجيل تحصيل الكاش من العميل")
+      const { data } = await api.get(`/orders/${selected.id}`)
+      setSelected(data.order)
+      fetchOrders(); fetchStats()
+    } catch (e: any) { toast.error(e.response?.data?.error || "فشل تسجيل التحصيل") }
     finally { setStatusUpd(false) }
   }
 
@@ -234,15 +241,22 @@ export default function DriverDashboard() {
           </Button>
         )
       case "DELIVERED":
+        if (selected?.collectionStatus === "DRIVER_COLLECTED" || selected?.collectionStatus === "COMPANY_RECEIVED" || selected?.collectionStatus === "SETTLED_TO_MERCHANT") {
+          return (
+            <div className="rounded-lg border border-sky-200 bg-sky-50 p-3 text-center text-sm font-medium text-sky-700 dark:border-sky-800 dark:bg-sky-950/20 dark:text-sky-400">
+              تم تسجيل تحصيل الكاش من العميل. التسوية مع التاجر تتم من الإدارة.
+            </div>
+          )
+        }
         return (
-          <div className="rounded-lg border border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-950/20 p-3 text-sm text-orange-700 dark:text-orange-400 text-center font-medium">
-            ⏳ تم التسليم — في انتظار تحصيل المبلغ من الشركة
-          </div>
+          <Button className="w-full gap-2 bg-sky-600 text-white hover:bg-sky-700" onClick={markDriverCollected}>
+            <Banknote className="h-4 w-4" /> تسجيل تحصيل الكاش من العميل
+          </Button>
         )
       case "COLLECTED":
         return (
           <div className="rounded-lg border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/20 p-3 text-sm text-emerald-700 dark:text-emerald-400 text-center font-medium">
-            ✓ تم تحصيل المبلغ — الطلب مكتمل
+            تم التسليم
           </div>
         )
       case "CANCELLED":
@@ -280,11 +294,12 @@ export default function DriverDashboard() {
       </div>
 
       {/* ── Stats strip ── */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
           { label: "جاري التوصيل",      value: stats.active,    icon: Truck,        cls: "text-indigo-600" },
-          { label: "انتظار التحصيل",    value: stats.delivered, icon: PackageCheck, cls: "text-orange-600" },
-          { label: "تم التحصيل",        value: stats.collected, icon: Banknote,     cls: "text-emerald-600" },
+          { label: "تم التسليم",        value: stats.delivered, icon: PackageCheck, cls: "text-emerald-600" },
+          { label: "كاش مع السائق",     value: `ج.م ${Number(stats.cashCollected).toFixed(0)}`, icon: Banknote, cls: "text-sky-600" },
+          { label: "غير محصل",          value: `ج.م ${Number(stats.cashNotCollected).toFixed(0)}`, icon: DollarSign, cls: "text-orange-600" },
         ].map(s => {
           const Icon = s.icon
           return (
@@ -391,8 +406,8 @@ export default function DriverDashboard() {
                 <div className="flex items-center justify-between border-t pt-3 gap-2" onClick={e => e.stopPropagation()}>
                   <div className="flex items-center gap-2">
                     <DeliveryPill type={order.deliveryType} />
-                    {order.weight && (
-                      <span className="text-xs text-muted-foreground">{order.weight} كغ</span>
+                    {order.shipmentNumber && (
+                      <span className="text-xs text-muted-foreground font-mono">{order.shipmentNumber}</span>
                     )}
                     <span className="text-xs text-muted-foreground">
                       {new Date(order.createdAt).toLocaleDateString("ar-EG", { month: "short", day: "numeric" })}
@@ -522,21 +537,12 @@ export default function DriverDashboard() {
                       <p className="font-medium">{DELIVERY_LABEL[selected.deliveryType] || selected.deliveryType}</p>
                     </div>
                   </div>
-                  {selected.weight != null && (
+                  {selected.shipmentNumber && (
                     <div className="flex items-start gap-2">
-                      <Package className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                      <Package className="h-4 w-4 text-primary mt-0.5 shrink-0" />
                       <div>
-                        <p className="text-[10px] text-muted-foreground">الوزن</p>
-                        <p className="font-medium">{selected.weight} كغ</p>
-                      </div>
-                    </div>
-                  )}
-                  {selected.length && (
-                    <div className="flex items-start gap-2">
-                      <Ruler className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
-                      <div>
-                        <p className="text-[10px] text-muted-foreground">الأبعاد</p>
-                        <p className="font-medium" dir="ltr">{selected.length}×{selected.width}×{selected.height} cm</p>
+                        <p className="text-[10px] text-muted-foreground">رقم الشحنة</p>
+                        <p className="font-mono font-bold text-primary">{selected.shipmentNumber}</p>
                       </div>
                     </div>
                   )}
