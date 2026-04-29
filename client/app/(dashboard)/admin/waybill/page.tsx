@@ -36,7 +36,7 @@ type Order = {
   createdAt?: string
   client?: { id?: string; name?: string; email?: string; phone?: string } | null
   driver?: { id?: string; name?: string; phone?: string } | null
-  zone?: { id?: string; name?: string } | null
+  zone?: { id?: string; name?: string; parent?: { id?: string; name?: string } | null } | null
 }
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i

@@ -13,15 +13,15 @@ export async function calculatePrice(input: PriceInput): Promise<number> {
   if (!zone) {
     zone = await prisma.zone.findUnique({
       where: { id: input.zoneId },
-      include: { pricingRule: true },
+      include: { pricingRule: true, parent: { include: { pricingRule: true } } },
     });
     setCache(cacheKey, zone, TTL.staticData);
   }
 
   if (!zone) throw new Error('المنطقة غير موجودة');
-  if (!zone.pricingRule) throw new Error('لا توجد قاعدة تسعير لهذه المنطقة');
+  const rule = zone.pricingRule || zone.parent?.pricingRule;
+  if (!rule) throw new Error('لا توجد قاعدة تسعير لهذه المنطقة أو المحافظة التابعة لها');
 
-  const rule = zone.pricingRule;
 
   let price: number;
   if (input.deliveryType === 'EXPRESS') {
@@ -46,15 +46,16 @@ export async function getDriverEarningAmount(
     if (!zone) {
       zone = await prisma.zone.findUnique({
         where: { id: zoneId },
-        include: { pricingRule: true },
+        include: { pricingRule: true, parent: { include: { pricingRule: true } } },
       });
       setCache(cacheKey, zone, TTL.staticData);
     }
-    if (zone?.pricingRule?.driverPayout != null) {
+    const payoutRule = zone?.pricingRule?.driverPayout != null ? zone.pricingRule : zone?.parent?.pricingRule;
+    if (payoutRule?.driverPayout != null) {
       return {
-        amount:          Math.round(zone.pricingRule.driverPayout * 100) / 100,
+        amount:          Math.round(payoutRule.driverPayout * 100) / 100,
         commissionType:  'ZONE_FIXED',
-        commissionValue: zone.pricingRule.driverPayout,
+        commissionValue: payoutRule.driverPayout,
       };
     }
   }

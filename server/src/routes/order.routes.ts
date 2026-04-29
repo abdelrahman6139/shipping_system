@@ -37,6 +37,7 @@ const createOrderSchema = z.object({
   packageDescription: z.string().min(3).optional(),
   deliveryType:       z.enum(['STANDARD', 'EXPRESS', 'SAME_DAY']).default('STANDARD'),
   zoneId:             z.string().uuid('يجب اختيار منطقة صحيحة'),
+  parentZoneId:       z.string().uuid('يجب اختيار محافظة صحيحة').optional(),
   notes:              z.string().optional(),
   itemPrice:          z.coerce.number().positive('سعر المنتج يجب أن يكون أكبر من صفر'),
   addons:             z.array(z.object({
@@ -103,6 +104,37 @@ function invalidateOrderCaches(shipmentNumber?: string | null) {
   if (shipmentNumber) deleteCache(`tracking:shipment:${shipmentNumber}`);
 }
 
+async function validateZoneSelection(zoneId: string, parentZoneId?: string | null) {
+  const zone = await prisma.zone.findUnique({
+    where: { id: zoneId },
+    select: {
+      id: true,
+      name: true,
+      parentId: true,
+      children: { select: { id: true }, take: 1 },
+    },
+  });
+  if (!zone) throw new Error('المنطقة غير موجودة');
+  if (!parentZoneId) return zone;
+
+  const parent = await prisma.zone.findUnique({
+    where: { id: parentZoneId },
+    select: {
+      id: true,
+      name: true,
+      parentId: true,
+      children: { select: { id: true }, take: 1 },
+    },
+  });
+  if (!parent || parent.parentId) throw new Error('المحافظة غير صحيحة');
+  if (zone.id === parent.id) {
+    if (parent.children.length > 0) throw new Error('اختر الحي / المنطقة التابعة للمحافظة');
+    return zone;
+  }
+  if (zone.parentId !== parent.id) throw new Error('الحي / المنطقة لا يتبع المحافظة المحددة');
+  return zone;
+}
+
 // ─── Public endpoint (no auth) ──────────────────────────────────────────────
 // GET /api/orders/track/:shipmentNumber
 router.get('/track/:shipmentNumber', async (req, res) => {
@@ -123,7 +155,7 @@ router.get('/track/:shipmentNumber', async (req, res) => {
         destination:      true,
         createdAt:        true,
         updatedAt:        true,
-        zone:             { select: { name: true } },
+        zone:             { select: { name: true, parent: { select: { name: true } } } },
         // Do NOT expose: clientId, driverId, client details, pricing, notes
       },
     });
@@ -140,12 +172,14 @@ router.post('/calculate-price', authenticate, async (req: AuthRequest, res) => {
     const parsed = z.object({
       deliveryType: z.enum(['STANDARD', 'EXPRESS', 'SAME_DAY']),
       zoneId:       z.string().uuid(),
+      parentZoneId: z.string().uuid().optional(),
       itemPrice:    z.coerce.number().min(0).optional().default(0),
       addons:       z.array(z.object({
         name:   z.string().trim().min(1).max(80),
         amount: z.coerce.number().min(0).max(100000),
       })).optional().default([]),
     }).parse(req.body);
+    await validateZoneSelection(parsed.zoneId, parsed.parentZoneId);
     const deliveryFee = await calculatePrice({ deliveryType: parsed.deliveryType as DeliveryType, zoneId: parsed.zoneId });
     const pricing = getOrderPricing(parsed.itemPrice, deliveryFee, parsed.addons);
     return res.json({ price: pricing.grandTotal, ...pricing });
@@ -209,7 +243,7 @@ router.get('/', authenticate, async (req: AuthRequest, res) => {
           clientId: true, driverId: true, zoneId: true,
           client: { select: { id: true, name: true, email: true, phone: true } },
           driver: { select: { id: true, name: true, email: true, phone: true } },
-          zone:   { select: { id: true, name: true } },
+          zone:   { select: { id: true, name: true, parent: { select: { id: true, name: true } } } },
           invoice: { select: { id: true, pdfUrl: true } },
         },
         orderBy: { createdAt: 'desc' },
@@ -236,7 +270,7 @@ router.get('/:id', authenticate, async (req: AuthRequest, res) => {
       include: {
         client: { select: { id: true, name: true, email: true, phone: true } },
         driver: { select: { id: true, name: true, email: true, phone: true } },
-        zone:   { include: { pricingRule: true } },
+        zone:   { include: { pricingRule: true, parent: true } },
         invoice: true,
         refund:  true,
         tickets: { include: { messages: true } },
@@ -259,6 +293,7 @@ router.get('/:id', authenticate, async (req: AuthRequest, res) => {
 router.post('/', authenticate, requireRole('CLIENT', 'ADMIN'), async (req: AuthRequest, res) => {
   try {
     const data     = createOrderSchema.parse(req.body);
+    await validateZoneSelection(data.zoneId, data.parentZoneId);
     const deliveryFee = await calculatePrice({ deliveryType: data.deliveryType as DeliveryType, zoneId: data.zoneId });
     const pricing = getOrderPricing(data.itemPrice, deliveryFee, data.addons);
     const clientId = req.user?.role === 'CLIENT' ? req.user.userId : (req.body.clientId || req.user?.userId);
@@ -292,7 +327,7 @@ router.post('/', authenticate, requireRole('CLIENT', 'ADMIN'), async (req: AuthR
       },
       include: {
         client: { select: { id: true, name: true, email: true } },
-        zone:   true,
+        zone:   { include: { parent: true } },
       },
     });
 
@@ -325,7 +360,7 @@ router.put('/:id', authenticate, async (req: AuthRequest, res) => {
       if (order.status !== 'PENDING')         return res.status(400).json({ error: 'يمكن تعديل الطلبات المعلقة فقط' });
     }
 
-    const { pickupAddress, destination, packageDescription, deliveryType, zoneId, notes, itemPrice, addons } = req.body;
+    const { pickupAddress, destination, packageDescription, deliveryType, zoneId, parentZoneId, notes, itemPrice, addons } = req.body;
     let pricing: ReturnType<typeof getOrderPricing> | null = null;
     if (deliveryType || zoneId || itemPrice !== undefined || addons !== undefined) {
       const parsedAddons = addons !== undefined
@@ -337,6 +372,7 @@ router.put('/:id', authenticate, async (req: AuthRequest, res) => {
       const nextItemPrice = itemPrice !== undefined
         ? z.coerce.number().positive('سعر المنتج يجب أن يكون أكبر من صفر').parse(itemPrice)
         : Number(order.itemPrice || 0);
+      if (zoneId) await validateZoneSelection(zoneId, parentZoneId);
       const deliveryFee = await calculatePrice({
         deliveryType: (deliveryType || order.deliveryType) as DeliveryType,
         zoneId:       zoneId || order.zoneId!,
@@ -364,7 +400,7 @@ router.put('/:id', authenticate, async (req: AuthRequest, res) => {
       },
       include: {
         client: { select: { id: true, name: true, email: true } },
-        zone:   true,
+        zone:   { include: { parent: true } },
       },
     });
     invalidateOrderCaches(updated.shipmentNumber);
@@ -421,7 +457,7 @@ router.patch('/:id/status', authenticate, requireRole('DRIVER', 'ADMIN'), async 
       include: {
         client: { select: { name: true, email: true } },
         driver: { select: { name: true } },
-        zone:   true,
+        zone:   { include: { parent: true } },
       },
     });
     invalidateOrderCaches(updated.shipmentNumber);
@@ -505,7 +541,7 @@ router.patch('/:id/assign', authenticate, requireRole('ADMIN'), async (req: Auth
       include: {
         client: { select: { name: true, email: true } },
         driver: { select: { name: true, email: true } },
-        zone:   true,
+        zone:   { include: { parent: true } },
       },
     });
     invalidateOrderCaches(updated.shipmentNumber);

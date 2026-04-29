@@ -39,7 +39,7 @@ type Order = {
   returnReason?: string
   notes?: string
   createdAt: string
-  zone?: { name: string }
+  zone?: { name: string; parent?: { name?: string } | null }
   driver?: { name: string; phone?: string }
 }
 
@@ -254,6 +254,9 @@ export default function ClientOrdersPage() {
 
   const orderAddons = (order: Order) =>
     Array.isArray(order.addons) ? order.addons : []
+
+  const zoneLabel = (zone?: Order["zone"]) =>
+    zone?.parent?.name ? `${zone.parent.name} / ${zone.name || "—"}` : (zone?.name || "—")
 
   /* ══════════════════════════ RENDER ══════════════════════════ */
   return (
@@ -517,7 +520,7 @@ export default function ClientOrdersPage() {
                 <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">تفاصيل الشحنة</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                   <InfoRow icon={<MapPin className="h-4 w-4 text-green-500" />} label="عنوان الاستلام" value={selected.pickupAddress} />
-                  <InfoRow icon={<Building2 className="h-4 w-4 text-muted-foreground" />} label="المنطقة" value={selected.zone?.name || "—"} />
+                  <InfoRow icon={<Building2 className="h-4 w-4 text-muted-foreground" />} label="المنطقة" value={zoneLabel(selected.zone)} />
                   <InfoRow icon={<Truck className="h-4 w-4 text-muted-foreground" />} label="نوع التوصيل" value={DELIVERY_LABEL[selected.deliveryType] || selected.deliveryType} />
                   {selected.shipmentNumber && (
                     <InfoRow icon={<Package className="h-4 w-4 text-primary" />} label="رقم الشحنة" value={selected.shipmentNumber} />

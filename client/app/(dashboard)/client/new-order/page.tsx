@@ -187,6 +187,7 @@ export default function NewOrderPage() {
       const { data } = await api.post("/orders/calculate-price", {
         deliveryType: form.deliveryType,
         zoneId:       effectiveZoneId,
+        parentZoneId: selectedRegionId || undefined,
         itemPrice:    itemPriceNumber,
         addons:       selectedAddonRows,
       })
@@ -223,6 +224,7 @@ export default function NewOrderPage() {
         notes:              form.notes.trim()              || undefined,
         deliveryType:       form.deliveryType,
         zoneId:             effectiveZoneId,
+        parentZoneId:       selectedRegionId || undefined,
         itemPrice:          itemPriceNumber,
         addons:             selectedAddonRows,
       })
@@ -516,7 +518,7 @@ export default function NewOrderPage() {
                       <div className="space-y-1.5">
                         <p className="text-xs text-muted-foreground">الحي / المنطقة</p>
                         <div className="flex h-10 items-center rounded-md border border-dashed bg-muted/20 px-3 text-sm text-muted-foreground">
-                          يُطبَّق تسعير المحافظة مباشرةً
+                          لا توجد مناطق فرعية، سيتم تطبيق تسعير المحافظة
                         </div>
                       </div>
                     ) : null}

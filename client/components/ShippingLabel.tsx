@@ -27,7 +27,7 @@ type Order = {
   createdAt?: string
   client?: { id?: string; name?: string; email?: string; phone?: string } | null
   driver?: { id?: string; name?: string; phone?: string } | null
-  zone?: { id?: string; name?: string } | null
+  zone?: { id?: string; name?: string; parent?: { id?: string; name?: string } | null } | null
 }
 
 interface ShippingLabelProps {
@@ -199,7 +199,9 @@ export default function ShippingLabel({ order }: ShippingLabelProps) {
   const merchantName = safe(order.client?.name)
   const merchantPhone = safe(order.client?.phone)
   const pickupAddress = safe(order.pickupAddress)
-  const zoneName = safe(order.zone?.name)
+  const areaName = safe(order.zone?.name)
+  const governorateName = safe(order.zone?.parent?.name)
+  const zoneName = governorateName !== FALLBACK ? `${governorateName} / ${areaName}` : areaName
   const deliveryType = DELIVERY_LABELS[order.deliveryType || ""] || safe(order.deliveryType)
   const status = STATUS_LABELS[order.status || ""] || safe(order.status)
   const collectionStatus = COLLECTION_LABELS[order.collectionStatus || ""] || safe(order.collectionStatus)
@@ -211,7 +213,7 @@ export default function ShippingLabel({ order }: ShippingLabelProps) {
   const itemPrice = money(order.itemPrice)
   const deliveryFee = money(order.deliveryFee)
   const addonsTotal = money(order.addonsTotal)
-  const route = routeCode(zoneName)
+  const route = routeCode(areaName)
 
   const qrValue = useMemo(
     () => (hasValidShipmentNumber ? `/track/${shipmentNumber}` : ""),

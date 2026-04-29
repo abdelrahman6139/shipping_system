@@ -49,6 +49,18 @@ function normalizeAddons(addons: Array<{ name: string; amount: number }>) {
     .filter((addon) => addon.name.length > 0 && addon.amount > 0);
 }
 
+async function validateZoneSelection(zoneId: string, parentZoneId?: string | null) {
+  if (!parentZoneId) return;
+  const zone = await prisma.zone.findUnique({ where: { id: zoneId }, select: { id: true, parentId: true } });
+  const parent = await prisma.zone.findUnique({
+    where: { id: parentZoneId },
+    select: { id: true, parentId: true, children: { select: { id: true }, take: 1 } },
+  });
+  if (!zone || !parent || parent.parentId) throw new Error('المنطقة غير صحيحة');
+  if (zone.id === parent.id && parent.children.length > 0) throw new Error('اختر الحي / المنطقة التابعة للمحافظة');
+  if (zone.id !== parent.id && zone.parentId !== parent.id) throw new Error('الحي / المنطقة لا يتبع المحافظة المحددة');
+}
+
 // GET /api/pricing-rules
 router.get('/', authenticate, async (req, res) => {
   try {
@@ -68,12 +80,14 @@ router.post('/estimate', authenticate, async (req, res) => {
     const parsed = z.object({
       deliveryType: z.enum(['STANDARD', 'EXPRESS', 'SAME_DAY']),
       zoneId: z.string().uuid(),
+      parentZoneId: z.string().uuid().optional(),
       itemPrice: z.coerce.number().min(0).optional().default(0),
       addons: z.array(z.object({
         name: z.string().trim().min(1).max(80),
         amount: z.coerce.number().min(0).max(100000),
       })).optional().default([]),
     }).parse(req.body);
+    await validateZoneSelection(parsed.zoneId, parsed.parentZoneId);
     const deliveryFee = await calculatePrice({ deliveryType: parsed.deliveryType as DeliveryType, zoneId: parsed.zoneId });
     const normalizedAddons = normalizeAddons(parsed.addons);
     const addonsTotal = roundMoney(normalizedAddons.reduce((sum, addon) => sum + addon.amount, 0));

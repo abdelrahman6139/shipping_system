@@ -37,7 +37,7 @@ type Order = {
   createdAt: string
   updatedAt?: string
   client?: { name?: string; phone?: string; email?: string }
-  zone?: { name?: string }
+  zone?: { name?: string; parent?: { name?: string } | null }
 }
 
 /* ─────────────── STATUS CONFIG ─────── */
@@ -283,6 +283,9 @@ export default function DriverDashboard() {
 
   const orderAddons = (order: Order) =>
     Array.isArray(order.addons) ? order.addons : []
+
+  const zoneLabel = (zone?: Order["zone"]) =>
+    zone?.parent?.name ? `${zone.parent.name} / ${zone.name || "—"}` : (zone?.name || "—")
 
   /* ══════════════════════════ RENDER ══════════════════════════ */
   return (
@@ -538,7 +541,7 @@ export default function DriverDashboard() {
                     <Building2 className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
                     <div>
                       <p className="text-[10px] text-muted-foreground">المنطقة</p>
-                      <p className="font-medium">{selected.zone?.name || "—"}</p>
+                      <p className="font-medium">{zoneLabel(selected.zone)}</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-2">

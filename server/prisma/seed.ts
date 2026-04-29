@@ -68,6 +68,27 @@ async function main() {
     create: { name: 'الدلتا', description: 'محافظات الوجه البحري', basePrice: 0 },
   });
 
+  const cairoAreas = [
+    'مدينة نصر',
+    'مصر الجديدة',
+    'المعادي',
+    'التجمع الخامس',
+    'وسط البلد',
+    'شبرا',
+    'حلوان',
+    'المرج',
+    'عين شمس',
+    'الزمالك',
+    'المقطم',
+  ];
+  for (const areaName of cairoAreas) {
+    await prisma.zone.upsert({
+      where: { name: areaName },
+      update: { parentId: cairoZone.id, description: `منطقة ${areaName} - القاهرة`, basePrice: 0 },
+      create: { name: areaName, description: `منطقة ${areaName} - القاهرة`, basePrice: 0, parentId: cairoZone.id },
+    });
+  }
+
   // قواعد التسعير (بالجنيه المصري)
   await prisma.pricingRule.upsert({
     where:  { zoneId: cairoZone.id },

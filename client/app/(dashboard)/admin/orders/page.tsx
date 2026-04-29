@@ -46,7 +46,7 @@ type Order = {
   updatedAt?: string
   client?: Client
   driver?: Driver | null
-  zone?: { id?: string; name?: string } | null
+  zone?: { id?: string; name?: string; parent?: { id?: string; name?: string } | null } | null
   invoice?: { id?: string; pdfUrl?: string } | null
 }
 
@@ -375,6 +375,9 @@ export default function AdminOrdersPage() {
 
   const orderAddons = (order: Order) =>
     Array.isArray(order.addons) ? order.addons : []
+
+  const zoneLabel = (zone?: Order["zone"]) =>
+    zone?.parent?.name ? `${zone.parent.name} / ${zone.name || "—"}` : (zone?.name || "—")
 
   const exportOrders = async () => {
     setExporting(true)
@@ -834,7 +837,7 @@ export default function AdminOrdersPage() {
                     <Building2 className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
                     <div>
                       <p className="text-[10px] text-muted-foreground">المنطقة</p>
-                      <p className="font-medium">{selected.zone?.name || "—"}</p>
+                      <p className="font-medium">{zoneLabel(selected.zone)}</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-2">
