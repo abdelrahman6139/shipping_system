@@ -239,44 +239,49 @@ export default function WaybillPage() {
       {/* ── Print-only global styles injected into <head> via style tag ── */}
       <style>{`
         @page {
-          size: 130mm 80mm;
+          size: 80mm 130mm;
           margin: 0;
         }
         @media print {
           html,
           body {
-            width: 130mm;
-            min-height: 80mm;
+            width: 80mm;
+            height: 130mm;
             margin: 0 !important;
+            padding: 0 !important;
             background: #fff !important;
           }
           body * {
             visibility: hidden !important;
           }
-          #print-area,
-          #print-area * {
+          .shipping-label,
+          .shipping-label * {
             visibility: visible !important;
           }
-          #print-area {
+          .shipping-label {
             position: absolute !important;
             top: 0 !important;
             left: 0 !important;
-            width: 130mm !important;
-            height: 80mm !important;
-            min-height: 80mm !important;
+            width: 80mm !important;
+            height: 130mm !important;
+            min-height: 130mm !important;
+            transform: scale(1) !important;
+            transform-origin: top left !important;
             box-shadow: none !important;
             overflow: hidden !important;
+            border-radius: 0 !important;
             page-break-after: always;
           }
-          #print-area .shipping-label {
-            width: 130mm !important;
-            height: 80mm !important;
-            min-height: 80mm !important;
-            box-shadow: none !important;
+          .qr-container {
+            width: 34mm !important;
+            height: 34mm !important;
+            padding: 2mm !important;
+            background: #fff !important;
+            box-sizing: border-box !important;
           }
-          #print-area .qr {
-            width: 28mm !important;
-            height: 28mm !important;
+          .qr {
+            width: 30mm !important;
+            height: 30mm !important;
           }
           .no-print {
             display: none !important;
@@ -442,9 +447,9 @@ export default function WaybillPage() {
             <div className="flex justify-center">
               <div
                 id="print-area"
-                className="shipping-label shadow-xl rounded overflow-hidden"
+                className="waybill-preview shadow-xl rounded overflow-hidden"
                 data-shipment-number={order.shipmentNumber}
-                style={{ width: "130mm", height: "80mm", boxShadow: "0 4px 32px rgba(0,0,0,0.18)" }}
+                style={{ width: "80mm", height: "130mm", boxShadow: "0 4px 32px rgba(0,0,0,0.18)" }}
               >
                 <ShippingLabel order={order} />
               </div>
@@ -452,7 +457,7 @@ export default function WaybillPage() {
 
             {/* Print hint */}
             <p className="no-print text-center text-xs text-muted-foreground">
-              سيتم الطباعة بحجم 130×80 مم — تأكد من ضبط الطابعة على هذا الحجم
+              سيتم الطباعة بحجم 80×130 مم عمودي — تأكد من ضبط الطابعة على هذا الحجم
             </p>
           </div>
         )}
