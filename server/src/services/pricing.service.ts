@@ -1,41 +1,36 @@
 import { DeliveryType } from '@prisma/client';
 import { prisma } from '../lib/prisma';
+import { getCache, setCache, TTL } from '../utils/cache';
 
 interface PriceInput {
-  weight: number;
-  length: number;
-  width: number;
-  height: number;
   deliveryType: DeliveryType;
   zoneId: string;
 }
 
 export async function calculatePrice(input: PriceInput): Promise<number> {
-  const zone = await prisma.zone.findUnique({
-    where: { id: input.zoneId },
-    include: { pricingRule: true },
-  });
+  const cacheKey = `pricing:zone:${input.zoneId}`;
+  let zone = getCache<any>(cacheKey);
+  if (!zone) {
+    zone = await prisma.zone.findUnique({
+      where: { id: input.zoneId },
+      include: { pricingRule: true },
+    });
+    setCache(cacheKey, zone, TTL.staticData);
+  }
 
-  if (!zone) throw new Error('Zone not found');
-  if (!zone.pricingRule) throw new Error('No pricing rule for this zone');
+  if (!zone) throw new Error('المنطقة غير موجودة');
+  if (!zone.pricingRule) throw new Error('لا توجد قاعدة تسعير لهذه المنطقة');
 
   const rule = zone.pricingRule;
 
-  // Base price + weight charge
-  let price = zone.basePrice + input.weight * rule.pricePerKg;
-
-  // Volume calculation (cubic weight factor)
-  const volume = input.length * input.width * input.height;
-  const volumeWeight = volume / 5000; // standard DIM factor
-  const chargeableWeight = Math.max(input.weight, volumeWeight);
-  price = zone.basePrice + chargeableWeight * rule.pricePerKg;
-
-  // Apply delivery type multiplier
-  let multiplier = rule.standardMultiplier;
-  if (input.deliveryType === 'EXPRESS') multiplier = rule.expressMultiplier;
-  if (input.deliveryType === 'SAME_DAY') multiplier = rule.sameDayMultiplier;
-
-  price *= multiplier;
+  let price: number;
+  if (input.deliveryType === 'EXPRESS') {
+    price = rule.expressPrice;
+  } else if (input.deliveryType === 'SAME_DAY') {
+    price = rule.sameDayPrice;
+  } else {
+    price = rule.standardPrice;
+  }
 
   return Math.round(price * 100) / 100;
 }
@@ -45,12 +40,16 @@ export async function getDriverEarningAmount(
   driverId: string,
   zoneId?: string
 ): Promise<{ amount: number; commissionType: string; commissionValue: number }> {
-  // If zoneId provided, check if the zone has a fixed driver payout
   if (zoneId) {
-    const zone = await prisma.zone.findUnique({
-      where: { id: zoneId },
-      include: { pricingRule: true },
-    });
+    const cacheKey = `pricing:zone:${zoneId}`;
+    let zone = getCache<any>(cacheKey);
+    if (!zone) {
+      zone = await prisma.zone.findUnique({
+        where: { id: zoneId },
+        include: { pricingRule: true },
+      });
+      setCache(cacheKey, zone, TTL.staticData);
+    }
     if (zone?.pricingRule?.driverPayout != null) {
       return {
         amount:          Math.round(zone.pricingRule.driverPayout * 100) / 100,
@@ -60,7 +59,6 @@ export async function getDriverEarningAmount(
     }
   }
 
-  // Fall back to driver's global commission
   const driver = await prisma.user.findUnique({ where: { id: driverId } });
   const type   = driver?.commissionType  ?? 'PERCENTAGE';
   const value  = driver?.commissionValue ?? 15;
