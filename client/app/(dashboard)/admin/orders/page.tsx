@@ -10,9 +10,9 @@ import { connectSocket } from "@/lib/socket"
 import { useAuth } from "@/context/AuthContext"
 import {
   Search, Eye, Download, MapPin, Truck, User, Calendar,
-  DollarSign, Phone, UserCheck, Package, Clock, CheckCircle2,
+  DollarSign, Phone, UserCheck, Package, Clock,
   XCircle, Boxes, ChevronLeft, ChevronRight, Loader2,
-  X, Building2, Ruler, StickyNote, RefreshCw, Banknote, PackageCheck, ScanLine,
+  X, Building2, StickyNote, RefreshCw, Banknote, PackageCheck, ScanLine,
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 
@@ -22,6 +22,7 @@ type Client = { id?: string; name?: string; email?: string; phone?: string }
 
 type Order = {
   id: string
+  shipmentNumber?: string
   clientId: string
   driverId: string | null
   destination: string
@@ -29,14 +30,13 @@ type Order = {
   packageDescription?: string
   recipientName?: string
   recipientPhone?: string
-  weight?: number
-  length?: number
-  width?: number
-  height?: number
   status: string
   deliveryType: string
+  collectionStatus?: string
   totalPrice: number
   notes?: string
+  cancellationReason?: string
+  returnReason?: string
   createdAt: string
   updatedAt?: string
   client?: Client
@@ -51,12 +51,13 @@ const STATUS_CFG: Record<string, { label: string; bg: string; text: string; icon
   ASSIGNED:   { label: "تم التعيين",         bg: "bg-blue-50    dark:bg-blue-900/20",    text: "text-blue-700    dark:text-blue-400",    icon: Truck,        step: 1 },
   PICKED_UP:  { label: "تم الاستلام",        bg: "bg-violet-50  dark:bg-violet-900/20",  text: "text-violet-700  dark:text-violet-400",  icon: Boxes,        step: 2 },
   IN_TRANSIT: { label: "جاري التوصيل",       bg: "bg-indigo-50  dark:bg-indigo-900/20",  text: "text-indigo-700  dark:text-indigo-400",  icon: Truck,        step: 3 },
-  DELIVERED:  { label: "في انتظار التحصيل", bg: "bg-orange-50  dark:bg-orange-900/20",  text: "text-orange-700  dark:text-orange-400",  icon: PackageCheck, step: 4 },
-  COLLECTED:  { label: "تم التحصيل",        bg: "bg-emerald-50 dark:bg-emerald-900/20", text: "text-emerald-700 dark:text-emerald-400", icon: Banknote,     step: 4 },
+  DELIVERED:  { label: "تم التسليم",        bg: "bg-emerald-50 dark:bg-emerald-900/20", text: "text-emerald-700 dark:text-emerald-400", icon: PackageCheck, step: 4 },
+  COLLECTED:  { label: "تم التسليم",        bg: "bg-emerald-50 dark:bg-emerald-900/20", text: "text-emerald-700 dark:text-emerald-400", icon: PackageCheck, step: 4 },
   CANCELLED:  { label: "ملغي",              bg: "bg-red-50     dark:bg-red-900/20",     text: "text-red-700     dark:text-red-400",     icon: XCircle,      step: -1 },
+  RETURNED:   { label: "مرتجع",             bg: "bg-purple-50  dark:bg-purple-900/20",  text: "text-purple-700  dark:text-purple-400",  icon: XCircle,      step: -1 },
 }
 
-const STATUS_OPTIONS = ["PENDING","ASSIGNED","PICKED_UP","IN_TRANSIT","DELIVERED","COLLECTED","CANCELLED"]
+const STATUS_OPTIONS = ["PENDING","ASSIGNED","PICKED_UP","IN_TRANSIT","DELIVERED","CANCELLED","RETURNED"]
 const STEPS = ["PENDING","ASSIGNED","PICKED_UP","IN_TRANSIT","DELIVERED"]
 const STEP_SHORT_LABEL = ["انتظار", "تعيين", "استلام", "توصيل", "تسليم"]
 
@@ -72,10 +73,16 @@ const FILTER_TABS = [
   { value: "ASSIGNED",   label: "معيّن" },
   { value: "PICKED_UP",  label: "استُلم" },
   { value: "IN_TRANSIT", label: "في الطريق" },
-  { value: "DELIVERED",  label: "لم يُحصَّل" },
-  { value: "COLLECTED",  label: "تم التحصيل" },
+  { value: "DELIVERED",  label: "تم التسليم" },
   { value: "CANCELLED",  label: "ملغي" },
 ]
+
+const COLLECTION_CFG: Record<string, { label: string; bg: string; text: string }> = {
+  NOT_COLLECTED: { label: "لم يحصل من العميل", bg: "bg-orange-50 dark:bg-orange-900/20", text: "text-orange-700 dark:text-orange-400" },
+  DRIVER_COLLECTED: { label: "السائق حصل من العميل", bg: "bg-sky-50 dark:bg-sky-900/20", text: "text-sky-700 dark:text-sky-400" },
+  COMPANY_RECEIVED: { label: "الشركة استلمت من السائق", bg: "bg-violet-50 dark:bg-violet-900/20", text: "text-violet-700 dark:text-violet-400" },
+  SETTLED_TO_MERCHANT: { label: "تمت التسوية مع التاجر", bg: "bg-emerald-50 dark:bg-emerald-900/20", text: "text-emerald-700 dark:text-emerald-400" },
+}
 
 /* ─────────────── COMPONENTS ─────────── */
 function StatusPill({ status }: { status: string }) {
@@ -226,7 +233,7 @@ export default function AdminOrdersPage() {
         api.get("/orders", { params: { status: "PENDING",    limit: 1 } }),
         api.get("/orders", { params: { status: "IN_TRANSIT", limit: 1 } }),
         api.get("/orders", { params: { status: "DELIVERED",  limit: 1 } }),
-        api.get("/orders", { params: { status: "COLLECTED",  limit: 1 } }),
+        api.get("/orders", { params: { collectionStatus: "DRIVER_COLLECTED", limit: 1 } }),
         api.get("/orders", { params: { status: "CANCELLED",  limit: 1 } }),
       ])
       setStats({
@@ -264,7 +271,7 @@ export default function AdminOrdersPage() {
     const socket = connectSocket()
     socket.emit("join", { userId: user.id, role: user.role })
     const refresh = () => { fetchOrders(); fetchStats() }
-    const evts = ["order:created","order:updated","order:assigned","order:statusUpdated","order:cancelled"]
+    const evts = ["order:created","order:updated","order:assigned","order:statusUpdated","order:collectionUpdated","order:cancelled"]
     evts.forEach(e => socket.on(e, refresh))
     return () => evts.forEach(e => socket.off(e, refresh))
   }, [fetchOrders, fetchStats, user])
@@ -282,6 +289,10 @@ export default function AdminOrdersPage() {
   /* update status */
   const updateStatus = async (newStatus: string) => {
     if (!selected) return
+    if ((selected.status === "CANCELLED" || selected.status === "RETURNED") && newStatus !== selected.status) {
+      const confirmed = window.confirm("هذا الطلب في حالة نهائية. هل تريد تغيير الحالة؟")
+      if (!confirmed) return
+    }
     setStatusUpd(true)
     try {
       await api.patch(`/orders/${selected.id}/status`, { status: newStatus })
@@ -290,6 +301,19 @@ export default function AdminOrdersPage() {
       setSelected(data.order)
       fetchOrders(); fetchStats()
     } catch (e: any) { toast.error(e.response?.data?.error || "فشل تحديث الحالة") }
+    finally { setStatusUpd(false) }
+  }
+
+  const updateCollectionStatus = async (collectionStatus: string) => {
+    if (!selected) return
+    setStatusUpd(true)
+    try {
+      await api.patch(`/orders/${selected.id}/collection`, { collectionStatus })
+      toast.success("تم تحديث حالة التحصيل")
+      const { data } = await api.get(`/orders/${selected.id}`)
+      setSelected(data.order)
+      fetchOrders(); fetchStats()
+    } catch (e: any) { toast.error(e.response?.data?.error || "فشل تحديث حالة التحصيل") }
     finally { setStatusUpd(false) }
   }
 
@@ -332,6 +356,14 @@ export default function AdminOrdersPage() {
     } catch { toast.error("فشل تنزيل الفاتورة") }
   }
 
+  const openWaybill = (order: Order) => {
+    if (!order.shipmentNumber) {
+      toast.error("رقم الشحنة غير متوفر لهذا الطلب")
+      return
+    }
+    router.push(`/admin/waybill?shipmentNumber=${encodeURIComponent(order.shipmentNumber)}`)
+  }
+
   const fmtDate = (d: string) =>
     new Date(d).toLocaleDateString("ar-EG", { year: "numeric", month: "short", day: "numeric" })
 
@@ -357,8 +389,8 @@ export default function AdminOrdersPage() {
           { label: "إجمالي الطلبات",     value: stats.total,     icon: Package,      cls: "text-primary" },
           { label: "قيد الانتظار",       value: stats.pending,   icon: Clock,        cls: "text-amber-600" },
           { label: "جاري التوصيل",       value: stats.inTransit, icon: Truck,        cls: "text-indigo-600" },
-          { label: "في انتظار التحصيل", value: stats.delivered, icon: PackageCheck, cls: "text-orange-600" },
-          { label: "تم التحصيل",        value: stats.collected, icon: Banknote,     cls: "text-emerald-600" },
+          { label: "تم التسليم",       value: stats.delivered, icon: PackageCheck, cls: "text-emerald-600" },
+          { label: "مع السائق",        value: stats.collected, icon: Banknote,     cls: "text-sky-600" },
           { label: "ملغاة",             value: stats.cancelled, icon: XCircle,      cls: "text-red-600" },
         ].map(s => {
           const Icon = s.icon
@@ -440,7 +472,7 @@ export default function AdminOrdersPage() {
                 >
                   <td className="px-4 py-3">
                     <span className="font-mono text-xs bg-muted px-2 py-0.5 rounded">
-                      #{o.id.slice(0,8).toUpperCase()}
+                      {o.shipmentNumber || `#${o.id.slice(0,8).toUpperCase()}`}
                     </span>
                   </td>
                   <td className="px-4 py-3">
@@ -569,78 +601,68 @@ export default function AdminOrdersPage() {
                 <Timeline status={selected.status} />
               </div>
 
-              {/* Cash Collection Status */}
-              {(selected.status === "DELIVERED" || selected.status === "COLLECTED") && (
-                <div className={`rounded-xl border p-4 flex items-center gap-3 ${
-                  selected.status === "COLLECTED"
-                    ? "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-900"
-                    : "bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-900"
-                }`}>
-                  <div className={`h-10 w-10 rounded-full flex items-center justify-center shrink-0 ${
-                    selected.status === "COLLECTED"
-                      ? "bg-emerald-100 dark:bg-emerald-900/40"
-                      : "bg-orange-100 dark:bg-orange-900/40"
-                  }`}>
-                    <Banknote className={`h-5 w-5 ${
-                      selected.status === "COLLECTED" ? "text-emerald-600 dark:text-emerald-400" : "text-orange-600 dark:text-orange-400"
-                    }`} />
+              {/* Collection / merchant settlement status */}
+              {selected.status === "DELIVERED" && (
+                <div className={`rounded-xl border p-4 space-y-3 ${COLLECTION_CFG[selected.collectionStatus || "NOT_COLLECTED"]?.bg || "bg-muted/30"}`}>
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-background/80">
+                      <Banknote className={`h-5 w-5 ${COLLECTION_CFG[selected.collectionStatus || "NOT_COLLECTED"]?.text || "text-muted-foreground"}`} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">التحصيل والتسوية</p>
+                      <p className={`text-sm font-semibold ${COLLECTION_CFG[selected.collectionStatus || "NOT_COLLECTED"]?.text || ""}`}>
+                        {COLLECTION_CFG[selected.collectionStatus || "NOT_COLLECTED"]?.label || selected.collectionStatus}
+                      </p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        تحصيل السائق من العميل لا يعني التسوية مع التاجر.
+                      </p>
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">تحصيل المبلغ</p>
-                    <p className={`text-sm font-semibold ${
-                      selected.status === "COLLECTED"
-                        ? "text-emerald-700 dark:text-emerald-400"
-                        : "text-orange-700 dark:text-orange-400"
-                    }`}>
-                      {selected.status === "COLLECTED"
-                        ? "✓ تم تحصيل المبلغ من السائق"
-                        : "في انتظار تحصيل المبلغ من السائق"}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {selected.status === "COLLECTED"
-                        ? "تم تسليم مبلغ الشحنة للعميل بنجاح"
-                        : "لم يتم تسليم مبلغ الشحنة للعميل بعد"}
-                    </p>
+                  <div className="flex flex-wrap gap-2 border-t pt-3">
+                    {[
+                      ["DRIVER_COLLECTED", "السائق حصل من العميل"],
+                      ["COMPANY_RECEIVED", "الشركة استلمت"],
+                      ["SETTLED_TO_MERCHANT", "تسوية التاجر"],
+                    ].map(([value, label]) => (
+                      <Button
+                        key={value}
+                        size="sm"
+                        variant={selected.collectionStatus === value ? "default" : "outline"}
+                        disabled={statusUpdating}
+                        onClick={() => updateCollectionStatus(value)}
+                        className="h-8 gap-1.5 text-xs"
+                      >
+                        {statusUpdating && selected.collectionStatus !== value ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Banknote className="h-3.5 w-3.5" />}
+                        {label}
+                      </Button>
+                    ))}
                   </div>
-                  {selected.status === "DELIVERED" && (
-                    <Button
-                      size="sm"
-                      className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5 shrink-0"
-                      disabled={statusUpdating}
-                      onClick={() => updateStatus("COLLECTED")}
-                    >
-                      {statusUpdating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Banknote className="h-3.5 w-3.5" />}
-                      تأكيد التحصيل
-                    </Button>
-                  )}
                 </div>
               )}
 
               {/* Change Status */}
-              {selected.status !== "CANCELLED" && (
-                <div className="rounded-xl border p-4 space-y-2">
-                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                    <RefreshCw className="h-3.5 w-3.5" /> تغيير الحالة
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {STATUS_OPTIONS.filter(s => s !== selected.status && s !== "COLLECTED").map(s => {
-                      const cfg = STATUS_CFG[s]
-                      const Icon = cfg?.icon
-                      return (
-                        <button
-                          key={s}
-                          disabled={statusUpdating}
-                          onClick={() => updateStatus(s)}
-                          className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold border transition-all hover:scale-105 ${cfg?.bg} ${cfg?.text} disabled:opacity-50`}
-                        >
-                          {Icon && <Icon className="h-3 w-3" />}
-                          {cfg?.label || s}
-                        </button>
-                      )
-                    })}
-                  </div>
+              <div className="rounded-xl border p-4 space-y-2">
+                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                  <RefreshCw className="h-3.5 w-3.5" /> تغيير الحالة
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {STATUS_OPTIONS.filter(s => s !== selected.status).map(s => {
+                    const cfg = STATUS_CFG[s]
+                    const Icon = cfg?.icon
+                    return (
+                      <button
+                        key={s}
+                        disabled={statusUpdating}
+                        onClick={() => updateStatus(s)}
+                        className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold border transition-all hover:scale-105 ${cfg?.bg} ${cfg?.text} disabled:opacity-50`}
+                      >
+                        {Icon && <Icon className="h-3 w-3" />}
+                        {cfg?.label || s}
+                      </button>
+                    )
+                  })}
                 </div>
-              )}
+              </div>
 
               {/* People — Client & Driver */}
               <div className="grid sm:grid-cols-2 gap-3">
@@ -755,10 +777,19 @@ export default function AdminOrdersPage() {
                 </div>
               </div>
 
-              {/* Package details */}
+              {/* Shipment details */}
               <div className="rounded-xl border p-4 space-y-3">
                 <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">تفاصيل الشحنة</p>
                 <div className="grid grid-cols-2 gap-3 text-sm">
+                  {selected.shipmentNumber && (
+                    <div className="col-span-2 flex items-start gap-2">
+                      <ScanLine className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                      <div>
+                        <p className="text-[10px] text-muted-foreground">رقم الشحنة</p>
+                        <p className="font-mono font-bold text-primary">{selected.shipmentNumber}</p>
+                      </div>
+                    </div>
+                  )}
                   <div className="flex items-start gap-2">
                     <Building2 className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
                     <div>
@@ -773,28 +804,23 @@ export default function AdminOrdersPage() {
                       <p className="font-medium">{DELIVERY_LABELS[selected.deliveryType] || selected.deliveryType}</p>
                     </div>
                   </div>
-                  <div className="flex items-start gap-2">
-                    <Package className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
-                    <div>
-                      <p className="text-[10px] text-muted-foreground">الوزن</p>
-                      <p className="font-medium">{selected.weight} كغ</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <Ruler className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
-                    <div>
-                      <p className="text-[10px] text-muted-foreground">الأبعاد</p>
-                      <p className="font-medium" dir="ltr">
-                        {selected.length ? `${selected.length}×${selected.width}×${selected.height} cm` : "—"}
-                      </p>
-                    </div>
-                  </div>
                   {selected.packageDescription && (
                     <div className="col-span-2 flex items-start gap-2">
                       <Package className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
                       <div>
                         <p className="text-[10px] text-muted-foreground">وصف الطرد</p>
                         <p className="font-medium">{selected.packageDescription}</p>
+                      </div>
+                    </div>
+                  )}
+                  {(selected.cancellationReason || selected.returnReason) && (
+                    <div className="col-span-2 flex items-start gap-2">
+                      <XCircle className="h-4 w-4 text-red-500 mt-0.5 shrink-0" />
+                      <div>
+                        <p className="text-[10px] text-muted-foreground">
+                          {selected.cancellationReason ? "سبب الإلغاء" : "سبب الإرجاع"}
+                        </p>
+                        <p className="font-medium text-red-600">{selected.cancellationReason || selected.returnReason}</p>
                       </div>
                     </div>
                   )}
@@ -835,7 +861,7 @@ export default function AdminOrdersPage() {
                 <Button
                   variant="outline"
                   className="gap-1.5 flex-1 border-primary/40 text-primary hover:bg-primary/5"
-                  onClick={() => router.push(`/admin/waybill?id=${selected.id}`)}
+                  onClick={() => openWaybill(selected)}
                 >
                   <ScanLine className="h-4 w-4" /> طباعة البوليصة
                 </Button>
