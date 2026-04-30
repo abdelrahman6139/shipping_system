@@ -1,6 +1,8 @@
 "use client"
 
-import React, { createContext, useContext, useEffect, useMemo, useState } from "react"
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react"
+import { useRouter } from "next/navigation"
+import { useLocale, useTranslations } from "next-intl"
 
 export type AppLanguage = "ar" | "en"
 
@@ -13,86 +15,46 @@ type LanguageContextType = {
   t: (key: string) => string
 }
 
-const dictionary: Record<AppLanguage, Record<string, string>> = {
-  ar: {
-    loading: "جاري التحميل...",
-    admin: "مشرف",
-    driver: "سائق",
-    client: "عميل",
-    logout: "تسجيل الخروج",
-    themeToggle: "تبديل المظهر",
-    languageToggle: "English",
-    openMenu: "فتح القائمة",
-    closeMenu: "إغلاق القائمة",
-    adminHome: "لوحة التحكم",
-    adminOrders: "الطلبات",
-    adminWaybill: "بوليصة الشحن",
-    adminUsers: "المستخدمون",
-    adminZones: "المناطق والتسعير",
-    adminTickets: "التذاكر",
-    adminReports: "التقارير",
-    clientHome: "طلباتي",
-    clientNewOrder: "طلب جديد",
-    clientOrders: "سجل الطلبات",
-    clientTickets: "الدعم",
-    driverHome: "عمليات التوصيل",
-    driverEarnings: "الأرباح",
-    adminSection: "الإدارة",
-    clientSection: "واجهة العميل",
-    driverSection: "واجهة السائق",
-    home: "الرئيسية",
-    delivery: "التوصيل",
-  },
-  en: {
-    loading: "Loading...",
-    admin: "Admin",
-    driver: "Driver",
-    client: "Client",
-    logout: "Log out",
-    themeToggle: "Toggle theme",
-    languageToggle: "العربية",
-    openMenu: "Open menu",
-    closeMenu: "Close menu",
-    adminHome: "Dashboard",
-    adminOrders: "Orders",
-    adminWaybill: "Waybill",
-    adminUsers: "Users",
-    adminZones: "Zones & Pricing",
-    adminTickets: "Tickets",
-    adminReports: "Reports",
-    clientHome: "My Orders",
-    clientNewOrder: "New Order",
-    clientOrders: "Order History",
-    clientTickets: "Support",
-    driverHome: "Deliveries",
-    driverEarnings: "Earnings",
-    adminSection: "Admin",
-    clientSection: "Client View",
-    driverSection: "Driver View",
-    home: "Home",
-    delivery: "Delivery",
-  },
-}
-
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined)
 
+function normalizeLanguage(locale: string): AppLanguage {
+  return locale === "en" ? "en" : "ar"
+}
+
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [language, setLanguageState] = useState<AppLanguage>("ar")
+  const locale = useLocale()
+  const translate = useTranslations() as unknown as (key: string) => string
+  const router = useRouter()
+  const [language, setLanguageState] = useState<AppLanguage>(() => normalizeLanguage(locale))
   const [isMounted, setMounted] = useState(false)
 
   useEffect(() => {
-    const stored = window.localStorage.getItem("language")
-    if (stored === "ar" || stored === "en") setLanguageState(stored)
+    setLanguageState(normalizeLanguage(locale))
+  }, [locale])
+
+  useEffect(() => {
     setMounted(true)
   }, [])
 
   useEffect(() => {
-    if (!isMounted) return
     const dir = language === "ar" ? "rtl" : "ltr"
     document.documentElement.lang = language
     document.documentElement.dir = dir
-    window.localStorage.setItem("language", language)
-  }, [language, isMounted])
+  }, [language])
+
+  const setLanguage = useCallback((nextLanguage: AppLanguage) => {
+    document.cookie = `NEXT_LOCALE=${nextLanguage}; path=/; max-age=31536000; SameSite=Lax`
+    setLanguageState(nextLanguage)
+    router.refresh()
+  }, [router])
+
+  const t = useCallback((key: string) => {
+    try {
+      return translate(key)
+    } catch {
+      return key
+    }
+  }, [translate])
 
   const value = useMemo<LanguageContextType>(() => {
     const dir = language === "ar" ? "rtl" : "ltr"
@@ -100,11 +62,11 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
       language,
       dir,
       isMounted,
-      setLanguage: setLanguageState,
-      toggleLanguage: () => setLanguageState((current) => (current === "ar" ? "en" : "ar")),
-      t: (key: string) => dictionary[language][key] || key,
+      setLanguage,
+      toggleLanguage: () => setLanguage(language === "ar" ? "en" : "ar"),
+      t,
     }
-  }, [isMounted, language])
+  }, [isMounted, language, setLanguage, t])
 
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>
 }

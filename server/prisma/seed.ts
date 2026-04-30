@@ -1,7 +1,109 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import fs from 'fs';
+import path from 'path';
 
 const prisma = new PrismaClient();
+
+type EgyptZoneData = {
+  governorates: Array<{
+    sourceId: string;
+    nameAr: string;
+    nameEn: string;
+    children: Array<{
+      sourceId: string;
+      nameAr: string;
+      nameEn: string;
+      originalNameAr?: string;
+      originalNameEn?: string;
+    }>;
+  }>;
+};
+
+const GOVERNORATE_ALIASES: Record<string, string[]> = {
+  الأسكندرية: ['الإسكندرية'],
+};
+
+function loadEgyptZones(): EgyptZoneData {
+  const filePath = path.join(__dirname, 'data', 'egypt-zones.json');
+  return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+}
+
+async function upsertZoneByName(name: string, data: { description?: string; basePrice?: number; parentId?: string | null }, aliases: string[] = []) {
+  const existing =
+    (await prisma.zone.findUnique({ where: { name }, select: { id: true } })) ||
+    (aliases.length > 0
+      ? await prisma.zone.findFirst({
+          where: { OR: aliases.map((alias) => ({ name: alias })) },
+          select: { id: true },
+        })
+      : null);
+
+  if (existing) {
+    return prisma.zone.update({
+      where: { id: existing.id },
+      data: {
+        name,
+        description: data.description,
+        basePrice: data.basePrice ?? 0,
+        parentId: data.parentId ?? null,
+      },
+    });
+  }
+
+  return prisma.zone.create({
+    data: {
+      name,
+      description: data.description,
+      basePrice: data.basePrice ?? 0,
+      ...(data.parentId ? { parentId: data.parentId } : {}),
+    },
+  });
+}
+
+async function seedEgyptZones() {
+  const data = loadEgyptZones();
+  const byEnglishName = new Map<string, Awaited<ReturnType<typeof upsertZoneByName>>>();
+
+  for (const governorate of data.governorates) {
+    const parent = await upsertZoneByName(
+      governorate.nameAr,
+      {
+        description: `${governorate.nameEn} governorate`,
+        basePrice: 0,
+      },
+      GOVERNORATE_ALIASES[governorate.nameAr] || [],
+    );
+    byEnglishName.set(governorate.nameEn, parent);
+
+    for (const child of governorate.children) {
+      await upsertZoneByName(child.nameAr, {
+        description: `${child.nameEn || child.originalNameEn || child.nameAr} - ${governorate.nameAr}`,
+        basePrice: 0,
+        parentId: parent.id,
+      });
+    }
+  }
+
+  return { byEnglishName };
+}
+
+async function ensurePricingRule(zoneId: string, standardPrice: number, expressPrice: number, sameDayPrice: number, driverPayout?: number) {
+  return prisma.pricingRule.upsert({
+    where: { zoneId },
+    update: {},
+    create: { zoneId, standardPrice, expressPrice, sameDayPrice, driverPayout },
+  });
+}
+
+async function findChildZone(parentId: string, names: string[]) {
+  return prisma.zone.findFirst({
+    where: {
+      parentId,
+      OR: names.map((name) => ({ name })),
+    },
+  });
+}
 
 function generateShipmentNumber(): string {
   const ts  = Date.now().toString(36).toUpperCase();
@@ -46,70 +148,19 @@ async function main() {
     create: { name: 'حسن المتجر', email: 'client2@shipping.com.eg', phone: '01201234567', password: clientPassword, role: 'CLIENT' },
   });
 
-  // المناطق المصرية
-  const cairoZone = await prisma.zone.upsert({
-    where:  { name: 'القاهرة' },
-    update: {},
-    create: { name: 'القاهرة', description: 'القاهرة الكبرى والمحافظة', basePrice: 0 },
-  });
-  const gizaZone = await prisma.zone.upsert({
-    where:  { name: 'الجيزة' },
-    update: {},
-    create: { name: 'الجيزة', description: 'محافظة الجيزة والأحياء المجاورة', basePrice: 0 },
-  });
-  const alexZone = await prisma.zone.upsert({
-    where:  { name: 'الإسكندرية' },
-    update: {},
-    create: { name: 'الإسكندرية', description: 'محافظة الإسكندرية', basePrice: 0 },
-  });
-  const deltaZone = await prisma.zone.upsert({
-    where:  { name: 'الدلتا' },
-    update: {},
-    create: { name: 'الدلتا', description: 'محافظات الوجه البحري', basePrice: 0 },
-  });
+  // المناطق المصرية: 27 محافظة و396 مدينة/منطقة من ملف بيانات محلي.
+  const { byEnglishName } = await seedEgyptZones();
+  const cairoZone = byEnglishName.get('Cairo')!;
+  const gizaZone = byEnglishName.get('Giza')!;
+  const alexZone = byEnglishName.get('Alexandria')!;
+  const gharbiyaZone = byEnglishName.get('Gharbiya')!;
+  const tantaZone = await findChildZone(gharbiyaZone.id, ['طنطا']);
 
-  const cairoAreas = [
-    'مدينة نصر',
-    'مصر الجديدة',
-    'المعادي',
-    'التجمع الخامس',
-    'وسط البلد',
-    'شبرا',
-    'حلوان',
-    'المرج',
-    'عين شمس',
-    'الزمالك',
-    'المقطم',
-  ];
-  for (const areaName of cairoAreas) {
-    await prisma.zone.upsert({
-      where: { name: areaName },
-      update: { parentId: cairoZone.id, description: `منطقة ${areaName} - القاهرة`, basePrice: 0 },
-      create: { name: areaName, description: `منطقة ${areaName} - القاهرة`, basePrice: 0, parentId: cairoZone.id },
-    });
-  }
-
-  // قواعد التسعير (بالجنيه المصري)
-  await prisma.pricingRule.upsert({
-    where:  { zoneId: cairoZone.id },
-    update: {},
-    create: { zoneId: cairoZone.id, standardPrice: 25, expressPrice: 40, sameDayPrice: 70, driverPayout: 15 },
-  });
-  await prisma.pricingRule.upsert({
-    where:  { zoneId: gizaZone.id },
-    update: {},
-    create: { zoneId: gizaZone.id, standardPrice: 30, expressPrice: 50, sameDayPrice: 80, driverPayout: 18 },
-  });
-  await prisma.pricingRule.upsert({
-    where:  { zoneId: alexZone.id },
-    update: {},
-    create: { zoneId: alexZone.id, standardPrice: 45, expressPrice: 75, sameDayPrice: 120 },
-  });
-  await prisma.pricingRule.upsert({
-    where:  { zoneId: deltaZone.id },
-    update: {},
-    create: { zoneId: deltaZone.id, standardPrice: 35, expressPrice: 60, sameDayPrice: 100 },
-  });
+  // قواعد التسعير (بالجنيه المصري). لا يتم تعديل الأسعار القائمة للحفاظ على إعدادات التشغيل.
+  await ensurePricingRule(cairoZone.id, 25, 40, 70, 15);
+  await ensurePricingRule(gizaZone.id, 30, 50, 80, 18);
+  await ensurePricingRule(alexZone.id, 45, 75, 120);
+  await ensurePricingRule(gharbiyaZone.id, 35, 60, 100);
 
   // طلبات نموذجية
   const order1 = await prisma.order.create({
@@ -172,7 +223,7 @@ async function main() {
       grandTotal:         1025,
       addons:             [{ name: 'خدمة إرجاع', amount: 25 }],
       totalPrice:         1025,
-      zoneId:             deltaZone.id,
+      zoneId:             tantaZone?.id ?? gharbiyaZone.id,
       collectionStatus:   'DRIVER_COLLECTED',
     },
   });

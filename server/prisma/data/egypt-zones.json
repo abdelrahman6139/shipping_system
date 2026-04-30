@@ -1,0 +1,2975 @@
+{
+  "source": {
+    "name": "Tech-Labs/egypt-governorates-and-cities-db",
+    "url": "https://github.com/Tech-Labs/egypt-governorates-and-cities-db",
+    "files": [
+      "governorates.json",
+      "cities.json"
+    ],
+    "importedAt": "2026-04-30",
+    "note": "Duplicate city Arabic names are suffixed with the governorate name. City names that match a governorate are prefixed with ????? because Zone.name is globally unique."
+  },
+  "governorates": [
+    {
+      "sourceId": "1",
+      "nameAr": "القاهرة",
+      "nameEn": "Cairo",
+      "children": [
+        {
+          "sourceId": "1",
+          "nameAr": "15 مايو",
+          "nameEn": "15 May",
+          "originalNameAr": "15 مايو",
+          "originalNameEn": "15 May"
+        },
+        {
+          "sourceId": "2",
+          "nameAr": "الازبكية",
+          "nameEn": "Al Azbakeyah",
+          "originalNameAr": "الازبكية",
+          "originalNameEn": "Al Azbakeyah"
+        },
+        {
+          "sourceId": "3",
+          "nameAr": "البساتين",
+          "nameEn": "Al Basatin",
+          "originalNameAr": "البساتين",
+          "originalNameEn": "Al Basatin"
+        },
+        {
+          "sourceId": "4",
+          "nameAr": "التبين",
+          "nameEn": "Tebin",
+          "originalNameAr": "التبين",
+          "originalNameEn": "Tebin"
+        },
+        {
+          "sourceId": "53",
+          "nameAr": "الجمالية (القاهرة)",
+          "nameEn": "El-Gamaleya (Cairo)",
+          "originalNameAr": "الجمالية",
+          "originalNameEn": "El-Gamaleya"
+        },
+        {
+          "sourceId": "55",
+          "nameAr": "الحلمية",
+          "nameEn": "Helmeyat Alzaytoun",
+          "originalNameAr": "الحلمية",
+          "originalNameEn": "Helmeyat Alzaytoun"
+        },
+        {
+          "sourceId": "5",
+          "nameAr": "الخليفة",
+          "nameEn": "El-Khalifa",
+          "originalNameAr": "الخليفة",
+          "originalNameEn": "El-Khalifa"
+        },
+        {
+          "sourceId": "6",
+          "nameAr": "الدراسة",
+          "nameEn": "El darrasa",
+          "originalNameAr": "الدراسة",
+          "originalNameEn": "El darrasa"
+        },
+        {
+          "sourceId": "7",
+          "nameAr": "الدرب الاحمر",
+          "nameEn": "Aldarb Alahmar",
+          "originalNameAr": "الدرب الاحمر",
+          "originalNameEn": "Aldarb Alahmar"
+        },
+        {
+          "sourceId": "48",
+          "nameAr": "الرحاب",
+          "nameEn": "Rehab",
+          "originalNameAr": "الرحاب",
+          "originalNameEn": "Rehab"
+        },
+        {
+          "sourceId": "8",
+          "nameAr": "الزاوية الحمراء",
+          "nameEn": "Zawya al-Hamra",
+          "originalNameAr": "الزاوية الحمراء",
+          "originalNameEn": "Zawya al-Hamra"
+        },
+        {
+          "sourceId": "46",
+          "nameAr": "الزمالك",
+          "nameEn": "Zamalek",
+          "originalNameAr": "الزمالك",
+          "originalNameEn": "Zamalek"
+        },
+        {
+          "sourceId": "9",
+          "nameAr": "الزيتون",
+          "nameEn": "El-Zaytoun",
+          "originalNameAr": "الزيتون",
+          "originalNameEn": "El-Zaytoun"
+        },
+        {
+          "sourceId": "10",
+          "nameAr": "الساحل",
+          "nameEn": "Sahel",
+          "originalNameAr": "الساحل",
+          "originalNameEn": "Sahel"
+        },
+        {
+          "sourceId": "11",
+          "nameAr": "السلام",
+          "nameEn": "El Salam",
+          "originalNameAr": "السلام",
+          "originalNameEn": "El Salam"
+        },
+        {
+          "sourceId": "12",
+          "nameAr": "السيدة زينب",
+          "nameEn": "Sayeda Zeinab",
+          "originalNameAr": "السيدة زينب",
+          "originalNameEn": "Sayeda Zeinab"
+        },
+        {
+          "sourceId": "13",
+          "nameAr": "الشرابية",
+          "nameEn": "El Sharabeya",
+          "originalNameAr": "الشرابية",
+          "originalNameEn": "El Sharabeya"
+        },
+        {
+          "sourceId": "15",
+          "nameAr": "الظاهر",
+          "nameEn": "El Daher",
+          "originalNameAr": "الظاهر",
+          "originalNameEn": "El Daher"
+        },
+        {
+          "sourceId": "54",
+          "nameAr": "العاشر من رمضان (القاهرة)",
+          "nameEn": "10th of Ramadan City (Cairo)",
+          "originalNameAr": "العاشر من رمضان",
+          "originalNameEn": "10th of Ramadan City"
+        },
+        {
+          "sourceId": "57",
+          "nameAr": "العاصمة الإدارية",
+          "nameEn": "Capital New",
+          "originalNameAr": "العاصمة الإدارية",
+          "originalNameEn": "Capital New"
+        },
+        {
+          "sourceId": "16",
+          "nameAr": "العتبة",
+          "nameEn": "Ataba",
+          "originalNameAr": "العتبة",
+          "originalNameEn": "Ataba"
+        },
+        {
+          "sourceId": "17",
+          "nameAr": "القاهرة الجديدة",
+          "nameEn": "New Cairo",
+          "originalNameAr": "القاهرة الجديدة",
+          "originalNameEn": "New Cairo"
+        },
+        {
+          "sourceId": "49",
+          "nameAr": "القطامية",
+          "nameEn": "Katameya",
+          "originalNameAr": "القطامية",
+          "originalNameEn": "Katameya"
+        },
+        {
+          "sourceId": "18",
+          "nameAr": "المرج",
+          "nameEn": "El Marg",
+          "originalNameAr": "المرج",
+          "originalNameEn": "El Marg"
+        },
+        {
+          "sourceId": "20",
+          "nameAr": "المطرية (القاهرة)",
+          "nameEn": "Matareya (Cairo)",
+          "originalNameAr": "المطرية",
+          "originalNameEn": "Matareya"
+        },
+        {
+          "sourceId": "21",
+          "nameAr": "المعادى",
+          "nameEn": "Maadi",
+          "originalNameAr": "المعادى",
+          "originalNameEn": "Maadi"
+        },
+        {
+          "sourceId": "22",
+          "nameAr": "المعصرة",
+          "nameEn": "Maasara",
+          "originalNameAr": "المعصرة",
+          "originalNameEn": "Maasara"
+        },
+        {
+          "sourceId": "23",
+          "nameAr": "المقطم",
+          "nameEn": "Mokattam",
+          "originalNameAr": "المقطم",
+          "originalNameEn": "Mokattam"
+        },
+        {
+          "sourceId": "24",
+          "nameAr": "المنيل",
+          "nameEn": "Manyal",
+          "originalNameAr": "المنيل",
+          "originalNameEn": "Manyal"
+        },
+        {
+          "sourceId": "25",
+          "nameAr": "الموسكى",
+          "nameEn": "Mosky",
+          "originalNameAr": "الموسكى",
+          "originalNameEn": "Mosky"
+        },
+        {
+          "sourceId": "26",
+          "nameAr": "النزهة",
+          "nameEn": "Nozha",
+          "originalNameAr": "النزهة",
+          "originalNameEn": "Nozha"
+        },
+        {
+          "sourceId": "56",
+          "nameAr": "النزهة الجديدة",
+          "nameEn": "New Nozha",
+          "originalNameAr": "النزهة الجديدة",
+          "originalNameEn": "New Nozha"
+        },
+        {
+          "sourceId": "27",
+          "nameAr": "الوايلى",
+          "nameEn": "Waily",
+          "originalNameAr": "الوايلى",
+          "originalNameEn": "Waily"
+        },
+        {
+          "sourceId": "28",
+          "nameAr": "باب الشعرية",
+          "nameEn": "Bab al-Shereia",
+          "originalNameAr": "باب الشعرية",
+          "originalNameEn": "Bab al-Shereia"
+        },
+        {
+          "sourceId": "29",
+          "nameAr": "بولاق",
+          "nameEn": "Bolaq",
+          "originalNameAr": "بولاق",
+          "originalNameEn": "Bolaq"
+        },
+        {
+          "sourceId": "30",
+          "nameAr": "جاردن سيتى",
+          "nameEn": "Garden City",
+          "originalNameAr": "جاردن سيتى",
+          "originalNameEn": "Garden City"
+        },
+        {
+          "sourceId": "31",
+          "nameAr": "حدائق القبة",
+          "nameEn": "Hadayek El-Kobba",
+          "originalNameAr": "حدائق القبة",
+          "originalNameEn": "Hadayek El-Kobba"
+        },
+        {
+          "sourceId": "32",
+          "nameAr": "حلوان",
+          "nameEn": "Helwan",
+          "originalNameAr": "حلوان",
+          "originalNameEn": "Helwan"
+        },
+        {
+          "sourceId": "33",
+          "nameAr": "دار السلام (القاهرة)",
+          "nameEn": "Dar Al Salam (Cairo)",
+          "originalNameAr": "دار السلام",
+          "originalNameEn": "Dar Al Salam"
+        },
+        {
+          "sourceId": "51",
+          "nameAr": "روض الفرج",
+          "nameEn": "Rod Alfarag",
+          "originalNameAr": "روض الفرج",
+          "originalNameEn": "Rod Alfarag"
+        },
+        {
+          "sourceId": "34",
+          "nameAr": "شبرا",
+          "nameEn": "Shubra",
+          "originalNameAr": "شبرا",
+          "originalNameEn": "Shubra"
+        },
+        {
+          "sourceId": "52",
+          "nameAr": "شيراتون",
+          "nameEn": "Sheraton",
+          "originalNameAr": "شيراتون",
+          "originalNameEn": "Sheraton"
+        },
+        {
+          "sourceId": "35",
+          "nameAr": "طره",
+          "nameEn": "Tura",
+          "originalNameAr": "طره",
+          "originalNameEn": "Tura"
+        },
+        {
+          "sourceId": "36",
+          "nameAr": "عابدين",
+          "nameEn": "Abdeen",
+          "originalNameAr": "عابدين",
+          "originalNameEn": "Abdeen"
+        },
+        {
+          "sourceId": "37",
+          "nameAr": "عباسية",
+          "nameEn": "Abaseya",
+          "originalNameAr": "عباسية",
+          "originalNameEn": "Abaseya"
+        },
+        {
+          "sourceId": "19",
+          "nameAr": "عزبة النخل",
+          "nameEn": "Ezbet el Nakhl",
+          "originalNameAr": "عزبة النخل",
+          "originalNameEn": "Ezbet el Nakhl"
+        },
+        {
+          "sourceId": "38",
+          "nameAr": "عين شمس",
+          "nameEn": "Ain Shams",
+          "originalNameAr": "عين شمس",
+          "originalNameEn": "Ain Shams"
+        },
+        {
+          "sourceId": "47",
+          "nameAr": "قصر النيل",
+          "nameEn": "Kasr El Nile",
+          "originalNameAr": "قصر النيل",
+          "originalNameEn": "Kasr El Nile"
+        },
+        {
+          "sourceId": "14",
+          "nameAr": "مدينة الشروق",
+          "nameEn": "Shorouk",
+          "originalNameAr": "مدينة الشروق",
+          "originalNameEn": "Shorouk"
+        },
+        {
+          "sourceId": "44",
+          "nameAr": "مدينة العبور",
+          "nameEn": "Obour City",
+          "originalNameAr": "مدينة العبور",
+          "originalNameEn": "Obour City"
+        },
+        {
+          "sourceId": "43",
+          "nameAr": "مدينة بدر",
+          "nameEn": "Badr City",
+          "originalNameAr": "مدينة بدر",
+          "originalNameEn": "Badr City"
+        },
+        {
+          "sourceId": "39",
+          "nameAr": "مدينة نصر",
+          "nameEn": "Nasr City",
+          "originalNameAr": "مدينة نصر",
+          "originalNameEn": "Nasr City"
+        },
+        {
+          "sourceId": "50",
+          "nameAr": "مدينتي",
+          "nameEn": "Madinty",
+          "originalNameAr": "مدينتي",
+          "originalNameEn": "Madinty"
+        },
+        {
+          "sourceId": "40",
+          "nameAr": "مصر الجديدة",
+          "nameEn": "New Heliopolis",
+          "originalNameAr": "مصر الجديدة",
+          "originalNameEn": "New Heliopolis"
+        },
+        {
+          "sourceId": "41",
+          "nameAr": "مصر القديمة",
+          "nameEn": "Masr Al Qadima",
+          "originalNameAr": "مصر القديمة",
+          "originalNameEn": "Masr Al Qadima"
+        },
+        {
+          "sourceId": "42",
+          "nameAr": "منشية ناصر",
+          "nameEn": "Mansheya Nasir",
+          "originalNameAr": "منشية ناصر",
+          "originalNameEn": "Mansheya Nasir"
+        },
+        {
+          "sourceId": "45",
+          "nameAr": "وسط البلد",
+          "nameEn": "Cairo Downtown",
+          "originalNameAr": "وسط البلد",
+          "originalNameEn": "Cairo Downtown"
+        }
+      ]
+    },
+    {
+      "sourceId": "2",
+      "nameAr": "الجيزة",
+      "nameEn": "Giza",
+      "children": [
+        {
+          "sourceId": "70",
+          "nameAr": "أبو النمرس",
+          "nameEn": "Abu Nomros",
+          "originalNameAr": "أبو النمرس",
+          "originalNameEn": "Abu Nomros"
+        },
+        {
+          "sourceId": "86",
+          "nameAr": "أبو رواش",
+          "nameEn": "Abu Rawash",
+          "originalNameAr": "أبو رواش",
+          "originalNameEn": "Abu Rawash"
+        },
+        {
+          "sourceId": "92",
+          "nameAr": "ارض اللواء",
+          "nameEn": "Ard Ellwaa",
+          "originalNameAr": "ارض اللواء",
+          "originalNameEn": "Ard Ellwaa"
+        },
+        {
+          "sourceId": "64",
+          "nameAr": "أطفيح",
+          "nameEn": "Atfih",
+          "originalNameAr": "أطفيح",
+          "originalNameEn": "Atfih"
+        },
+        {
+          "sourceId": "66",
+          "nameAr": "الباويطي",
+          "nameEn": "Al-Bawaiti",
+          "originalNameAr": "الباويطي",
+          "originalNameEn": "Al-Bawaiti"
+        },
+        {
+          "sourceId": "62",
+          "nameAr": "البدرشين",
+          "nameEn": "Al Badrasheen",
+          "originalNameAr": "البدرشين",
+          "originalNameEn": "Al Badrasheen"
+        },
+        {
+          "sourceId": "58",
+          "nameAr": "????? الجيزة",
+          "nameEn": "City of Giza",
+          "originalNameAr": "الجيزة",
+          "originalNameEn": "Giza"
+        },
+        {
+          "sourceId": "88",
+          "nameAr": "الحرانية",
+          "nameEn": "Haraneya",
+          "originalNameAr": "الحرانية",
+          "originalNameEn": "Haraneya"
+        },
+        {
+          "sourceId": "61",
+          "nameAr": "الحوامدية",
+          "nameEn": "Hawamdiyah",
+          "originalNameAr": "الحوامدية",
+          "originalNameEn": "Hawamdiyah"
+        },
+        {
+          "sourceId": "73",
+          "nameAr": "الدقى",
+          "nameEn": "Dokki",
+          "originalNameAr": "الدقى",
+          "originalNameEn": "Dokki"
+        },
+        {
+          "sourceId": "59",
+          "nameAr": "السادس من أكتوبر",
+          "nameEn": "Sixth of October",
+          "originalNameAr": "السادس من أكتوبر",
+          "originalNameEn": "Sixth of October"
+        },
+        {
+          "sourceId": "60",
+          "nameAr": "الشيخ زايد (الجيزة)",
+          "nameEn": "Cheikh Zayed (Giza)",
+          "originalNameAr": "الشيخ زايد",
+          "originalNameEn": "Cheikh Zayed"
+        },
+        {
+          "sourceId": "63",
+          "nameAr": "الصف",
+          "nameEn": "Saf",
+          "originalNameAr": "الصف",
+          "originalNameEn": "Saf"
+        },
+        {
+          "sourceId": "74",
+          "nameAr": "العجوزة",
+          "nameEn": "Agouza",
+          "originalNameAr": "العجوزة",
+          "originalNameEn": "Agouza"
+        },
+        {
+          "sourceId": "80",
+          "nameAr": "العمرانية",
+          "nameEn": "Omraneya",
+          "originalNameAr": "العمرانية",
+          "originalNameEn": "Omraneya"
+        },
+        {
+          "sourceId": "65",
+          "nameAr": "العياط",
+          "nameEn": "Al Ayat",
+          "originalNameAr": "العياط",
+          "originalNameEn": "Al Ayat"
+        },
+        {
+          "sourceId": "91",
+          "nameAr": "القرية الذكية",
+          "nameEn": "Smart Village",
+          "originalNameAr": "القرية الذكية",
+          "originalNameEn": "Smart Village"
+        },
+        {
+          "sourceId": "83",
+          "nameAr": "الكيت كات",
+          "nameEn": "Kit Kat",
+          "originalNameAr": "الكيت كات",
+          "originalNameEn": "Kit Kat"
+        },
+        {
+          "sourceId": "81",
+          "nameAr": "المنيب",
+          "nameEn": "Moneeb",
+          "originalNameAr": "المنيب",
+          "originalNameEn": "Moneeb"
+        },
+        {
+          "sourceId": "84",
+          "nameAr": "المهندسين",
+          "nameEn": "Mohandessin",
+          "originalNameAr": "المهندسين",
+          "originalNameEn": "Mohandessin"
+        },
+        {
+          "sourceId": "75",
+          "nameAr": "الهرم",
+          "nameEn": "Haram",
+          "originalNameAr": "الهرم",
+          "originalNameEn": "Haram"
+        },
+        {
+          "sourceId": "79",
+          "nameAr": "الواحات البحرية",
+          "nameEn": "Al Wahat Al Baharia",
+          "originalNameAr": "الواحات البحرية",
+          "originalNameEn": "Al Wahat Al Baharia"
+        },
+        {
+          "sourceId": "76",
+          "nameAr": "الوراق",
+          "nameEn": "Warraq",
+          "originalNameAr": "الوراق",
+          "originalNameEn": "Warraq"
+        },
+        {
+          "sourceId": "77",
+          "nameAr": "امبابة",
+          "nameEn": "Imbaba",
+          "originalNameAr": "امبابة",
+          "originalNameEn": "Imbaba"
+        },
+        {
+          "sourceId": "68",
+          "nameAr": "أوسيم",
+          "nameEn": "Oaseem",
+          "originalNameAr": "أوسيم",
+          "originalNameEn": "Oaseem"
+        },
+        {
+          "sourceId": "78",
+          "nameAr": "بولاق الدكرور",
+          "nameEn": "Boulaq Dakrour",
+          "originalNameAr": "بولاق الدكرور",
+          "originalNameEn": "Boulaq Dakrour"
+        },
+        {
+          "sourceId": "82",
+          "nameAr": "بين السرايات",
+          "nameEn": "Bin Alsarayat",
+          "originalNameAr": "بين السرايات",
+          "originalNameEn": "Bin Alsarayat"
+        },
+        {
+          "sourceId": "89",
+          "nameAr": "حدائق اكتوبر",
+          "nameEn": "Hadayek October",
+          "originalNameAr": "حدائق اكتوبر",
+          "originalNameEn": "Hadayek October"
+        },
+        {
+          "sourceId": "87",
+          "nameAr": "حدائق الأهرام",
+          "nameEn": "Hadayek Alahram",
+          "originalNameAr": "حدائق الأهرام",
+          "originalNameEn": "Hadayek Alahram"
+        },
+        {
+          "sourceId": "90",
+          "nameAr": "صفط اللبن",
+          "nameEn": "Saft Allaban",
+          "originalNameAr": "صفط اللبن",
+          "originalNameEn": "Saft Allaban"
+        },
+        {
+          "sourceId": "85",
+          "nameAr": "فيصل (الجيزة)",
+          "nameEn": "Faisal (Giza)",
+          "originalNameAr": "فيصل",
+          "originalNameEn": "Faisal"
+        },
+        {
+          "sourceId": "69",
+          "nameAr": "كرداسة",
+          "nameEn": "Kerdasa",
+          "originalNameAr": "كرداسة",
+          "originalNameEn": "Kerdasa"
+        },
+        {
+          "sourceId": "71",
+          "nameAr": "كفر غطاطي",
+          "nameEn": "Kafr Ghati",
+          "originalNameAr": "كفر غطاطي",
+          "originalNameEn": "Kafr Ghati"
+        },
+        {
+          "sourceId": "72",
+          "nameAr": "منشأة البكاري",
+          "nameEn": "Manshiyet Al Bakari",
+          "originalNameAr": "منشأة البكاري",
+          "originalNameEn": "Manshiyet Al Bakari"
+        },
+        {
+          "sourceId": "67",
+          "nameAr": "منشأة القناطر",
+          "nameEn": "ManshiyetAl Qanater",
+          "originalNameAr": "منشأة القناطر",
+          "originalNameEn": "ManshiyetAl Qanater"
+        }
+      ]
+    },
+    {
+      "sourceId": "3",
+      "nameAr": "الأسكندرية",
+      "nameEn": "Alexandria",
+      "children": [
+        {
+          "sourceId": "93",
+          "nameAr": "ابو قير",
+          "nameEn": "Abu Qir",
+          "originalNameAr": "ابو قير",
+          "originalNameEn": "Abu Qir"
+        },
+        {
+          "sourceId": "94",
+          "nameAr": "الابراهيمية",
+          "nameEn": "Al Ibrahimeyah",
+          "originalNameAr": "الابراهيمية",
+          "originalNameEn": "Al Ibrahimeyah"
+        },
+        {
+          "sourceId": "95",
+          "nameAr": "الأزاريطة",
+          "nameEn": "Azarita",
+          "originalNameAr": "الأزاريطة",
+          "originalNameEn": "Azarita"
+        },
+        {
+          "sourceId": "96",
+          "nameAr": "الانفوشى",
+          "nameEn": "Anfoushi",
+          "originalNameAr": "الانفوشى",
+          "originalNameEn": "Anfoushi"
+        },
+        {
+          "sourceId": "134",
+          "nameAr": "الجمرك",
+          "nameEn": "Elgomrok",
+          "originalNameAr": "الجمرك",
+          "originalNameEn": "Elgomrok"
+        },
+        {
+          "sourceId": "131",
+          "nameAr": "الحضرة",
+          "nameEn": "Alhadra",
+          "originalNameAr": "الحضرة",
+          "originalNameEn": "Alhadra"
+        },
+        {
+          "sourceId": "97",
+          "nameAr": "الدخيلة",
+          "nameEn": "Dekheila",
+          "originalNameAr": "الدخيلة",
+          "originalNameEn": "Dekheila"
+        },
+        {
+          "sourceId": "130",
+          "nameAr": "الساحل الشمالي",
+          "nameEn": "North Coast/sahel",
+          "originalNameAr": "الساحل الشمالي",
+          "originalNameEn": "North Coast/sahel"
+        },
+        {
+          "sourceId": "98",
+          "nameAr": "السيوف",
+          "nameEn": "El Soyof",
+          "originalNameAr": "السيوف",
+          "originalNameEn": "El Soyof"
+        },
+        {
+          "sourceId": "128",
+          "nameAr": "الشاطبي",
+          "nameEn": "Elshatby",
+          "originalNameAr": "الشاطبي",
+          "originalNameEn": "Elshatby"
+        },
+        {
+          "sourceId": "99",
+          "nameAr": "العامرية",
+          "nameEn": "Ameria",
+          "originalNameAr": "العامرية",
+          "originalNameEn": "Ameria"
+        },
+        {
+          "sourceId": "120",
+          "nameAr": "العجمي",
+          "nameEn": "Agamy",
+          "originalNameAr": "العجمي",
+          "originalNameEn": "Agamy"
+        },
+        {
+          "sourceId": "119",
+          "nameAr": "العصافرة",
+          "nameEn": "Asafra",
+          "originalNameAr": "العصافرة",
+          "originalNameEn": "Asafra"
+        },
+        {
+          "sourceId": "132",
+          "nameAr": "العطارين",
+          "nameEn": "Alattarin",
+          "originalNameAr": "العطارين",
+          "originalNameEn": "Alattarin"
+        },
+        {
+          "sourceId": "100",
+          "nameAr": "اللبان",
+          "nameEn": "El Labban",
+          "originalNameAr": "اللبان",
+          "originalNameEn": "El Labban"
+        },
+        {
+          "sourceId": "125",
+          "nameAr": "المعمورة",
+          "nameEn": "Al Mamurah",
+          "originalNameAr": "المعمورة",
+          "originalNameEn": "Al Mamurah"
+        },
+        {
+          "sourceId": "101",
+          "nameAr": "المفروزة",
+          "nameEn": "Al Mafrouza",
+          "originalNameAr": "المفروزة",
+          "originalNameEn": "Al Mafrouza"
+        },
+        {
+          "sourceId": "135",
+          "nameAr": "المكس",
+          "nameEn": "Al Max",
+          "originalNameAr": "المكس",
+          "originalNameEn": "Al Max"
+        },
+        {
+          "sourceId": "102",
+          "nameAr": "المنتزه",
+          "nameEn": "El Montaza",
+          "originalNameAr": "المنتزه",
+          "originalNameEn": "El Montaza"
+        },
+        {
+          "sourceId": "126",
+          "nameAr": "المندرة",
+          "nameEn": "Al Mandara",
+          "originalNameAr": "المندرة",
+          "originalNameEn": "Al Mandara"
+        },
+        {
+          "sourceId": "103",
+          "nameAr": "المنشية",
+          "nameEn": "Mansheya",
+          "originalNameAr": "المنشية",
+          "originalNameEn": "Mansheya"
+        },
+        {
+          "sourceId": "104",
+          "nameAr": "الناصرية",
+          "nameEn": "Naseria",
+          "originalNameAr": "الناصرية",
+          "originalNameEn": "Naseria"
+        },
+        {
+          "sourceId": "105",
+          "nameAr": "امبروزو",
+          "nameEn": "Ambrozo",
+          "originalNameAr": "امبروزو",
+          "originalNameEn": "Ambrozo"
+        },
+        {
+          "sourceId": "106",
+          "nameAr": "باب شرق",
+          "nameEn": "Bab Sharq",
+          "originalNameAr": "باب شرق",
+          "originalNameEn": "Bab Sharq"
+        },
+        {
+          "sourceId": "107",
+          "nameAr": "برج العرب",
+          "nameEn": "Bourj Alarab",
+          "originalNameAr": "برج العرب",
+          "originalNameEn": "Bourj Alarab"
+        },
+        {
+          "sourceId": "121",
+          "nameAr": "بكوس",
+          "nameEn": "Bakos",
+          "originalNameAr": "بكوس",
+          "originalNameEn": "Bakos"
+        },
+        {
+          "sourceId": "122",
+          "nameAr": "بولكلي",
+          "nameEn": "Boulkly",
+          "originalNameAr": "بولكلي",
+          "originalNameEn": "Boulkly"
+        },
+        {
+          "sourceId": "124",
+          "nameAr": "جليم",
+          "nameEn": "Glim",
+          "originalNameAr": "جليم",
+          "originalNameEn": "Glim"
+        },
+        {
+          "sourceId": "108",
+          "nameAr": "ستانلى",
+          "nameEn": "Stanley",
+          "originalNameAr": "ستانلى",
+          "originalNameEn": "Stanley"
+        },
+        {
+          "sourceId": "109",
+          "nameAr": "سموحة",
+          "nameEn": "Smouha",
+          "originalNameAr": "سموحة",
+          "originalNameEn": "Smouha"
+        },
+        {
+          "sourceId": "110",
+          "nameAr": "سيدى بشر",
+          "nameEn": "Sidi Bishr",
+          "originalNameAr": "سيدى بشر",
+          "originalNameEn": "Sidi Bishr"
+        },
+        {
+          "sourceId": "129",
+          "nameAr": "سيدي جابر",
+          "nameEn": "Sidi Gaber",
+          "originalNameAr": "سيدي جابر",
+          "originalNameEn": "Sidi Gaber"
+        },
+        {
+          "sourceId": "133",
+          "nameAr": "سيدي كرير",
+          "nameEn": "Sidi Kerir",
+          "originalNameAr": "سيدي كرير",
+          "originalNameEn": "Sidi Kerir"
+        },
+        {
+          "sourceId": "111",
+          "nameAr": "شدس",
+          "nameEn": "Shads",
+          "originalNameAr": "شدس",
+          "originalNameEn": "Shads"
+        },
+        {
+          "sourceId": "112",
+          "nameAr": "غيط العنب",
+          "nameEn": "Gheet Alenab",
+          "originalNameAr": "غيط العنب",
+          "originalNameEn": "Gheet Alenab"
+        },
+        {
+          "sourceId": "113",
+          "nameAr": "فلمينج",
+          "nameEn": "Fleming",
+          "originalNameAr": "فلمينج",
+          "originalNameEn": "Fleming"
+        },
+        {
+          "sourceId": "114",
+          "nameAr": "فيكتوريا",
+          "nameEn": "Victoria",
+          "originalNameAr": "فيكتوريا",
+          "originalNameEn": "Victoria"
+        },
+        {
+          "sourceId": "115",
+          "nameAr": "كامب شيزار",
+          "nameEn": "Camp Shizar",
+          "originalNameAr": "كامب شيزار",
+          "originalNameEn": "Camp Shizar"
+        },
+        {
+          "sourceId": "116",
+          "nameAr": "كرموز",
+          "nameEn": "Karmooz",
+          "originalNameAr": "كرموز",
+          "originalNameEn": "Karmooz"
+        },
+        {
+          "sourceId": "123",
+          "nameAr": "كليوباترا",
+          "nameEn": "Cleopatra",
+          "originalNameAr": "كليوباترا",
+          "originalNameEn": "Cleopatra"
+        },
+        {
+          "sourceId": "136",
+          "nameAr": "مارينا (الأسكندرية)",
+          "nameEn": "Marina (Alexandria)",
+          "originalNameAr": "مارينا",
+          "originalNameEn": "Marina"
+        },
+        {
+          "sourceId": "127",
+          "nameAr": "محرم بك",
+          "nameEn": "Moharam Bek",
+          "originalNameAr": "محرم بك",
+          "originalNameEn": "Moharam Bek"
+        },
+        {
+          "sourceId": "117",
+          "nameAr": "محطة الرمل",
+          "nameEn": "Mahta Alraml",
+          "originalNameAr": "محطة الرمل",
+          "originalNameEn": "Mahta Alraml"
+        },
+        {
+          "sourceId": "118",
+          "nameAr": "مينا البصل",
+          "nameEn": "Mina El-Basal",
+          "originalNameAr": "مينا البصل",
+          "originalNameEn": "Mina El-Basal"
+        }
+      ]
+    },
+    {
+      "sourceId": "4",
+      "nameAr": "الدقهلية",
+      "nameEn": "Dakahlia",
+      "children": [
+        {
+          "sourceId": "141",
+          "nameAr": "أجا",
+          "nameEn": "Aga",
+          "originalNameAr": "أجا",
+          "originalNameEn": "Aga"
+        },
+        {
+          "sourceId": "148",
+          "nameAr": "الجمالية (الدقهلية)",
+          "nameEn": "aljamalia (Dakahlia)",
+          "originalNameAr": "الجمالية",
+          "originalNameEn": "aljamalia"
+        },
+        {
+          "sourceId": "143",
+          "nameAr": "السنبلاوين",
+          "nameEn": "Sinbillawin",
+          "originalNameAr": "السنبلاوين",
+          "originalNameEn": "Sinbillawin"
+        },
+        {
+          "sourceId": "144",
+          "nameAr": "الكردي",
+          "nameEn": "El Kurdi",
+          "originalNameAr": "الكردي",
+          "originalNameEn": "El Kurdi"
+        },
+        {
+          "sourceId": "150",
+          "nameAr": "المطرية (الدقهلية)",
+          "nameEn": "Mataria (Dakahlia)",
+          "originalNameAr": "المطرية",
+          "originalNameEn": "Mataria"
+        },
+        {
+          "sourceId": "146",
+          "nameAr": "المنزلة",
+          "nameEn": "Al Manzala",
+          "originalNameAr": "المنزلة",
+          "originalNameEn": "Al Manzala"
+        },
+        {
+          "sourceId": "137",
+          "nameAr": "المنصورة",
+          "nameEn": "Mansoura",
+          "originalNameAr": "المنصورة",
+          "originalNameEn": "Mansoura"
+        },
+        {
+          "sourceId": "151",
+          "nameAr": "بلقاس",
+          "nameEn": "Belqas",
+          "originalNameAr": "بلقاس",
+          "originalNameEn": "Belqas"
+        },
+        {
+          "sourceId": "145",
+          "nameAr": "بني عبيد",
+          "nameEn": "Bani Ubaid",
+          "originalNameAr": "بني عبيد",
+          "originalNameEn": "Bani Ubaid"
+        },
+        {
+          "sourceId": "147",
+          "nameAr": "تمي الأمديد",
+          "nameEn": "tami al'amdid",
+          "originalNameAr": "تمي الأمديد",
+          "originalNameEn": "tami al'amdid"
+        },
+        {
+          "sourceId": "153",
+          "nameAr": "جمصة",
+          "nameEn": "Gamasa",
+          "originalNameAr": "جمصة",
+          "originalNameEn": "Gamasa"
+        },
+        {
+          "sourceId": "140",
+          "nameAr": "دكرنس",
+          "nameEn": "Dekernes",
+          "originalNameAr": "دكرنس",
+          "originalNameEn": "Dekernes"
+        },
+        {
+          "sourceId": "149",
+          "nameAr": "شربين",
+          "nameEn": "Sherbin",
+          "originalNameAr": "شربين",
+          "originalNameEn": "Sherbin"
+        },
+        {
+          "sourceId": "138",
+          "nameAr": "طلخا",
+          "nameEn": "Talkha",
+          "originalNameAr": "طلخا",
+          "originalNameEn": "Talkha"
+        },
+        {
+          "sourceId": "154",
+          "nameAr": "محلة دمنة",
+          "nameEn": "Mahalat Damana",
+          "originalNameAr": "محلة دمنة",
+          "originalNameEn": "Mahalat Damana"
+        },
+        {
+          "sourceId": "142",
+          "nameAr": "منية النصر",
+          "nameEn": "Menia El Nasr",
+          "originalNameAr": "منية النصر",
+          "originalNameEn": "Menia El Nasr"
+        },
+        {
+          "sourceId": "152",
+          "nameAr": "ميت سلسيل",
+          "nameEn": "Meet Salsil",
+          "originalNameAr": "ميت سلسيل",
+          "originalNameEn": "Meet Salsil"
+        },
+        {
+          "sourceId": "139",
+          "nameAr": "ميت غمر",
+          "nameEn": "Mitt Ghamr",
+          "originalNameAr": "ميت غمر",
+          "originalNameEn": "Mitt Ghamr"
+        },
+        {
+          "sourceId": "155",
+          "nameAr": "نبروه",
+          "nameEn": "Nabroh",
+          "originalNameAr": "نبروه",
+          "originalNameEn": "Nabroh"
+        }
+      ]
+    },
+    {
+      "sourceId": "5",
+      "nameAr": "البحر الأحمر",
+      "nameEn": "Red Sea",
+      "children": [
+        {
+          "sourceId": "163",
+          "nameAr": "الدهار",
+          "nameEn": "Aldahar",
+          "originalNameAr": "الدهار",
+          "originalNameEn": "Aldahar"
+        },
+        {
+          "sourceId": "161",
+          "nameAr": "الشلاتين",
+          "nameEn": "Shalatin",
+          "originalNameAr": "الشلاتين",
+          "originalNameEn": "Shalatin"
+        },
+        {
+          "sourceId": "156",
+          "nameAr": "الغردقة",
+          "nameEn": "Hurghada",
+          "originalNameAr": "الغردقة",
+          "originalNameEn": "Hurghada"
+        },
+        {
+          "sourceId": "159",
+          "nameAr": "القصير",
+          "nameEn": "El Qusiar",
+          "originalNameAr": "القصير",
+          "originalNameEn": "El Qusiar"
+        },
+        {
+          "sourceId": "162",
+          "nameAr": "حلايب",
+          "nameEn": "Halaib",
+          "originalNameAr": "حلايب",
+          "originalNameEn": "Halaib"
+        },
+        {
+          "sourceId": "157",
+          "nameAr": "رأس غارب",
+          "nameEn": "Ras Ghareb",
+          "originalNameAr": "رأس غارب",
+          "originalNameEn": "Ras Ghareb"
+        },
+        {
+          "sourceId": "158",
+          "nameAr": "سفاجا",
+          "nameEn": "Safaga",
+          "originalNameAr": "سفاجا",
+          "originalNameEn": "Safaga"
+        },
+        {
+          "sourceId": "160",
+          "nameAr": "مرسى علم (البحر الأحمر)",
+          "nameEn": "Marsa Alam (Red Sea)",
+          "originalNameAr": "مرسى علم",
+          "originalNameEn": "Marsa Alam"
+        }
+      ]
+    },
+    {
+      "sourceId": "6",
+      "nameAr": "البحيرة",
+      "nameEn": "Beheira",
+      "children": [
+        {
+          "sourceId": "168",
+          "nameAr": "أبو المطامير",
+          "nameEn": "Abu al-Matamir",
+          "originalNameAr": "أبو المطامير",
+          "originalNameEn": "Abu al-Matamir"
+        },
+        {
+          "sourceId": "169",
+          "nameAr": "أبو حمص",
+          "nameEn": "Abu Homs",
+          "originalNameAr": "أبو حمص",
+          "originalNameEn": "Abu Homs"
+        },
+        {
+          "sourceId": "167",
+          "nameAr": "إدكو",
+          "nameEn": "Edco",
+          "originalNameAr": "إدكو",
+          "originalNameEn": "Edco"
+        },
+        {
+          "sourceId": "170",
+          "nameAr": "الدلنجات",
+          "nameEn": "Delengat",
+          "originalNameAr": "الدلنجات",
+          "originalNameEn": "Delengat"
+        },
+        {
+          "sourceId": "172",
+          "nameAr": "الرحمانية",
+          "nameEn": "Rahmaniyah",
+          "originalNameAr": "الرحمانية",
+          "originalNameEn": "Rahmaniyah"
+        },
+        {
+          "sourceId": "171",
+          "nameAr": "المحمودية",
+          "nameEn": "Mahmoudiyah",
+          "originalNameAr": "المحمودية",
+          "originalNameEn": "Mahmoudiyah"
+        },
+        {
+          "sourceId": "180",
+          "nameAr": "النوبارية",
+          "nameEn": "Alnoubareya",
+          "originalNameAr": "النوبارية",
+          "originalNameEn": "Alnoubareya"
+        },
+        {
+          "sourceId": "179",
+          "nameAr": "النوبارية الجديدة",
+          "nameEn": "New Nubaria",
+          "originalNameAr": "النوبارية الجديدة",
+          "originalNameEn": "New Nubaria"
+        },
+        {
+          "sourceId": "173",
+          "nameAr": "إيتاي البارود",
+          "nameEn": "Itai Baroud",
+          "originalNameAr": "إيتاي البارود",
+          "originalNameEn": "Itai Baroud"
+        },
+        {
+          "sourceId": "177",
+          "nameAr": "بدر",
+          "nameEn": "Badr",
+          "originalNameAr": "بدر",
+          "originalNameEn": "Badr"
+        },
+        {
+          "sourceId": "174",
+          "nameAr": "حوش عيسى",
+          "nameEn": "Housh Eissa",
+          "originalNameAr": "حوش عيسى",
+          "originalNameEn": "Housh Eissa"
+        },
+        {
+          "sourceId": "164",
+          "nameAr": "دمنهور",
+          "nameEn": "Damanhour",
+          "originalNameAr": "دمنهور",
+          "originalNameEn": "Damanhour"
+        },
+        {
+          "sourceId": "166",
+          "nameAr": "رشيد",
+          "nameEn": "Rashid",
+          "originalNameAr": "رشيد",
+          "originalNameEn": "Rashid"
+        },
+        {
+          "sourceId": "175",
+          "nameAr": "شبراخيت",
+          "nameEn": "Shubrakhit",
+          "originalNameAr": "شبراخيت",
+          "originalNameEn": "Shubrakhit"
+        },
+        {
+          "sourceId": "165",
+          "nameAr": "كفر الدوار",
+          "nameEn": "Kafr El Dawar",
+          "originalNameAr": "كفر الدوار",
+          "originalNameEn": "Kafr El Dawar"
+        },
+        {
+          "sourceId": "176",
+          "nameAr": "كوم حمادة",
+          "nameEn": "Kom Hamada",
+          "originalNameAr": "كوم حمادة",
+          "originalNameEn": "Kom Hamada"
+        },
+        {
+          "sourceId": "178",
+          "nameAr": "وادي النطرون",
+          "nameEn": "Wadi Natrun",
+          "originalNameAr": "وادي النطرون",
+          "originalNameEn": "Wadi Natrun"
+        }
+      ]
+    },
+    {
+      "sourceId": "7",
+      "nameAr": "الفيوم",
+      "nameEn": "Fayoum",
+      "children": [
+        {
+          "sourceId": "186",
+          "nameAr": "إبشواي",
+          "nameEn": "Epschway",
+          "originalNameAr": "إبشواي",
+          "originalNameEn": "Epschway"
+        },
+        {
+          "sourceId": "185",
+          "nameAr": "إطسا",
+          "nameEn": "Etsa",
+          "originalNameAr": "إطسا",
+          "originalNameEn": "Etsa"
+        },
+        {
+          "sourceId": "189",
+          "nameAr": "اطسا",
+          "nameEn": "Atsa",
+          "originalNameAr": "اطسا",
+          "originalNameEn": "Atsa"
+        },
+        {
+          "sourceId": "190",
+          "nameAr": "الجامعة",
+          "nameEn": "Algamaa",
+          "originalNameAr": "الجامعة",
+          "originalNameEn": "Algamaa"
+        },
+        {
+          "sourceId": "188",
+          "nameAr": "الحادقة",
+          "nameEn": "Hadqa",
+          "originalNameAr": "الحادقة",
+          "originalNameEn": "Hadqa"
+        },
+        {
+          "sourceId": "191",
+          "nameAr": "السيالة",
+          "nameEn": "Sayala",
+          "originalNameAr": "السيالة",
+          "originalNameEn": "Sayala"
+        },
+        {
+          "sourceId": "181",
+          "nameAr": "????? الفيوم",
+          "nameEn": "City of Fayoum",
+          "originalNameAr": "الفيوم",
+          "originalNameEn": "Fayoum"
+        },
+        {
+          "sourceId": "182",
+          "nameAr": "الفيوم الجديدة",
+          "nameEn": "Fayoum El Gedida",
+          "originalNameAr": "الفيوم الجديدة",
+          "originalNameEn": "Fayoum El Gedida"
+        },
+        {
+          "sourceId": "184",
+          "nameAr": "سنورس",
+          "nameEn": "Snores",
+          "originalNameAr": "سنورس",
+          "originalNameEn": "Snores"
+        },
+        {
+          "sourceId": "183",
+          "nameAr": "طامية",
+          "nameEn": "Tamiya",
+          "originalNameAr": "طامية",
+          "originalNameEn": "Tamiya"
+        },
+        {
+          "sourceId": "187",
+          "nameAr": "يوسف الصديق",
+          "nameEn": "Yusuf El Sediaq",
+          "originalNameAr": "يوسف الصديق",
+          "originalNameEn": "Yusuf El Sediaq"
+        }
+      ]
+    },
+    {
+      "sourceId": "8",
+      "nameAr": "الغربية",
+      "nameEn": "Gharbiya",
+      "children": [
+        {
+          "sourceId": "196",
+          "nameAr": "السنطة",
+          "nameEn": "El Santa",
+          "originalNameAr": "السنطة",
+          "originalNameEn": "El Santa"
+        },
+        {
+          "sourceId": "193",
+          "nameAr": "المحلة الكبرى",
+          "nameEn": "Al Mahalla Al Kobra",
+          "originalNameAr": "المحلة الكبرى",
+          "originalNameEn": "Al Mahalla Al Kobra"
+        },
+        {
+          "sourceId": "198",
+          "nameAr": "بسيون",
+          "nameEn": "Basion",
+          "originalNameAr": "بسيون",
+          "originalNameEn": "Basion"
+        },
+        {
+          "sourceId": "195",
+          "nameAr": "زفتى",
+          "nameEn": "Zefta",
+          "originalNameAr": "زفتى",
+          "originalNameEn": "Zefta"
+        },
+        {
+          "sourceId": "199",
+          "nameAr": "سمنود",
+          "nameEn": "Samannoud",
+          "originalNameAr": "سمنود",
+          "originalNameEn": "Samannoud"
+        },
+        {
+          "sourceId": "192",
+          "nameAr": "طنطا",
+          "nameEn": "Tanta",
+          "originalNameAr": "طنطا",
+          "originalNameEn": "Tanta"
+        },
+        {
+          "sourceId": "197",
+          "nameAr": "قطور",
+          "nameEn": "Qutour",
+          "originalNameAr": "قطور",
+          "originalNameEn": "Qutour"
+        },
+        {
+          "sourceId": "194",
+          "nameAr": "كفر الزيات",
+          "nameEn": "Kafr El Zayat",
+          "originalNameAr": "كفر الزيات",
+          "originalNameEn": "Kafr El Zayat"
+        }
+      ]
+    },
+    {
+      "sourceId": "9",
+      "nameAr": "الإسماعلية",
+      "nameEn": "Ismailia",
+      "children": [
+        {
+          "sourceId": "205",
+          "nameAr": "أبو صوير",
+          "nameEn": "Abu Sawir",
+          "originalNameAr": "أبو صوير",
+          "originalNameEn": "Abu Sawir"
+        },
+        {
+          "sourceId": "200",
+          "nameAr": "الإسماعيلية",
+          "nameEn": "Ismailia",
+          "originalNameAr": "الإسماعيلية",
+          "originalNameEn": "Ismailia"
+        },
+        {
+          "sourceId": "204",
+          "nameAr": "التل الكبير",
+          "nameEn": "El Tal El Kabier",
+          "originalNameAr": "التل الكبير",
+          "originalNameEn": "El Tal El Kabier"
+        },
+        {
+          "sourceId": "208",
+          "nameAr": "الشيخ زايد (الإسماعلية)",
+          "nameEn": "Sheikh Zayed (Ismailia)",
+          "originalNameAr": "الشيخ زايد",
+          "originalNameEn": "Sheikh Zayed"
+        },
+        {
+          "sourceId": "206",
+          "nameAr": "القصاصين الجديدة",
+          "nameEn": "Kasasien El Gedida",
+          "originalNameAr": "القصاصين الجديدة",
+          "originalNameEn": "Kasasien El Gedida"
+        },
+        {
+          "sourceId": "202",
+          "nameAr": "القنطرة شرق",
+          "nameEn": "Qantara Sharq",
+          "originalNameAr": "القنطرة شرق",
+          "originalNameEn": "Qantara Sharq"
+        },
+        {
+          "sourceId": "203",
+          "nameAr": "القنطرة غرب",
+          "nameEn": "Qantara Gharb",
+          "originalNameAr": "القنطرة غرب",
+          "originalNameEn": "Qantara Gharb"
+        },
+        {
+          "sourceId": "201",
+          "nameAr": "فايد",
+          "nameEn": "Fayed",
+          "originalNameAr": "فايد",
+          "originalNameEn": "Fayed"
+        },
+        {
+          "sourceId": "207",
+          "nameAr": "نفيشة",
+          "nameEn": "Nefesha",
+          "originalNameAr": "نفيشة",
+          "originalNameEn": "Nefesha"
+        }
+      ]
+    },
+    {
+      "sourceId": "10",
+      "nameAr": "المنوفية",
+      "nameEn": "Menofia",
+      "children": [
+        {
+          "sourceId": "213",
+          "nameAr": "أشمون",
+          "nameEn": "Ashmon",
+          "originalNameAr": "أشمون",
+          "originalNameEn": "Ashmon"
+        },
+        {
+          "sourceId": "214",
+          "nameAr": "الباجور",
+          "nameEn": "Al Bagor",
+          "originalNameAr": "الباجور",
+          "originalNameEn": "Al Bagor"
+        },
+        {
+          "sourceId": "218",
+          "nameAr": "الشهداء",
+          "nameEn": "Al Shohada",
+          "originalNameAr": "الشهداء",
+          "originalNameEn": "Al Shohada"
+        },
+        {
+          "sourceId": "216",
+          "nameAr": "بركة السبع",
+          "nameEn": "Berkat El Saba",
+          "originalNameAr": "بركة السبع",
+          "originalNameEn": "Berkat El Saba"
+        },
+        {
+          "sourceId": "217",
+          "nameAr": "تلا",
+          "nameEn": "Tala",
+          "originalNameAr": "تلا",
+          "originalNameEn": "Tala"
+        },
+        {
+          "sourceId": "212",
+          "nameAr": "سرس الليان",
+          "nameEn": "Sars El-Layan",
+          "originalNameAr": "سرس الليان",
+          "originalNameEn": "Sars El-Layan"
+        },
+        {
+          "sourceId": "209",
+          "nameAr": "شبين الكوم",
+          "nameEn": "Shbeen El Koom",
+          "originalNameAr": "شبين الكوم",
+          "originalNameEn": "Shbeen El Koom"
+        },
+        {
+          "sourceId": "215",
+          "nameAr": "قويسنا",
+          "nameEn": "Quesna",
+          "originalNameAr": "قويسنا",
+          "originalNameEn": "Quesna"
+        },
+        {
+          "sourceId": "210",
+          "nameAr": "مدينة السادات",
+          "nameEn": "Sadat City",
+          "originalNameAr": "مدينة السادات",
+          "originalNameEn": "Sadat City"
+        },
+        {
+          "sourceId": "211",
+          "nameAr": "منوف",
+          "nameEn": "Menouf",
+          "originalNameAr": "منوف",
+          "originalNameEn": "Menouf"
+        }
+      ]
+    },
+    {
+      "sourceId": "11",
+      "nameAr": "المنيا",
+      "nameEn": "Minya",
+      "children": [
+        {
+          "sourceId": "229",
+          "nameAr": "ابو قرقاص",
+          "nameEn": "Abu Qurqas",
+          "originalNameAr": "ابو قرقاص",
+          "originalNameEn": "Abu Qurqas"
+        },
+        {
+          "sourceId": "230",
+          "nameAr": "ارض سلطان",
+          "nameEn": "Ard Sultan",
+          "originalNameAr": "ارض سلطان",
+          "originalNameEn": "Ard Sultan"
+        },
+        {
+          "sourceId": "221",
+          "nameAr": "العدوة",
+          "nameEn": "El Adwa",
+          "originalNameAr": "العدوة",
+          "originalNameEn": "El Adwa"
+        },
+        {
+          "sourceId": "226",
+          "nameAr": "المدينة الفكرية",
+          "nameEn": "Madinat El Fekria",
+          "originalNameAr": "المدينة الفكرية",
+          "originalNameEn": "Madinat El Fekria"
+        },
+        {
+          "sourceId": "219",
+          "nameAr": "????? المنيا",
+          "nameEn": "City of Minya",
+          "originalNameAr": "المنيا",
+          "originalNameEn": "Minya"
+        },
+        {
+          "sourceId": "220",
+          "nameAr": "المنيا الجديدة",
+          "nameEn": "Minya El Gedida",
+          "originalNameAr": "المنيا الجديدة",
+          "originalNameEn": "Minya El Gedida"
+        },
+        {
+          "sourceId": "223",
+          "nameAr": "بني مزار",
+          "nameEn": "Bani Mazar",
+          "originalNameAr": "بني مزار",
+          "originalNameEn": "Bani Mazar"
+        },
+        {
+          "sourceId": "228",
+          "nameAr": "دير مواس",
+          "nameEn": "Deir Mawas",
+          "originalNameAr": "دير مواس",
+          "originalNameEn": "Deir Mawas"
+        },
+        {
+          "sourceId": "225",
+          "nameAr": "سمالوط",
+          "nameEn": "Samalut",
+          "originalNameAr": "سمالوط",
+          "originalNameEn": "Samalut"
+        },
+        {
+          "sourceId": "224",
+          "nameAr": "مطاي",
+          "nameEn": "Mattay",
+          "originalNameAr": "مطاي",
+          "originalNameEn": "Mattay"
+        },
+        {
+          "sourceId": "222",
+          "nameAr": "مغاغة",
+          "nameEn": "Magagha",
+          "originalNameAr": "مغاغة",
+          "originalNameEn": "Magagha"
+        },
+        {
+          "sourceId": "227",
+          "nameAr": "ملوي",
+          "nameEn": "Meloy",
+          "originalNameAr": "ملوي",
+          "originalNameEn": "Meloy"
+        }
+      ]
+    },
+    {
+      "sourceId": "12",
+      "nameAr": "القليوبية",
+      "nameEn": "Qaliubiya",
+      "children": [
+        {
+          "sourceId": "235",
+          "nameAr": "الخانكة",
+          "nameEn": "Khanka",
+          "originalNameAr": "الخانكة",
+          "originalNameEn": "Khanka"
+        },
+        {
+          "sourceId": "240",
+          "nameAr": "الخصوص",
+          "nameEn": "Khosous",
+          "originalNameAr": "الخصوص",
+          "originalNameEn": "Khosous"
+        },
+        {
+          "sourceId": "239",
+          "nameAr": "العبور",
+          "nameEn": "Obour",
+          "originalNameAr": "العبور",
+          "originalNameEn": "Obour"
+        },
+        {
+          "sourceId": "234",
+          "nameAr": "القناطر الخيرية",
+          "nameEn": "Al Qanater Charity",
+          "originalNameAr": "القناطر الخيرية",
+          "originalNameEn": "Al Qanater Charity"
+        },
+        {
+          "sourceId": "231",
+          "nameAr": "بنها",
+          "nameEn": "Banha",
+          "originalNameAr": "بنها",
+          "originalNameEn": "Banha"
+        },
+        {
+          "sourceId": "233",
+          "nameAr": "شبرا الخيمة",
+          "nameEn": "Shubra Al Khaimah",
+          "originalNameAr": "شبرا الخيمة",
+          "originalNameEn": "Shubra Al Khaimah"
+        },
+        {
+          "sourceId": "241",
+          "nameAr": "شبين القناطر",
+          "nameEn": "Shibin Al Qanater",
+          "originalNameAr": "شبين القناطر",
+          "originalNameEn": "Shibin Al Qanater"
+        },
+        {
+          "sourceId": "237",
+          "nameAr": "طوخ",
+          "nameEn": "Tukh",
+          "originalNameAr": "طوخ",
+          "originalNameEn": "Tukh"
+        },
+        {
+          "sourceId": "232",
+          "nameAr": "قليوب",
+          "nameEn": "Qalyub",
+          "originalNameAr": "قليوب",
+          "originalNameEn": "Qalyub"
+        },
+        {
+          "sourceId": "238",
+          "nameAr": "قها",
+          "nameEn": "Qaha",
+          "originalNameAr": "قها",
+          "originalNameEn": "Qaha"
+        },
+        {
+          "sourceId": "236",
+          "nameAr": "كفر شكر",
+          "nameEn": "Kafr Shukr",
+          "originalNameAr": "كفر شكر",
+          "originalNameEn": "Kafr Shukr"
+        },
+        {
+          "sourceId": "242",
+          "nameAr": "مسطرد",
+          "nameEn": "Mostorod",
+          "originalNameAr": "مسطرد",
+          "originalNameEn": "Mostorod"
+        }
+      ]
+    },
+    {
+      "sourceId": "13",
+      "nameAr": "الوادي الجديد",
+      "nameEn": "New Valley",
+      "children": [
+        {
+          "sourceId": "243",
+          "nameAr": "الخارجة",
+          "nameEn": "El Kharga",
+          "originalNameAr": "الخارجة",
+          "originalNameEn": "El Kharga"
+        },
+        {
+          "sourceId": "248",
+          "nameAr": "الداخلة",
+          "nameEn": "Dakhla",
+          "originalNameAr": "الداخلة",
+          "originalNameEn": "Dakhla"
+        },
+        {
+          "sourceId": "246",
+          "nameAr": "الفرافرة",
+          "nameEn": "Farafra",
+          "originalNameAr": "الفرافرة",
+          "originalNameEn": "Farafra"
+        },
+        {
+          "sourceId": "244",
+          "nameAr": "باريس",
+          "nameEn": "Paris",
+          "originalNameAr": "باريس",
+          "originalNameEn": "Paris"
+        },
+        {
+          "sourceId": "247",
+          "nameAr": "بلاط",
+          "nameEn": "Balat",
+          "originalNameAr": "بلاط",
+          "originalNameEn": "Balat"
+        },
+        {
+          "sourceId": "245",
+          "nameAr": "موط",
+          "nameEn": "Mout",
+          "originalNameAr": "موط",
+          "originalNameEn": "Mout"
+        }
+      ]
+    },
+    {
+      "sourceId": "14",
+      "nameAr": "السويس",
+      "nameEn": "Suez",
+      "children": [
+        {
+          "sourceId": "250",
+          "nameAr": "الجناين",
+          "nameEn": "Alganayen",
+          "originalNameAr": "الجناين",
+          "originalNameEn": "Alganayen"
+        },
+        {
+          "sourceId": "249",
+          "nameAr": "????? السويس",
+          "nameEn": "City of Suez",
+          "originalNameAr": "السويس",
+          "originalNameEn": "Suez"
+        },
+        {
+          "sourceId": "252",
+          "nameAr": "العين السخنة",
+          "nameEn": "Ain Sokhna",
+          "originalNameAr": "العين السخنة",
+          "originalNameEn": "Ain Sokhna"
+        },
+        {
+          "sourceId": "251",
+          "nameAr": "عتاقة",
+          "nameEn": "Ataqah",
+          "originalNameAr": "عتاقة",
+          "originalNameEn": "Ataqah"
+        },
+        {
+          "sourceId": "253",
+          "nameAr": "فيصل (السويس)",
+          "nameEn": "Faysal (Suez)",
+          "originalNameAr": "فيصل",
+          "originalNameEn": "Faysal"
+        }
+      ]
+    },
+    {
+      "sourceId": "15",
+      "nameAr": "اسوان",
+      "nameEn": "Aswan",
+      "children": [
+        {
+          "sourceId": "264",
+          "nameAr": "ابوسمبل السياحية",
+          "nameEn": "Abo Simbl Al Siyahia",
+          "originalNameAr": "ابوسمبل السياحية",
+          "originalNameEn": "Abo Simbl Al Siyahia"
+        },
+        {
+          "sourceId": "260",
+          "nameAr": "إدفو",
+          "nameEn": "Edfu",
+          "originalNameAr": "إدفو",
+          "originalNameEn": "Edfu"
+        },
+        {
+          "sourceId": "254",
+          "nameAr": "أسوان",
+          "nameEn": "Aswan",
+          "originalNameAr": "أسوان",
+          "originalNameEn": "Aswan"
+        },
+        {
+          "sourceId": "255",
+          "nameAr": "أسوان الجديدة",
+          "nameEn": "Aswan El Gedida",
+          "originalNameAr": "أسوان الجديدة",
+          "originalNameEn": "Aswan El Gedida"
+        },
+        {
+          "sourceId": "262",
+          "nameAr": "البصيلية",
+          "nameEn": "Al Basilia",
+          "originalNameAr": "البصيلية",
+          "originalNameEn": "Al Basilia"
+        },
+        {
+          "sourceId": "261",
+          "nameAr": "الرديسية",
+          "nameEn": "Al-Radisiyah",
+          "originalNameAr": "الرديسية",
+          "originalNameEn": "Al-Radisiyah"
+        },
+        {
+          "sourceId": "263",
+          "nameAr": "السباعية",
+          "nameEn": "Al Sibaeia",
+          "originalNameAr": "السباعية",
+          "originalNameEn": "Al Sibaeia"
+        },
+        {
+          "sourceId": "256",
+          "nameAr": "دراو",
+          "nameEn": "Drau",
+          "originalNameAr": "دراو",
+          "originalNameEn": "Drau"
+        },
+        {
+          "sourceId": "259",
+          "nameAr": "كلابشة",
+          "nameEn": "Kalabsha",
+          "originalNameAr": "كلابشة",
+          "originalNameEn": "Kalabsha"
+        },
+        {
+          "sourceId": "257",
+          "nameAr": "كوم أمبو",
+          "nameEn": "Kom Ombo",
+          "originalNameAr": "كوم أمبو",
+          "originalNameEn": "Kom Ombo"
+        },
+        {
+          "sourceId": "265",
+          "nameAr": "مرسى علم (اسوان)",
+          "nameEn": "Marsa Alam (Aswan)",
+          "originalNameAr": "مرسى علم",
+          "originalNameEn": "Marsa Alam"
+        },
+        {
+          "sourceId": "258",
+          "nameAr": "نصر النوبة",
+          "nameEn": "Nasr Al Nuba",
+          "originalNameAr": "نصر النوبة",
+          "originalNameEn": "Nasr Al Nuba"
+        }
+      ]
+    },
+    {
+      "sourceId": "16",
+      "nameAr": "اسيوط",
+      "nameEn": "Assiut",
+      "children": [
+        {
+          "sourceId": "271",
+          "nameAr": "أبنوب",
+          "nameEn": "Abnoub",
+          "originalNameAr": "أبنوب",
+          "originalNameEn": "Abnoub"
+        },
+        {
+          "sourceId": "272",
+          "nameAr": "أبو تيج",
+          "nameEn": "Abu Tig",
+          "originalNameAr": "أبو تيج",
+          "originalNameEn": "Abu Tig"
+        },
+        {
+          "sourceId": "266",
+          "nameAr": "أسيوط",
+          "nameEn": "Assiut",
+          "originalNameAr": "أسيوط",
+          "originalNameEn": "Assiut"
+        },
+        {
+          "sourceId": "267",
+          "nameAr": "أسيوط الجديدة",
+          "nameEn": "Assiut El Gedida",
+          "originalNameAr": "أسيوط الجديدة",
+          "originalNameEn": "Assiut El Gedida"
+        },
+        {
+          "sourceId": "275",
+          "nameAr": "البداري",
+          "nameEn": "El Badari",
+          "originalNameAr": "البداري",
+          "originalNameEn": "El Badari"
+        },
+        {
+          "sourceId": "273",
+          "nameAr": "الغنايم",
+          "nameEn": "El Ghanaim",
+          "originalNameAr": "الغنايم",
+          "originalNameEn": "El Ghanaim"
+        },
+        {
+          "sourceId": "270",
+          "nameAr": "القوصية",
+          "nameEn": "Qusiya",
+          "originalNameAr": "القوصية",
+          "originalNameEn": "Qusiya"
+        },
+        {
+          "sourceId": "268",
+          "nameAr": "ديروط",
+          "nameEn": "Dayrout",
+          "originalNameAr": "ديروط",
+          "originalNameEn": "Dayrout"
+        },
+        {
+          "sourceId": "274",
+          "nameAr": "ساحل سليم",
+          "nameEn": "Sahel Selim",
+          "originalNameAr": "ساحل سليم",
+          "originalNameEn": "Sahel Selim"
+        },
+        {
+          "sourceId": "276",
+          "nameAr": "صدفا",
+          "nameEn": "Sidfa",
+          "originalNameAr": "صدفا",
+          "originalNameEn": "Sidfa"
+        },
+        {
+          "sourceId": "269",
+          "nameAr": "منفلوط",
+          "nameEn": "Manfalut",
+          "originalNameAr": "منفلوط",
+          "originalNameEn": "Manfalut"
+        }
+      ]
+    },
+    {
+      "sourceId": "17",
+      "nameAr": "بني سويف",
+      "nameEn": "Beni Suef",
+      "children": [
+        {
+          "sourceId": "285",
+          "nameAr": "الاباصيرى",
+          "nameEn": "Alabbaseri",
+          "originalNameAr": "الاباصيرى",
+          "originalNameEn": "Alabbaseri"
+        },
+        {
+          "sourceId": "283",
+          "nameAr": "الفشن",
+          "nameEn": "Fashn",
+          "originalNameAr": "الفشن",
+          "originalNameEn": "Fashn"
+        },
+        {
+          "sourceId": "279",
+          "nameAr": "الواسطى",
+          "nameEn": "Al Wasta",
+          "originalNameAr": "الواسطى",
+          "originalNameEn": "Al Wasta"
+        },
+        {
+          "sourceId": "281",
+          "nameAr": "إهناسيا",
+          "nameEn": "Ehnasia",
+          "originalNameAr": "إهناسيا",
+          "originalNameEn": "Ehnasia"
+        },
+        {
+          "sourceId": "282",
+          "nameAr": "ببا",
+          "nameEn": "beba",
+          "originalNameAr": "ببا",
+          "originalNameEn": "beba"
+        },
+        {
+          "sourceId": "277",
+          "nameAr": "????? بني سويف",
+          "nameEn": "Bani Sweif",
+          "originalNameAr": "بني سويف",
+          "originalNameEn": "Bani Sweif"
+        },
+        {
+          "sourceId": "278",
+          "nameAr": "بني سويف الجديدة",
+          "nameEn": "Beni Suef El Gedida",
+          "originalNameAr": "بني سويف الجديدة",
+          "originalNameEn": "Beni Suef El Gedida"
+        },
+        {
+          "sourceId": "284",
+          "nameAr": "سمسطا",
+          "nameEn": "Somasta",
+          "originalNameAr": "سمسطا",
+          "originalNameEn": "Somasta"
+        },
+        {
+          "sourceId": "286",
+          "nameAr": "مقبل",
+          "nameEn": "Mokbel",
+          "originalNameAr": "مقبل",
+          "originalNameEn": "Mokbel"
+        },
+        {
+          "sourceId": "280",
+          "nameAr": "ناصر",
+          "nameEn": "Naser",
+          "originalNameAr": "ناصر",
+          "originalNameEn": "Naser"
+        }
+      ]
+    },
+    {
+      "sourceId": "18",
+      "nameAr": "بورسعيد",
+      "nameEn": "Port Said",
+      "children": [
+        {
+          "sourceId": "289",
+          "nameAr": "العرب",
+          "nameEn": "Alarab",
+          "originalNameAr": "العرب",
+          "originalNameEn": "Alarab"
+        },
+        {
+          "sourceId": "287",
+          "nameAr": "????? بورسعيد",
+          "nameEn": "PorSaid",
+          "originalNameAr": "بورسعيد",
+          "originalNameEn": "PorSaid"
+        },
+        {
+          "sourceId": "288",
+          "nameAr": "بورفؤاد",
+          "nameEn": "Port Fouad",
+          "originalNameAr": "بورفؤاد",
+          "originalNameEn": "Port Fouad"
+        },
+        {
+          "sourceId": "290",
+          "nameAr": "حى الزهور",
+          "nameEn": "Zohour",
+          "originalNameAr": "حى الزهور",
+          "originalNameEn": "Zohour"
+        },
+        {
+          "sourceId": "291",
+          "nameAr": "حى الشرق",
+          "nameEn": "Alsharq",
+          "originalNameAr": "حى الشرق",
+          "originalNameEn": "Alsharq"
+        },
+        {
+          "sourceId": "292",
+          "nameAr": "حى الضواحى",
+          "nameEn": "Aldawahi",
+          "originalNameAr": "حى الضواحى",
+          "originalNameEn": "Aldawahi"
+        },
+        {
+          "sourceId": "293",
+          "nameAr": "حى المناخ",
+          "nameEn": "Almanakh",
+          "originalNameAr": "حى المناخ",
+          "originalNameEn": "Almanakh"
+        },
+        {
+          "sourceId": "294",
+          "nameAr": "حى مبارك",
+          "nameEn": "Mubarak",
+          "originalNameAr": "حى مبارك",
+          "originalNameEn": "Mubarak"
+        }
+      ]
+    },
+    {
+      "sourceId": "19",
+      "nameAr": "دمياط",
+      "nameEn": "Damietta",
+      "children": [
+        {
+          "sourceId": "301",
+          "nameAr": "الروضة",
+          "nameEn": "alruwda",
+          "originalNameAr": "الروضة",
+          "originalNameEn": "alruwda"
+        },
+        {
+          "sourceId": "299",
+          "nameAr": "الزرقا",
+          "nameEn": "Zarqa",
+          "originalNameAr": "الزرقا",
+          "originalNameEn": "Zarqa"
+        },
+        {
+          "sourceId": "300",
+          "nameAr": "السرو",
+          "nameEn": "alsaru",
+          "originalNameAr": "السرو",
+          "originalNameEn": "alsaru"
+        },
+        {
+          "sourceId": "295",
+          "nameAr": "????? دمياط",
+          "nameEn": "City of Damietta",
+          "originalNameAr": "دمياط",
+          "originalNameEn": "Damietta"
+        },
+        {
+          "sourceId": "296",
+          "nameAr": "دمياط الجديدة",
+          "nameEn": "New Damietta",
+          "originalNameAr": "دمياط الجديدة",
+          "originalNameEn": "New Damietta"
+        },
+        {
+          "sourceId": "297",
+          "nameAr": "رأس البر",
+          "nameEn": "Ras El Bar",
+          "originalNameAr": "رأس البر",
+          "originalNameEn": "Ras El Bar"
+        },
+        {
+          "sourceId": "303",
+          "nameAr": "عزبة البرج",
+          "nameEn": "Azbet Al Burg",
+          "originalNameAr": "عزبة البرج",
+          "originalNameEn": "Azbet Al Burg"
+        },
+        {
+          "sourceId": "298",
+          "nameAr": "فارسكور",
+          "nameEn": "Faraskour",
+          "originalNameAr": "فارسكور",
+          "originalNameEn": "Faraskour"
+        },
+        {
+          "sourceId": "302",
+          "nameAr": "كفر البطيخ",
+          "nameEn": "Kafr El-Batikh",
+          "originalNameAr": "كفر البطيخ",
+          "originalNameEn": "Kafr El-Batikh"
+        },
+        {
+          "sourceId": "305",
+          "nameAr": "كفر سعد",
+          "nameEn": "Kafr Saad",
+          "originalNameAr": "كفر سعد",
+          "originalNameEn": "Kafr Saad"
+        },
+        {
+          "sourceId": "304",
+          "nameAr": "ميت أبو غالب",
+          "nameEn": "Meet Abou Ghalib",
+          "originalNameAr": "ميت أبو غالب",
+          "originalNameEn": "Meet Abou Ghalib"
+        }
+      ]
+    },
+    {
+      "sourceId": "20",
+      "nameAr": "الشرقية",
+      "nameEn": "Sharkia",
+      "children": [
+        {
+          "sourceId": "312",
+          "nameAr": "أبو حماد",
+          "nameEn": "Abu Hammad",
+          "originalNameAr": "أبو حماد",
+          "originalNameEn": "Abu Hammad"
+        },
+        {
+          "sourceId": "315",
+          "nameAr": "أبو كبير",
+          "nameEn": "Abu Kabir",
+          "originalNameAr": "أبو كبير",
+          "originalNameEn": "Abu Kabir"
+        },
+        {
+          "sourceId": "318",
+          "nameAr": "الإبراهيمية",
+          "nameEn": "Al Ibrahimiyah",
+          "originalNameAr": "الإبراهيمية",
+          "originalNameEn": "Al Ibrahimiyah"
+        },
+        {
+          "sourceId": "322",
+          "nameAr": "الحسينية",
+          "nameEn": "Husseiniya",
+          "originalNameAr": "الحسينية",
+          "originalNameEn": "Husseiniya"
+        },
+        {
+          "sourceId": "306",
+          "nameAr": "الزقازيق",
+          "nameEn": "Zagazig",
+          "originalNameAr": "الزقازيق",
+          "originalNameEn": "Zagazig"
+        },
+        {
+          "sourceId": "317",
+          "nameAr": "الصالحية الجديدة",
+          "nameEn": "El Salihia El Gedida",
+          "originalNameAr": "الصالحية الجديدة",
+          "originalNameEn": "El Salihia El Gedida"
+        },
+        {
+          "sourceId": "307",
+          "nameAr": "العاشر من رمضان (الشرقية)",
+          "nameEn": "Al Ashr Men Ramadan (Sharkia)",
+          "originalNameAr": "العاشر من رمضان",
+          "originalNameEn": "Al Ashr Men Ramadan"
+        },
+        {
+          "sourceId": "313",
+          "nameAr": "القرين",
+          "nameEn": "El Qurain",
+          "originalNameAr": "القرين",
+          "originalNameEn": "El Qurain"
+        },
+        {
+          "sourceId": "311",
+          "nameAr": "القنايات",
+          "nameEn": "Qenaiat",
+          "originalNameAr": "القنايات",
+          "originalNameEn": "Qenaiat"
+        },
+        {
+          "sourceId": "321",
+          "nameAr": "أولاد صقر",
+          "nameEn": "Awlad Saqr",
+          "originalNameAr": "أولاد صقر",
+          "originalNameEn": "Awlad Saqr"
+        },
+        {
+          "sourceId": "309",
+          "nameAr": "بلبيس",
+          "nameEn": "Belbeis",
+          "originalNameAr": "بلبيس",
+          "originalNameEn": "Belbeis"
+        },
+        {
+          "sourceId": "319",
+          "nameAr": "ديرب نجم",
+          "nameEn": "Deirb Negm",
+          "originalNameAr": "ديرب نجم",
+          "originalNameEn": "Deirb Negm"
+        },
+        {
+          "sourceId": "323",
+          "nameAr": "صان الحجر القبلية",
+          "nameEn": "san alhajar alqablia",
+          "originalNameAr": "صان الحجر القبلية",
+          "originalNameEn": "san alhajar alqablia"
+        },
+        {
+          "sourceId": "316",
+          "nameAr": "فاقوس",
+          "nameEn": "Faccus",
+          "originalNameAr": "فاقوس",
+          "originalNameEn": "Faccus"
+        },
+        {
+          "sourceId": "320",
+          "nameAr": "كفر صقر",
+          "nameEn": "Kafr Saqr",
+          "originalNameAr": "كفر صقر",
+          "originalNameEn": "Kafr Saqr"
+        },
+        {
+          "sourceId": "310",
+          "nameAr": "مشتول السوق",
+          "nameEn": "Mashtoul El Souq",
+          "originalNameAr": "مشتول السوق",
+          "originalNameEn": "Mashtoul El Souq"
+        },
+        {
+          "sourceId": "324",
+          "nameAr": "منشأة أبو عمر",
+          "nameEn": "Manshayat Abu Omar",
+          "originalNameAr": "منشأة أبو عمر",
+          "originalNameEn": "Manshayat Abu Omar"
+        },
+        {
+          "sourceId": "308",
+          "nameAr": "منيا القمح",
+          "nameEn": "Minya Al Qamh",
+          "originalNameAr": "منيا القمح",
+          "originalNameEn": "Minya Al Qamh"
+        },
+        {
+          "sourceId": "314",
+          "nameAr": "ههيا",
+          "nameEn": "Hehia",
+          "originalNameAr": "ههيا",
+          "originalNameEn": "Hehia"
+        }
+      ]
+    },
+    {
+      "sourceId": "21",
+      "nameAr": "جنوب سيناء",
+      "nameEn": "South Sinai",
+      "children": [
+        {
+          "sourceId": "331",
+          "nameAr": "أبو رديس",
+          "nameEn": "Abu Redis",
+          "originalNameAr": "أبو رديس",
+          "originalNameEn": "Abu Redis"
+        },
+        {
+          "sourceId": "332",
+          "nameAr": "أبو زنيمة",
+          "nameEn": "Abu Zenaima",
+          "originalNameAr": "أبو زنيمة",
+          "originalNameEn": "Abu Zenaima"
+        },
+        {
+          "sourceId": "325",
+          "nameAr": "الطور",
+          "nameEn": "Al Toor",
+          "originalNameAr": "الطور",
+          "originalNameEn": "Al Toor"
+        },
+        {
+          "sourceId": "327",
+          "nameAr": "دهب",
+          "nameEn": "Dahab",
+          "originalNameAr": "دهب",
+          "originalNameEn": "Dahab"
+        },
+        {
+          "sourceId": "333",
+          "nameAr": "رأس سدر",
+          "nameEn": "Ras Sidr",
+          "originalNameAr": "رأس سدر",
+          "originalNameEn": "Ras Sidr"
+        },
+        {
+          "sourceId": "330",
+          "nameAr": "سانت كاترين",
+          "nameEn": "Saint Catherine",
+          "originalNameAr": "سانت كاترين",
+          "originalNameEn": "Saint Catherine"
+        },
+        {
+          "sourceId": "326",
+          "nameAr": "شرم الشيخ",
+          "nameEn": "Sharm El-Shaikh",
+          "originalNameAr": "شرم الشيخ",
+          "originalNameEn": "Sharm El-Shaikh"
+        },
+        {
+          "sourceId": "329",
+          "nameAr": "طابا",
+          "nameEn": "Taba",
+          "originalNameAr": "طابا",
+          "originalNameEn": "Taba"
+        },
+        {
+          "sourceId": "328",
+          "nameAr": "نويبع",
+          "nameEn": "Nuweiba",
+          "originalNameAr": "نويبع",
+          "originalNameEn": "Nuweiba"
+        }
+      ]
+    },
+    {
+      "sourceId": "22",
+      "nameAr": "كفر الشيخ",
+      "nameEn": "Kafr Al sheikh",
+      "children": [
+        {
+          "sourceId": "342",
+          "nameAr": "الحامول",
+          "nameEn": "Hamol",
+          "originalNameAr": "الحامول",
+          "originalNameEn": "Hamol"
+        },
+        {
+          "sourceId": "344",
+          "nameAr": "الرياض",
+          "nameEn": "Riyadh",
+          "originalNameAr": "الرياض",
+          "originalNameEn": "Riyadh"
+        },
+        {
+          "sourceId": "339",
+          "nameAr": "برج البرلس",
+          "nameEn": "Burg Al Burullus",
+          "originalNameAr": "برج البرلس",
+          "originalNameEn": "Burg Al Burullus"
+        },
+        {
+          "sourceId": "340",
+          "nameAr": "بلطيم",
+          "nameEn": "Baltim",
+          "originalNameAr": "بلطيم",
+          "originalNameEn": "Baltim"
+        },
+        {
+          "sourceId": "343",
+          "nameAr": "بيلا",
+          "nameEn": "Bella",
+          "originalNameAr": "بيلا",
+          "originalNameEn": "Bella"
+        },
+        {
+          "sourceId": "336",
+          "nameAr": "دسوق",
+          "nameEn": "Desouq",
+          "originalNameAr": "دسوق",
+          "originalNameEn": "Desouq"
+        },
+        {
+          "sourceId": "345",
+          "nameAr": "سيدي سالم",
+          "nameEn": "Sidi Salm",
+          "originalNameAr": "سيدي سالم",
+          "originalNameEn": "Sidi Salm"
+        },
+        {
+          "sourceId": "347",
+          "nameAr": "سيدي غازي",
+          "nameEn": "Sidi Ghazi",
+          "originalNameAr": "سيدي غازي",
+          "originalNameEn": "Sidi Ghazi"
+        },
+        {
+          "sourceId": "337",
+          "nameAr": "فوه",
+          "nameEn": "Fooh",
+          "originalNameAr": "فوه",
+          "originalNameEn": "Fooh"
+        },
+        {
+          "sourceId": "346",
+          "nameAr": "قلين",
+          "nameEn": "Qellen",
+          "originalNameAr": "قلين",
+          "originalNameEn": "Qellen"
+        },
+        {
+          "sourceId": "334",
+          "nameAr": "????? كفر الشيخ",
+          "nameEn": "Kafr El Sheikh",
+          "originalNameAr": "كفر الشيخ",
+          "originalNameEn": "Kafr El Sheikh"
+        },
+        {
+          "sourceId": "341",
+          "nameAr": "مصيف بلطيم",
+          "nameEn": "Masief Baltim",
+          "originalNameAr": "مصيف بلطيم",
+          "originalNameEn": "Masief Baltim"
+        },
+        {
+          "sourceId": "338",
+          "nameAr": "مطوبس",
+          "nameEn": "Metobas",
+          "originalNameAr": "مطوبس",
+          "originalNameEn": "Metobas"
+        },
+        {
+          "sourceId": "335",
+          "nameAr": "وسط البلد كفر الشيخ",
+          "nameEn": "Kafr El Sheikh Downtown",
+          "originalNameAr": "وسط البلد كفر الشيخ",
+          "originalNameEn": "Kafr El Sheikh Downtown"
+        }
+      ]
+    },
+    {
+      "sourceId": "23",
+      "nameAr": "مطروح",
+      "nameEn": "Matrouh",
+      "children": [
+        {
+          "sourceId": "349",
+          "nameAr": "الحمام",
+          "nameEn": "El Hamam",
+          "originalNameAr": "الحمام",
+          "originalNameEn": "El Hamam"
+        },
+        {
+          "sourceId": "357",
+          "nameAr": "الساحل الشمالى",
+          "nameEn": "North Coast",
+          "originalNameAr": "الساحل الشمالى",
+          "originalNameEn": "North Coast"
+        },
+        {
+          "sourceId": "354",
+          "nameAr": "السلوم",
+          "nameEn": "Salloum",
+          "originalNameAr": "السلوم",
+          "originalNameEn": "Salloum"
+        },
+        {
+          "sourceId": "351",
+          "nameAr": "الضبعة",
+          "nameEn": "Dabaa",
+          "originalNameAr": "الضبعة",
+          "originalNameEn": "Dabaa"
+        },
+        {
+          "sourceId": "350",
+          "nameAr": "العلمين",
+          "nameEn": "Alamein",
+          "originalNameAr": "العلمين",
+          "originalNameEn": "Alamein"
+        },
+        {
+          "sourceId": "352",
+          "nameAr": "النجيلة",
+          "nameEn": "Al-Nagila",
+          "originalNameAr": "النجيلة",
+          "originalNameEn": "Al-Nagila"
+        },
+        {
+          "sourceId": "353",
+          "nameAr": "سيدي براني",
+          "nameEn": "Sidi Brani",
+          "originalNameAr": "سيدي براني",
+          "originalNameEn": "Sidi Brani"
+        },
+        {
+          "sourceId": "355",
+          "nameAr": "سيوة",
+          "nameEn": "Siwa",
+          "originalNameAr": "سيوة",
+          "originalNameEn": "Siwa"
+        },
+        {
+          "sourceId": "356",
+          "nameAr": "مارينا (مطروح)",
+          "nameEn": "Marina (Matrouh)",
+          "originalNameAr": "مارينا",
+          "originalNameEn": "Marina"
+        },
+        {
+          "sourceId": "348",
+          "nameAr": "مرسى مطروح",
+          "nameEn": "Marsa Matrouh",
+          "originalNameAr": "مرسى مطروح",
+          "originalNameEn": "Marsa Matrouh"
+        }
+      ]
+    },
+    {
+      "sourceId": "24",
+      "nameAr": "الأقصر",
+      "nameEn": "Luxor",
+      "children": [
+        {
+          "sourceId": "365",
+          "nameAr": "أرمنت",
+          "nameEn": "Armant",
+          "originalNameAr": "أرمنت",
+          "originalNameEn": "Armant"
+        },
+        {
+          "sourceId": "360",
+          "nameAr": "إسنا",
+          "nameEn": "Esna",
+          "originalNameAr": "إسنا",
+          "originalNameEn": "Esna"
+        },
+        {
+          "sourceId": "358",
+          "nameAr": "????? الأقصر",
+          "nameEn": "City of Luxor",
+          "originalNameAr": "الأقصر",
+          "originalNameEn": "Luxor"
+        },
+        {
+          "sourceId": "359",
+          "nameAr": "الأقصر الجديدة",
+          "nameEn": "New Luxor",
+          "originalNameAr": "الأقصر الجديدة",
+          "originalNameEn": "New Luxor"
+        },
+        {
+          "sourceId": "363",
+          "nameAr": "البياضية",
+          "nameEn": "Al Bayadieh",
+          "originalNameAr": "البياضية",
+          "originalNameEn": "Al Bayadieh"
+        },
+        {
+          "sourceId": "362",
+          "nameAr": "الزينية",
+          "nameEn": "Al ziynia",
+          "originalNameAr": "الزينية",
+          "originalNameEn": "Al ziynia"
+        },
+        {
+          "sourceId": "366",
+          "nameAr": "الطود",
+          "nameEn": "Al Tud",
+          "originalNameAr": "الطود",
+          "originalNameEn": "Al Tud"
+        },
+        {
+          "sourceId": "364",
+          "nameAr": "القرنة",
+          "nameEn": "Al Qarna",
+          "originalNameAr": "القرنة",
+          "originalNameEn": "Al Qarna"
+        },
+        {
+          "sourceId": "361",
+          "nameAr": "طيبة الجديدة",
+          "nameEn": "New Tiba",
+          "originalNameAr": "طيبة الجديدة",
+          "originalNameEn": "New Tiba"
+        }
+      ]
+    },
+    {
+      "sourceId": "25",
+      "nameAr": "قنا",
+      "nameEn": "Qena",
+      "children": [
+        {
+          "sourceId": "369",
+          "nameAr": "ابو طشت",
+          "nameEn": "Abu Tesht",
+          "originalNameAr": "ابو طشت",
+          "originalNameEn": "Abu Tesht"
+        },
+        {
+          "sourceId": "372",
+          "nameAr": "الوقف",
+          "nameEn": "Alwaqf",
+          "originalNameAr": "الوقف",
+          "originalNameEn": "Alwaqf"
+        },
+        {
+          "sourceId": "371",
+          "nameAr": "دشنا",
+          "nameEn": "Deshna",
+          "originalNameAr": "دشنا",
+          "originalNameEn": "Deshna"
+        },
+        {
+          "sourceId": "375",
+          "nameAr": "فرشوط",
+          "nameEn": "Farshout",
+          "originalNameAr": "فرشوط",
+          "originalNameEn": "Farshout"
+        },
+        {
+          "sourceId": "373",
+          "nameAr": "قفط",
+          "nameEn": "Qaft",
+          "originalNameAr": "قفط",
+          "originalNameEn": "Qaft"
+        },
+        {
+          "sourceId": "367",
+          "nameAr": "????? قنا",
+          "nameEn": "City of Qena",
+          "originalNameAr": "قنا",
+          "originalNameEn": "Qena"
+        },
+        {
+          "sourceId": "368",
+          "nameAr": "قنا الجديدة",
+          "nameEn": "New Qena",
+          "originalNameAr": "قنا الجديدة",
+          "originalNameEn": "New Qena"
+        },
+        {
+          "sourceId": "376",
+          "nameAr": "قوص",
+          "nameEn": "Quos",
+          "originalNameAr": "قوص",
+          "originalNameEn": "Quos"
+        },
+        {
+          "sourceId": "370",
+          "nameAr": "نجع حمادي",
+          "nameEn": "Nag Hammadi",
+          "originalNameAr": "نجع حمادي",
+          "originalNameEn": "Nag Hammadi"
+        },
+        {
+          "sourceId": "374",
+          "nameAr": "نقادة",
+          "nameEn": "Naqada",
+          "originalNameAr": "نقادة",
+          "originalNameEn": "Naqada"
+        }
+      ]
+    },
+    {
+      "sourceId": "26",
+      "nameAr": "شمال سيناء",
+      "nameEn": "North Sinai",
+      "children": [
+        {
+          "sourceId": "382",
+          "nameAr": "الحسنة",
+          "nameEn": "Al Hasana",
+          "originalNameAr": "الحسنة",
+          "originalNameEn": "Al Hasana"
+        },
+        {
+          "sourceId": "378",
+          "nameAr": "الشيخ زويد",
+          "nameEn": "Sheikh Zowaid",
+          "originalNameAr": "الشيخ زويد",
+          "originalNameEn": "Sheikh Zowaid"
+        },
+        {
+          "sourceId": "377",
+          "nameAr": "العريش",
+          "nameEn": "Arish",
+          "originalNameAr": "العريش",
+          "originalNameEn": "Arish"
+        },
+        {
+          "sourceId": "381",
+          "nameAr": "بئر العبد",
+          "nameEn": "Bir al-Abed",
+          "originalNameAr": "بئر العبد",
+          "originalNameEn": "Bir al-Abed"
+        },
+        {
+          "sourceId": "380",
+          "nameAr": "رفح",
+          "nameEn": "Rafah",
+          "originalNameAr": "رفح",
+          "originalNameEn": "Rafah"
+        },
+        {
+          "sourceId": "379",
+          "nameAr": "نخل",
+          "nameEn": "Nakhl",
+          "originalNameAr": "نخل",
+          "originalNameEn": "Nakhl"
+        }
+      ]
+    },
+    {
+      "sourceId": "27",
+      "nameAr": "سوهاج",
+      "nameEn": "Sohag",
+      "children": [
+        {
+          "sourceId": "385",
+          "nameAr": "أخميم",
+          "nameEn": "Akhmeem",
+          "originalNameAr": "أخميم",
+          "originalNameEn": "Akhmeem"
+        },
+        {
+          "sourceId": "386",
+          "nameAr": "أخميم الجديدة",
+          "nameEn": "Akhmim El Gedida",
+          "originalNameAr": "أخميم الجديدة",
+          "originalNameEn": "Akhmim El Gedida"
+        },
+        {
+          "sourceId": "387",
+          "nameAr": "البلينا",
+          "nameEn": "Albalina",
+          "originalNameAr": "البلينا",
+          "originalNameEn": "Albalina"
+        },
+        {
+          "sourceId": "396",
+          "nameAr": "الكوثر",
+          "nameEn": "Alkawthar",
+          "originalNameAr": "الكوثر",
+          "originalNameEn": "Alkawthar"
+        },
+        {
+          "sourceId": "388",
+          "nameAr": "المراغة",
+          "nameEn": "El Maragha",
+          "originalNameAr": "المراغة",
+          "originalNameEn": "El Maragha"
+        },
+        {
+          "sourceId": "389",
+          "nameAr": "المنشأة",
+          "nameEn": "almunsha'a",
+          "originalNameAr": "المنشأة",
+          "originalNameEn": "almunsha'a"
+        },
+        {
+          "sourceId": "391",
+          "nameAr": "جرجا",
+          "nameEn": "Gerga",
+          "originalNameAr": "جرجا",
+          "originalNameEn": "Gerga"
+        },
+        {
+          "sourceId": "392",
+          "nameAr": "جهينة الغربية",
+          "nameEn": "Jahina Al Gharbia",
+          "originalNameAr": "جهينة الغربية",
+          "originalNameEn": "Jahina Al Gharbia"
+        },
+        {
+          "sourceId": "390",
+          "nameAr": "دار السلام (سوهاج)",
+          "nameEn": "Dar AISalaam (Sohag)",
+          "originalNameAr": "دار السلام",
+          "originalNameEn": "Dar AISalaam"
+        },
+        {
+          "sourceId": "393",
+          "nameAr": "ساقلته",
+          "nameEn": "Saqilatuh",
+          "originalNameAr": "ساقلته",
+          "originalNameEn": "Saqilatuh"
+        },
+        {
+          "sourceId": "383",
+          "nameAr": "????? سوهاج",
+          "nameEn": "City of Sohag",
+          "originalNameAr": "سوهاج",
+          "originalNameEn": "Sohag"
+        },
+        {
+          "sourceId": "384",
+          "nameAr": "سوهاج الجديدة",
+          "nameEn": "Sohag El Gedida",
+          "originalNameAr": "سوهاج الجديدة",
+          "originalNameEn": "Sohag El Gedida"
+        },
+        {
+          "sourceId": "394",
+          "nameAr": "طما",
+          "nameEn": "Tama",
+          "originalNameAr": "طما",
+          "originalNameEn": "Tama"
+        },
+        {
+          "sourceId": "395",
+          "nameAr": "طهطا",
+          "nameEn": "Tahta",
+          "originalNameAr": "طهطا",
+          "originalNameEn": "Tahta"
+        }
+      ]
+    }
+  ]
+}

@@ -26,6 +26,7 @@ function ChartLoading() {
   return <div className="flex h-full items-center justify-center text-sm text-muted-foreground">Loading chart...</div>
 }
 
+// Reports use Recharts heavily, so chart modules stay lazy and off the shared admin bundle.
 const PipelineAmountChart = dynamic(() => import("@/components/admin/ReportsCharts").then((mod) => mod.PipelineAmountChart), { ssr: false, loading: ChartLoading })
 const RevenueAreaChart = dynamic(() => import("@/components/admin/ReportsCharts").then((mod) => mod.RevenueAreaChart), { ssr: false, loading: ChartLoading })
 const StatusPieChart = dynamic(() => import("@/components/admin/ReportsCharts").then((mod) => mod.StatusPieChart), { ssr: false, loading: ChartLoading })
@@ -155,7 +156,7 @@ export default function AdminReportsPage() {
   }
 
   const revenueData = useMemo(() => (data?.orderAnalytics?.revenueByDay || []).map((row: any) => ({
-    name: new Date(row.date).toLocaleDateString("ar-EG", { month: "short", day: "numeric" }),
+    date: String(row.date ?? ""),
     revenue: Number(row.revenue) || 0,
     orders: Number(row.orders) || 0,
   })), [data])
@@ -193,7 +194,7 @@ export default function AdminReportsPage() {
   }, [data])
 
   const cancellationTrend = useMemo(() => (data?.orderAnalytics?.cancellationReturnTrend || []).map((row: any) => ({
-    name: new Date(row.date).toLocaleDateString("ar-EG", { month: "short", day: "numeric" }),
+    date: String(row.date ?? ""),
     cancelled: Number(row.cancelled) || 0,
     returned: Number(row.returned) || 0,
   })), [data])

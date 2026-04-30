@@ -6,11 +6,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import api from "@/lib/api"
 import { Package, Users, DollarSign, Activity } from "lucide-react"
 
+// Keep Recharts out of the dashboard shell so route changes do not pay for it upfront.
 const AdminRevenueChart = dynamic(() => import("@/components/admin/AdminRevenueChart"), {
   ssr: false,
   loading: () => (
     <div className="flex h-full w-full items-center justify-center text-muted-foreground">
-      Ø¬Ø§Ø±ÙŠ ØªØ­Ù…ÙŠÙ„ Ø§Ù„Ø±Ø³Ù… Ø§Ù„Ø¨ÙŠØ§Ù†ÙŠ...
+      جاري تحميل الرسم البياني...
     </div>
   ),
 })
@@ -25,7 +26,7 @@ export default function AdminDashboard() {
     deliveredOrders: 0,
     totalDrivers: 0,
   })
-  const [chartData, setChartData] = useState([])
+  const [chartData, setChartData] = useState<{ date: string; revenue: number }[]>([])
   const [recentOrders, setRecentOrders] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -51,25 +52,16 @@ export default function AdminDashboard() {
 
         setRecentOrders(ordersRes.data?.orders || [])
 
-        // Format revenueByDay for the chart
-        const revenueByDay: { day: string; revenue: number }[] = chartRes.data?.revenueByDay || []
+        const revenueByDay: { date?: string; day?: string; revenue: number }[] = chartRes.data?.revenueByDay || []
         if (revenueByDay.length > 0) {
           setChartData(
             revenueByDay.map((r) => ({
-              name: new Date(r.day).toLocaleDateString('en-US', { weekday: 'short' }),
+              date: String(r.date ?? r.day ?? ""),
               revenue: Number(r.revenue) || 0,
-            })) as any
+            }))
           )
         } else {
-          setChartData([
-            { name: "Mon", revenue: 1500 },
-            { name: "Tue", revenue: 2300 },
-            { name: "Wed", revenue: 1900 },
-            { name: "Thu", revenue: 2800 },
-            { name: "Fri", revenue: 3500 },
-            { name: "Sat", revenue: 1200 },
-            { name: "Sun", revenue: 950 },
-          ] as any)
+          setChartData(getFallbackRevenueData())
         }
       } catch (error) {
         console.error("Failed to fetch analytics, using fallback data for demo.")
@@ -82,15 +74,7 @@ export default function AdminDashboard() {
           deliveredOrders: 0,
           totalDrivers: 0,
         })
-        setChartData([
-          { name: "Mon", revenue: 1500 },
-          { name: "Tue", revenue: 2300 },
-          { name: "Wed", revenue: 1900 },
-          { name: "Thu", revenue: 2800 },
-          { name: "Fri", revenue: 3500 },
-          { name: "Sat", revenue: 1200 },
-          { name: "Sun", revenue: 950 },
-        ] as any)
+        setChartData(getFallbackRevenueData())
       } finally {
         setIsLoading(false)
       }
@@ -222,6 +206,15 @@ export default function AdminDashboard() {
       </div>
     </div>
   )
+}
+
+function getFallbackRevenueData() {
+  const values = [1500, 2300, 1900, 2800, 3500, 1200, 950]
+  return values.map((revenue, index) => {
+    const date = new Date()
+    date.setDate(date.getDate() - (values.length - index - 1))
+    return { date: date.toISOString().split("T")[0], revenue }
+  })
 }
 
 function CheckCircle(props: any) {

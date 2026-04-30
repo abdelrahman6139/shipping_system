@@ -1,6 +1,7 @@
 "use client"
 
 import { memo } from "react"
+import { useLocale } from "next-intl"
 import {
   Area,
   AreaChart,
@@ -17,6 +18,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts"
+import { formatDate, formatMoney, type ChartLocale } from "@/lib/chart-format"
 
 const tooltipStyle = {
   borderRadius: "8px",
@@ -26,18 +28,16 @@ const tooltipStyle = {
   fontSize: "12px",
 }
 
-function formatMoney(value: number) {
-  return `Ø¬.Ù… ${Number(value || 0).toLocaleString("ar-EG", { maximumFractionDigits: 2 })}`
-}
-
 export const PipelineAmountChart = memo(function PipelineAmountChart({ data }: { data: any[] }) {
+  const locale = useLocale() as ChartLocale
+
   return (
     <ResponsiveContainer width="100%" height="100%">
       <BarChart data={data} margin={{ top: 8, right: 10, left: 0, bottom: 0 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
         <XAxis dataKey="name" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-        <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} tickFormatter={(value) => `${value}`} />
-        <Tooltip contentStyle={tooltipStyle} formatter={(value: any) => [formatMoney(Number(value)), "Ø§Ù„Ù…Ø¨Ù„Øº"]} />
+        <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} tickFormatter={(value) => formatMoney(value, locale)} />
+        <Tooltip contentStyle={tooltipStyle} formatter={(value: any) => [formatMoney(value, locale), locale === "ar" ? "المبلغ" : "Amount"]} />
         <Bar dataKey="amount" radius={[6, 6, 0, 0]}>
           {data.map((entry: any, index: number) => <Cell key={index} fill={entry.color} />)}
         </Bar>
@@ -47,6 +47,8 @@ export const PipelineAmountChart = memo(function PipelineAmountChart({ data }: {
 })
 
 export const RevenueAreaChart = memo(function RevenueAreaChart({ data }: { data: any[] }) {
+  const locale = useLocale() as ChartLocale
+
   return (
     <ResponsiveContainer width="100%" height="100%">
       <AreaChart data={data} margin={{ top: 8, right: 10, left: 0, bottom: 0 }}>
@@ -57,9 +59,13 @@ export const RevenueAreaChart = memo(function RevenueAreaChart({ data }: { data:
           </linearGradient>
         </defs>
         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-        <XAxis dataKey="name" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-        <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-        <Tooltip contentStyle={tooltipStyle} formatter={(value: any) => [formatMoney(Number(value)), "Ø§Ù„Ø¥ÙŠØ±Ø§Ø¯"]} />
+        <XAxis dataKey="date" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} tickFormatter={(value) => formatDate(value, locale)} />
+        <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} tickFormatter={(value) => formatMoney(value, locale)} />
+        <Tooltip
+          contentStyle={tooltipStyle}
+          formatter={(value: any) => [formatMoney(value, locale), locale === "ar" ? "الإيراد" : "Revenue"]}
+          labelFormatter={(label) => formatDate(label, locale)}
+        />
         <Area type="monotone" dataKey="revenue" stroke="#10b981" strokeWidth={2} fill="url(#revenueFill)" />
       </AreaChart>
     </ResponsiveContainer>
@@ -93,12 +99,14 @@ export const FunnelBarChart = memo(function FunnelBarChart({ data }: { data: any
 })
 
 export const ZoneRevenueBarChart = memo(function ZoneRevenueBarChart({ data }: { data: any[] }) {
+  const locale = useLocale() as ChartLocale
+
   return (
     <ResponsiveContainer width="100%" height="100%">
       <BarChart data={data} margin={{ top: 8, right: 10, left: 0, bottom: 0 }}>
         <XAxis dataKey="zone" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
-        <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-        <Tooltip contentStyle={tooltipStyle} formatter={(value: any) => [formatMoney(Number(value)), "Ø§Ù„Ø¥ÙŠØ±Ø§Ø¯"]} />
+        <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} tickFormatter={(value) => formatMoney(value, locale)} />
+        <Tooltip contentStyle={tooltipStyle} formatter={(value: any) => [formatMoney(value, locale), locale === "ar" ? "الإيراد" : "Revenue"]} />
         <Bar dataKey="revenue" fill="#8b5cf6" radius={[6, 6, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
@@ -106,15 +114,17 @@ export const ZoneRevenueBarChart = memo(function ZoneRevenueBarChart({ data }: {
 })
 
 export const CancellationReturnLineChart = memo(function CancellationReturnLineChart({ data }: { data: any[] }) {
+  const locale = useLocale() as ChartLocale
+
   return (
     <ResponsiveContainer width="100%" height="100%">
       <LineChart data={data} margin={{ top: 8, right: 10, left: 0, bottom: 0 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-        <XAxis dataKey="name" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
+        <XAxis dataKey="date" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} tickFormatter={(value) => formatDate(value, locale)} />
         <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-        <Tooltip contentStyle={tooltipStyle} />
-        <Line type="monotone" dataKey="cancelled" name="Ù…Ù„ØºÙŠ" stroke="#ef4444" strokeWidth={2} dot={false} />
-        <Line type="monotone" dataKey="returned" name="Ù…Ø±ØªØ¬Ø¹" stroke="#a855f7" strokeWidth={2} dot={false} />
+        <Tooltip contentStyle={tooltipStyle} labelFormatter={(label) => formatDate(label, locale)} />
+        <Line type="monotone" dataKey="cancelled" name={locale === "ar" ? "ملغي" : "Cancelled"} stroke="#ef4444" strokeWidth={2} dot={false} />
+        <Line type="monotone" dataKey="returned" name={locale === "ar" ? "مرتجع" : "Returned"} stroke="#a855f7" strokeWidth={2} dot={false} />
       </LineChart>
     </ResponsiveContainer>
   )

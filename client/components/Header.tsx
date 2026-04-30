@@ -1,11 +1,11 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
+import { Menu, Moon, Sun, UserCircle } from "lucide-react"
+import { useTheme } from "next-themes"
+import { Button } from "@/components/ui/button"
 import { useAuth } from "@/context/AuthContext"
 import { useLanguage } from "@/context/LanguageContext"
-import { Menu, Moon, Sun, UserCircle } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { useTheme } from "next-themes"
 
 interface HeaderProps {
   onMenuToggle: () => void
@@ -44,12 +44,11 @@ export default function Header({ onMenuToggle }: HeaderProps) {
 
   const roleLabel = user.role === "ADMIN" ? t("admin") : user.role === "DRIVER" ? t("driver") : t("client")
   const nextLanguage = language === "ar" ? "en" : "ar"
-  const nextLanguageLabel = nextLanguage === "ar" ? "العربية" : "English"
-  const accountMenuLabel = language === "ar" ? "قائمة الحساب" : "Account menu"
+  const nextLanguageLabel = nextLanguage === "ar" ? t("arabic") : t("english")
+  const accountMenuLabel = t("accountMenu")
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 md:px-6">
-      {/* Mobile: logo + menu */}
+    <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60 md:px-6">
       <div className="flex items-center gap-3 md:hidden">
         <Button
           variant="ghost"
@@ -61,21 +60,19 @@ export default function Header({ onMenuToggle }: HeaderProps) {
           <Menu className="h-5 w-5" />
         </Button>
         <div className="flex items-center gap-2">
-          <div className="h-7 w-7 rounded-lg bg-primary flex items-center justify-center">
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary">
             <span className="text-[10px] font-black text-primary-foreground">SF</span>
           </div>
           <span className="text-base font-bold tracking-tight">ShipFlow</span>
         </div>
       </div>
 
-      {/* Desktop: breadcrumb or role badge */}
-      <div className="hidden md:flex items-center gap-2">
-        <span className="text-xs font-semibold bg-primary/10 text-primary px-2.5 py-1 rounded-full">
+      <div className="hidden items-center gap-2 md:flex">
+        <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
           {roleLabel}
         </span>
       </div>
 
-      {/* Actions */}
       <div className="flex items-center gap-1">
         <Button
           variant="ghost"

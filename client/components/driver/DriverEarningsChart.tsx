@@ -1,7 +1,9 @@
 "use client"
 
 import { memo } from "react"
+import { useLocale } from "next-intl"
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
+import { formatDate, formatMoney, type ChartLocale } from "@/lib/chart-format"
 
 type DayChart = {
   date: string
@@ -9,15 +11,11 @@ type DayChart = {
   orderTotal: number
 }
 
-function fmt(value: number) {
-  return `Ø¬.Ù… ${Number(value || 0).toFixed(2)}`
-}
-
-function fmtDate(date: string) {
-  return new Date(date).toLocaleDateString("ar-EG", { year: "numeric", month: "short", day: "numeric" })
-}
-
 function DriverEarningsChart({ data }: { data: DayChart[] }) {
+  const locale = useLocale() as ChartLocale
+  const driverShareLabel = locale === "ar" ? "حصة السائق" : "Driver share"
+  const orderValueLabel = locale === "ar" ? "قيمة الطلب" : "Order value"
+
   return (
     <ResponsiveContainer width="100%" height="100%" minWidth={280} minHeight={200}>
       <BarChart data={data} barGap={4}>
@@ -27,17 +25,20 @@ function DriverEarningsChart({ data }: { data: DayChart[] }) {
           tickLine={false}
           axisLine={false}
           fontSize={11}
-          tickFormatter={(value) => new Date(value).toLocaleDateString("ar-EG", { month: "short", day: "numeric" })}
+          tickFormatter={(value) => formatDate(value, locale)}
         />
-        <YAxis tickLine={false} axisLine={false} fontSize={11} tickFormatter={(value) => `Ø¬.Ù… ${value}`} />
+        <YAxis tickLine={false} axisLine={false} fontSize={11} tickFormatter={(value) => formatMoney(value, locale)} />
         <Tooltip
           cursor={{ fill: "rgba(0,0,0,0.04)" }}
           contentStyle={{ borderRadius: "10px", fontSize: "13px" }}
-          formatter={(value, name) => [fmt(Number(value ?? 0)), name === "driverEarning" ? "Ø­ØµØ© Ø§Ù„Ø³Ø§Ø¦Ù‚" : "Ù‚ÙŠÙ…Ø© Ø§Ù„Ø·Ù„Ø¨"]}
-          labelFormatter={(label) => fmtDate(String(label))}
+          formatter={(value, name) => [
+            formatMoney(value, locale),
+            name === "driverEarning" ? driverShareLabel : orderValueLabel,
+          ]}
+          labelFormatter={(label) => formatDate(label, locale)}
         />
         <Legend
-          formatter={(value) => value === "driverEarning" ? "Ø­ØµØ© Ø§Ù„Ø³Ø§Ø¦Ù‚" : "Ù‚ÙŠÙ…Ø© Ø§Ù„Ø·Ù„Ø¨"}
+          formatter={(value) => (value === "driverEarning" ? driverShareLabel : orderValueLabel)}
           wrapperStyle={{ fontSize: "12px" }}
         />
         <Bar dataKey="orderTotal" fill="#93c5fd" radius={[4, 4, 0, 0]} name="orderTotal" />
