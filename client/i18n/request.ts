@@ -1,4 +1,3 @@
-import { cookies, headers } from "next/headers"
 import { getRequestConfig } from "next-intl/server"
 
 export const locales = ["ar", "en"] as const
@@ -9,16 +8,8 @@ function normalizeLocale(value?: string | null): AppLocale {
   return value === "en" || value === "ar" ? value : defaultLocale
 }
 
-function getPreferredLocale() {
-  const cookieLocale = cookies().get("NEXT_LOCALE")?.value
-  if (cookieLocale) return normalizeLocale(cookieLocale)
-
-  const acceptLanguage = headers().get("accept-language") || ""
-  return acceptLanguage.toLowerCase().startsWith("en") ? "en" : defaultLocale
-}
-
-export default getRequestConfig(async () => {
-  const locale = getPreferredLocale()
+export default getRequestConfig(async ({ requestLocale }) => {
+  const locale = normalizeLocale(await requestLocale)
 
   return {
     locale,

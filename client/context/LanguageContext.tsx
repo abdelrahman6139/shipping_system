@@ -1,7 +1,7 @@
 "use client"
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react"
-import { useRouter } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { useLocale, useTranslations } from "next-intl"
 
 export type AppLanguage = "ar" | "en"
@@ -12,6 +12,7 @@ type LanguageContextType = {
   isMounted: boolean
   setLanguage: (language: AppLanguage) => void
   toggleLanguage: () => void
+  localizedPath: (path: string) => string
   t: (key: string) => string
 }
 
@@ -21,10 +22,27 @@ function normalizeLanguage(locale: string): AppLanguage {
   return locale === "en" ? "en" : "ar"
 }
 
+function stripLocalePrefix(pathname: string) {
+  const path = pathname || "/"
+  const stripped = path.replace(/^\/(ar|en)(?=\/|$)/, "")
+  return stripped || "/"
+}
+
+function buildLocalizedPath(language: AppLanguage, pathname: string, search = "") {
+  const base = stripLocalePrefix(pathname)
+  const normalizedBase = base.startsWith("/") ? base : `/${base}`
+  const path = language === "en"
+    ? normalizedBase === "/" ? "/en" : `/en${normalizedBase}`
+    : normalizedBase
+
+  return search ? `${path}?${search}` : path
+}
+
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const locale = useLocale()
   const translate = useTranslations() as unknown as (key: string) => string
   const router = useRouter()
+  const pathname = usePathname()
   const [language, setLanguageState] = useState<AppLanguage>(() => normalizeLanguage(locale))
   const [isMounted, setMounted] = useState(false)
 
@@ -43,10 +61,15 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   }, [language])
 
   const setLanguage = useCallback((nextLanguage: AppLanguage) => {
+    const search = typeof window === "undefined" ? "" : window.location.search.replace(/^\?/, "")
     document.cookie = `NEXT_LOCALE=${nextLanguage}; path=/; max-age=31536000; SameSite=Lax`
     setLanguageState(nextLanguage)
-    router.refresh()
-  }, [router])
+    router.push(buildLocalizedPath(nextLanguage, pathname || "/", search))
+  }, [pathname, router])
+
+  const localizedPath = useCallback((path: string) => {
+    return buildLocalizedPath(language, path)
+  }, [language])
 
   const t = useCallback((key: string) => {
     try {
@@ -64,9 +87,10 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
       isMounted,
       setLanguage,
       toggleLanguage: () => setLanguage(language === "ar" ? "en" : "ar"),
+      localizedPath,
       t,
     }
-  }, [isMounted, language, setLanguage, t])
+  }, [isMounted, language, localizedPath, setLanguage, t])
 
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>
 }

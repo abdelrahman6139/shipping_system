@@ -9,6 +9,7 @@ import api from "@/lib/api"
 import { toast } from "sonner"
 import { connectSocket } from "@/lib/socket"
 import { useAuth } from "@/context/AuthContext"
+import { useLanguage } from "@/context/LanguageContext"
 import { useRouter } from "next/navigation"
 import {
   Download, FileText, Search, MapPin, Truck, Calendar,
@@ -169,6 +170,7 @@ function Skeleton() {
 /* ═══════════════════════════ PAGE ══════════════════════════════ */
 export default function ClientOrdersPage() {
   const { user } = useAuth()
+  const { localizedPath } = useLanguage()
   const router = useRouter()
 
   const [orders, setOrders]           = useState<Order[]>([])
@@ -270,7 +272,7 @@ export default function ClientOrdersPage() {
             {pagination.total > 0 ? `${pagination.total} طلب إجمالي` : "لا توجد طلبات بعد"}
           </p>
         </div>
-        <Button className="gap-2 shrink-0" onClick={() => router.push("/client/new-order")}>
+        <Button className="gap-2 shrink-0" onClick={() => router.push(localizedPath("/client/new-order"))}>
           <Plus className="h-4 w-4" /> طلب جديد
         </Button>
       </div>
@@ -315,7 +317,7 @@ export default function ClientOrdersPage() {
             {search || filterStatus !== "ALL" ? "جرب تعديل الفلتر أو البحث" : "أنشئ أول طلب شحن الآن"}
           </p>
           {!search && filterStatus === "ALL" && (
-            <Button onClick={() => router.push("/client/new-order")} className="gap-2">
+            <Button onClick={() => router.push(localizedPath("/client/new-order"))} className="gap-2">
               <Plus className="h-4 w-4" /> طلب شحن جديد
             </Button>
           )}

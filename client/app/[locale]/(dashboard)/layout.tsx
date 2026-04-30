@@ -16,16 +16,16 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   const { user, isLoading } = useAuth()
-  const { t, dir } = useLanguage()
+  const { localizedPath, t, dir } = useLanguage()
   const router = useRouter()
   const pathname = usePathname()
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
   useEffect(() => {
     if (!isLoading && !user) {
-      router.push("/login")
+      router.push(localizedPath("/login"))
     }
-  }, [user, isLoading, router])
+  }, [user, isLoading, localizedPath, router])
 
   // Close sidebar on route change
   useEffect(() => {
@@ -67,12 +67,13 @@ export default function DashboardLayout({
   }
 
   const mobileLinks = getMobileLinks()
+  const normalizedPathname = (pathname || "/").replace(/^\/(ar|en)(?=\/|$)/, "") || "/"
 
   const isMobileLinkActive = (href: string) => {
     if (href === "/admin" || href === "/client" || href === "/driver") {
-      return pathname === href
+      return normalizedPathname === href
     }
-    return pathname.startsWith(href)
+    return normalizedPathname.startsWith(href)
   }
 
   return (
@@ -93,7 +94,7 @@ export default function DashboardLayout({
               return (
                 <Link
                   key={link.href}
-                  href={link.href}
+                  href={localizedPath(link.href)}
                   className={cn(
                     "flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-xl transition-colors",
                     active ? "text-primary" : "text-muted-foreground"

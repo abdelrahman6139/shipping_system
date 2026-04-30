@@ -2,11 +2,13 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react"
 import dynamic from "next/dynamic"
+import { useLocale, useTranslations } from "next-intl"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import api from "@/lib/api"
+import { formatMoney, type ChartLocale } from "@/lib/chart-format"
 import {
   AlertTriangle,
   Banknote,
@@ -23,10 +25,10 @@ import {
 } from "lucide-react"
 
 function ChartLoading() {
-  return <div className="flex h-full items-center justify-center text-sm text-muted-foreground">Loading chart...</div>
+  const t = useTranslations("Common")
+  return <div className="flex h-full items-center justify-center text-sm text-muted-foreground">{t("chartLoading")}</div>
 }
 
-// Reports use Recharts heavily, so chart modules stay lazy and off the shared admin bundle.
 const PipelineAmountChart = dynamic(() => import("@/components/admin/ReportsCharts").then((mod) => mod.PipelineAmountChart), { ssr: false, loading: ChartLoading })
 const RevenueAreaChart = dynamic(() => import("@/components/admin/ReportsCharts").then((mod) => mod.RevenueAreaChart), { ssr: false, loading: ChartLoading })
 const StatusPieChart = dynamic(() => import("@/components/admin/ReportsCharts").then((mod) => mod.StatusPieChart), { ssr: false, loading: ChartLoading })
@@ -34,17 +36,6 @@ const FunnelBarChart = dynamic(() => import("@/components/admin/ReportsCharts").
 const ZoneRevenueBarChart = dynamic(() => import("@/components/admin/ReportsCharts").then((mod) => mod.ZoneRevenueBarChart), { ssr: false, loading: ChartLoading })
 const CancellationReturnLineChart = dynamic(() => import("@/components/admin/ReportsCharts").then((mod) => mod.CancellationReturnLineChart), { ssr: false, loading: ChartLoading })
 const TypeDistributionChart = dynamic(() => import("@/components/admin/ReportsCharts").then((mod) => mod.TypeDistributionChart), { ssr: false, loading: ChartLoading })
-
-const STATUS_LABELS: Record<string, string> = {
-  PENDING: "قيد الانتظار",
-  ASSIGNED: "تم التعيين",
-  PICKED_UP: "تم الاستلام",
-  IN_TRANSIT: "قيد التوصيل",
-  DELIVERED: "تم التسليم",
-  COLLECTED: "تم التسليم",
-  CANCELLED: "ملغي",
-  RETURNED: "مرتجع",
-}
 
 const STATUS_COLORS: Record<string, string> = {
   PENDING: "#f59e0b",
@@ -57,19 +48,6 @@ const STATUS_COLORS: Record<string, string> = {
   RETURNED: "#a855f7",
 }
 
-const TYPE_LABELS: Record<string, string> = {
-  STANDARD: "عادي",
-  EXPRESS: "سريع",
-  SAME_DAY: "نفس اليوم",
-}
-
-const COLLECTION_LABELS: Record<string, string> = {
-  NOT_COLLECTED: "لم يحصل من العميل",
-  DRIVER_COLLECTED: "مع السائق",
-  COMPANY_RECEIVED: "مع الشركة",
-  SETTLED_TO_MERCHANT: "مسوى للتاجر",
-}
-
 const COLLECTION_COLORS: Record<string, string> = {
   NOT_COLLECTED: "#f97316",
   DRIVER_COLLECTED: "#0ea5e9",
@@ -77,12 +55,18 @@ const COLLECTION_COLORS: Record<string, string> = {
   SETTLED_TO_MERCHANT: "#10b981",
 }
 
-function formatMoney(value: number) {
-  return `ج.م ${Number(value || 0).toLocaleString("ar-EG", { maximumFractionDigits: 2 })}`
+function safeMessage(t: (key: string) => string, key?: string) {
+  if (!key) return "-"
+  try {
+    return t(key)
+  } catch {
+    return key
+  }
 }
 
 function EmptyChart() {
-  return <div className="flex h-full items-center justify-center text-sm text-muted-foreground">لا توجد بيانات في هذه الفترة</div>
+  const t = useTranslations("Common")
+  return <div className="flex h-full items-center justify-center text-sm text-muted-foreground">{t("noDataForPeriod")}</div>
 }
 
 function KpiCard({ title, value, hint, icon: Icon, tone = "text-primary" }: { title: string; value: string | number; hint?: string; icon: any; tone?: string }) {
@@ -101,6 +85,14 @@ function KpiCard({ title, value, hint, icon: Icon, tone = "text-primary" }: { ti
 }
 
 export default function AdminReportsPage() {
+  const t = useTranslations("Reports")
+  const commonT = useTranslations("Common")
+  const statusT = useTranslations("Status")
+  const collectionT = useTranslations("CollectionStatus")
+  const deliveryT = useTranslations("DeliveryType")
+  const locale = useLocale() as ChartLocale
+  const money = useCallback((value: unknown) => formatMoney(value, locale), [locale])
+
   const [data, setData] = useState<any>(null)
   const [range, setRange] = useState("last30")
   const [startDate, setStartDate] = useState("")
@@ -108,6 +100,14 @@ export default function AdminReportsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
+
+  const rangeOptions = useMemo(() => [
+    { value: "today", label: t("range.today") },
+    { value: "last7", label: t("range.last7") },
+    { value: "last30", label: t("range.last30") },
+    { value: "thisMonth", label: t("range.thisMonth") },
+    { value: "custom", label: t("range.custom") },
+  ], [t])
 
   const fetchData = useCallback(async (showLoader = false) => {
     if (showLoader) setIsLoading(true)
@@ -148,8 +148,7 @@ export default function AdminReportsPage() {
       a.remove()
       window.URL.revokeObjectURL(url)
     } catch {
-      // Keep export errors visible without changing report data.
-      alert("فشل تصدير ملف Excel")
+      alert(t("exportFailed"))
     } finally {
       setIsExporting(false)
     }
@@ -162,36 +161,27 @@ export default function AdminReportsPage() {
   })), [data])
 
   const statusData = useMemo(() => (data?.orderAnalytics?.ordersByStatus || []).map((row: any) => ({
-    name: STATUS_LABELS[row.status] || row.status,
+    name: safeMessage(statusT, row.status),
     value: Number(row.count) || 0,
     color: STATUS_COLORS[row.status] || "#64748b",
-  })), [data])
+  })), [data, statusT])
 
   const typeData = useMemo(() => (data?.orderAnalytics?.ordersByType || []).map((row: any) => ({
-    name: TYPE_LABELS[row.type] || row.type,
+    name: safeMessage(deliveryT, row.type),
     count: Number(row.count) || 0,
-  })), [data])
+  })), [data, deliveryT])
 
   const pipelineData = useMemo(() => (data?.financial?.pipeline || []).map((row: any) => ({
-    name: COLLECTION_LABELS[row.key] || row.label,
+    name: safeMessage(collectionT, row.key) || row.label,
     amount: Number(row.amount) || 0,
     count: Number(row.count) || 0,
     color: COLLECTION_COLORS[row.key] || "#64748b",
-  })), [data])
+  })), [collectionT, data])
 
-  const funnelData = useMemo(() => {
-    const stageLabels: Record<string, string> = {
-      Created: "تم الإنشاء",
-      Assigned: "تم التعيين",
-      "Picked Up": "تم الاستلام",
-      "In Transit": "قيد التوصيل",
-      Delivered: "تم التسليم",
-    }
-    return (data?.orderAnalytics?.deliveryFunnel || []).map((row: any) => ({
-      stage: stageLabels[row.stage] || row.stage,
-      count: Number(row.count) || 0,
-    }))
-  }, [data])
+  const funnelData = useMemo(() => (data?.orderAnalytics?.deliveryFunnel || []).map((row: any) => ({
+    stage: safeMessage((key) => t(`funnel.${key}`), row.stage),
+    count: Number(row.count) || 0,
+  })), [data, t])
 
   const cancellationTrend = useMemo(() => (data?.orderAnalytics?.cancellationReturnTrend || []).map((row: any) => ({
     date: String(row.date ?? ""),
@@ -219,18 +209,12 @@ export default function AdminReportsPage() {
     <div className="space-y-8">
       <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">لوحة ذكاء الأعمال اللوجستية</h2>
-          <p className="text-muted-foreground">تحليل التسليم والتحصيل والتسويات حسب التجار والسائقين والمناطق.</p>
+          <h2 className="text-2xl font-bold tracking-tight">{t("title")}</h2>
+          <p className="text-muted-foreground">{t("subtitle")}</p>
         </div>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <div className="flex flex-wrap gap-2">
-            {[
-              { value: "today", label: "اليوم" },
-              { value: "last7", label: "آخر 7 أيام" },
-              { value: "last30", label: "آخر 30 يوم" },
-              { value: "thisMonth", label: "هذا الشهر" },
-              { value: "custom", label: "مخصص" },
-            ].map((option) => (
+            {rangeOptions.map((option) => (
               <button
                 key={option.value}
                 onClick={() => setRange(option.value)}
@@ -251,41 +235,41 @@ export default function AdminReportsPage() {
             </div>
           )}
           <Button variant="outline" size="sm" onClick={() => fetchData()} disabled={isRefreshing} className="gap-2">
-            <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} /> تحديث
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} /> {commonT("refresh")}
           </Button>
           <Button variant="outline" size="sm" onClick={exportReports} disabled={isExporting} className="gap-2">
             {isExporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-            تصدير Excel
+            {commonT("exportExcel")}
           </Button>
         </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
-        <KpiCard title="إيراد الشحن" value={formatMoney(data?.summary?.shippingRevenue ?? data?.summary?.totalRevenue)} hint="الشحن + الإضافات فقط" icon={DollarSign} tone="text-emerald-600" />
-        <KpiCard title="قيمة المنتجات" value={formatMoney(data?.summary?.itemValue)} hint="ليست إيراد شحن" icon={Package} tone="text-orange-600" />
-        <KpiCard title="مستحق للتجار" value={formatMoney(data?.summary?.owedToMerchants)} hint="مبالغ حصلت ولم تسو بعد" icon={Banknote} tone="text-sky-600" />
-        <KpiCard title="مسوى للتجار" value={formatMoney(data?.summary?.settledToMerchants)} icon={CheckCircle} tone="text-green-600" />
-        <KpiCard title="إجمالي الطلبات" value={data?.summary?.totalOrders || 0} icon={Package} tone="text-primary" />
-        <KpiCard title="تم التسليم" value={data?.summary?.deliveredOrders || 0} hint={`${data?.summary?.cancelledOrders || 0} ملغي / ${data?.summary?.returnedOrders || 0} مرتجع`} icon={Truck} tone="text-indigo-600" />
+        <KpiCard title={t("shippingRevenue")} value={money(data?.summary?.shippingRevenue ?? data?.summary?.totalRevenue)} hint={t("shippingRevenueHint")} icon={DollarSign} tone="text-emerald-600" />
+        <KpiCard title={t("itemValue")} value={money(data?.summary?.itemValue)} hint={t("itemValueHint")} icon={Package} tone="text-orange-600" />
+        <KpiCard title={t("owedToMerchants")} value={money(data?.summary?.owedToMerchants)} hint={t("owedToMerchantsHint")} icon={Banknote} tone="text-sky-600" />
+        <KpiCard title={t("settledToMerchants")} value={money(data?.summary?.settledToMerchants)} icon={CheckCircle} tone="text-green-600" />
+        <KpiCard title={t("totalOrders")} value={data?.summary?.totalOrders || 0} icon={Package} tone="text-primary" />
+        <KpiCard title={t("deliveredOrders")} value={data?.summary?.deliveredOrders || 0} hint={t("deliveredHint", { cancelled: data?.summary?.cancelledOrders || 0, returned: data?.summary?.returnedOrders || 0 })} icon={Truck} tone="text-indigo-600" />
       </div>
 
       <section className="space-y-4">
         <div className="flex items-center gap-2">
           <Banknote className="h-5 w-5 text-primary" />
-          <h3 className="text-lg font-semibold">خط سير التحصيل والتسوية</h3>
+          <h3 className="text-lg font-semibold">{t("financialPipeline")}</h3>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-          <KpiCard title="محصل من العملاء" value={formatMoney(data?.financial?.cards?.collectedFromCustomers)} icon={DollarSign} tone="text-emerald-600" />
-          <KpiCard title="مع السائقين" value={formatMoney(data?.financial?.cards?.withDrivers)} icon={Truck} tone="text-sky-600" />
-          <KpiCard title="مع الشركة" value={formatMoney(data?.financial?.cards?.withCompany)} icon={Users} tone="text-violet-600" />
-          <KpiCard title="مسوى للتجار" value={formatMoney(data?.financial?.cards?.settledToMerchants)} icon={CheckCircle} tone="text-green-600" />
-          <KpiCard title="لم يحصل من العميل" value={formatMoney(data?.financial?.collection?.notCollected?.amount)} icon={Clock} tone="text-orange-600" />
+          <KpiCard title={t("collectedFromCustomers")} value={money(data?.financial?.cards?.collectedFromCustomers)} icon={DollarSign} tone="text-emerald-600" />
+          <KpiCard title={t("withDrivers")} value={money(data?.financial?.cards?.withDrivers)} icon={Truck} tone="text-sky-600" />
+          <KpiCard title={t("withCompany")} value={money(data?.financial?.cards?.withCompany)} icon={Users} tone="text-violet-600" />
+          <KpiCard title={t("settledToMerchants")} value={money(data?.financial?.cards?.settledToMerchants)} icon={CheckCircle} tone="text-green-600" />
+          <KpiCard title={t("notCollectedFromCustomer")} value={money(data?.financial?.collection?.notCollected?.amount)} icon={Clock} tone="text-orange-600" />
         </div>
         <div className="grid gap-6 lg:grid-cols-7">
           <Card className="lg:col-span-4">
             <CardHeader>
-              <CardTitle>المسار المالي</CardTitle>
-              <CardDescription>Customer → Driver → Company → Merchant</CardDescription>
+              <CardTitle>{t("financialPath")}</CardTitle>
+              <CardDescription>{t("financialPathDescription")}</CardDescription>
             </CardHeader>
             <CardContent className="h-[260px]">
               {pipelineData.length === 0 ? <EmptyChart /> : <PipelineAmountChart data={pipelineData} />}
@@ -293,8 +277,8 @@ export default function AdminReportsPage() {
           </Card>
           <Card className="lg:col-span-3">
             <CardHeader>
-              <CardTitle>تدفق التسوية</CardTitle>
-              <CardDescription>قراءة سريعة لحالة الأموال داخل الشبكة</CardDescription>
+              <CardTitle>{t("settlementFlow")}</CardTitle>
+              <CardDescription>{t("settlementFlowDescription")}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
@@ -303,9 +287,9 @@ export default function AdminReportsPage() {
                     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white" style={{ backgroundColor: item.color }}>{index + 1}</div>
                     <div className="min-w-0 flex-1">
                       <p className="font-medium">{item.name}</p>
-                      <p className="text-xs text-muted-foreground">{item.count} طلب</p>
+                      <p className="text-xs text-muted-foreground">{t("orderCount", { count: item.count })}</p>
                     </div>
-                    <p className="font-semibold">{formatMoney(item.amount)}</p>
+                    <p className="font-semibold" dir="ltr">{money(item.amount)}</p>
                   </div>
                 ))}
               </div>
@@ -317,8 +301,8 @@ export default function AdminReportsPage() {
       <div className="grid gap-6 lg:grid-cols-7">
         <Card className="lg:col-span-4">
           <CardHeader>
-            <CardTitle>الإيراد اليومي</CardTitle>
-            <CardDescription>بيانات جاهزة للتصدير لاحقا حسب الفترة المختارة</CardDescription>
+            <CardTitle>{t("dailyRevenue")}</CardTitle>
+            <CardDescription>{t("dailyRevenueDescription")}</CardDescription>
           </CardHeader>
           <CardContent className="h-[300px]">
             {revenueData.length === 0 ? <EmptyChart /> : <RevenueAreaChart data={revenueData} />}
@@ -327,8 +311,8 @@ export default function AdminReportsPage() {
 
         <Card className="lg:col-span-3">
           <CardHeader>
-            <CardTitle>توزيع حالات الطلبات</CardTitle>
-            <CardDescription>الحالة التشغيلية للشحنات</CardDescription>
+            <CardTitle>{t("statusDistribution")}</CardTitle>
+            <CardDescription>{t("statusDistributionDescription")}</CardDescription>
           </CardHeader>
           <CardContent className="h-[300px]">
             {statusData.length === 0 ? <EmptyChart /> : <StatusPieChart data={statusData} />}
@@ -338,25 +322,19 @@ export default function AdminReportsPage() {
 
       <div className="grid gap-6 lg:grid-cols-3">
         <Card>
-          <CardHeader>
-            <CardTitle>قمع التسليم</CardTitle>
-          </CardHeader>
+          <CardHeader><CardTitle>{t("deliveryFunnel")}</CardTitle></CardHeader>
           <CardContent className="h-[260px]">
             {funnelData.length === 0 ? <EmptyChart /> : <FunnelBarChart data={funnelData} />}
           </CardContent>
         </Card>
         <Card>
-          <CardHeader>
-            <CardTitle>الإيراد حسب المنطقة</CardTitle>
-          </CardHeader>
+          <CardHeader><CardTitle>{t("revenueByZone")}</CardTitle></CardHeader>
           <CardContent className="h-[260px]">
             {zoneRevenue.length === 0 ? <EmptyChart /> : <ZoneRevenueBarChart data={zoneRevenue} />}
           </CardContent>
         </Card>
         <Card>
-          <CardHeader>
-            <CardTitle>الإلغاء والمرتجعات</CardTitle>
-          </CardHeader>
+          <CardHeader><CardTitle>{t("cancellationReturns")}</CardTitle></CardHeader>
           <CardContent className="h-[260px]">
             {cancellationTrend.length === 0 ? <EmptyChart /> : <CancellationReturnLineChart data={cancellationTrend} />}
           </CardContent>
@@ -365,26 +343,26 @@ export default function AdminReportsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>أرصدة التجار المستحقة</CardTitle>
-          <CardDescription>الفصل واضح بين غير المحصل، المحصل من العملاء، والمسوى للتاجر</CardDescription>
+          <CardTitle>{t("merchantBalances")}</CardTitle>
+          <CardDescription>{t("merchantBalancesDescription")}</CardDescription>
         </CardHeader>
         <CardContent>
           {merchants.length === 0 ? (
-            <p className="py-10 text-center text-sm text-muted-foreground">لا توجد بيانات تجار في هذه الفترة</p>
+            <p className="py-10 text-center text-sm text-muted-foreground">{t("noMerchants")}</p>
           ) : (
             <div className="overflow-x-auto rounded-md border">
               <table className="w-full min-w-[980px] text-sm">
                 <thead className="border-b bg-muted/50 text-xs text-muted-foreground">
                   <tr>
-                    <th className="p-3 text-start">التاجر</th>
-                    <th className="p-3 text-start">الطلبات</th>
-                    <th className="p-3 text-start">محصل من العملاء</th>
-                    <th className="p-3 text-start">غير محصل</th>
-                    <th className="p-3 text-start">مسوى للتاجر</th>
-                    <th className="p-3 text-start">مستحق للتاجر</th>
-                    <th className="p-3 text-start">نجاح</th>
-                    <th className="p-3 text-start">إلغاء</th>
-                    <th className="p-3 text-start">مرتجع</th>
+                    <th className="p-3 text-start">{t("merchant")}</th>
+                    <th className="p-3 text-start">{t("orders")}</th>
+                    <th className="p-3 text-start">{t("collectedFromCustomers")}</th>
+                    <th className="p-3 text-start">{t("notCollected")}</th>
+                    <th className="p-3 text-start">{t("settledToMerchants")}</th>
+                    <th className="p-3 text-start">{t("owedToMerchant")}</th>
+                    <th className="p-3 text-start">{commonT("success")}</th>
+                    <th className="p-3 text-start">{t("cancellation")}</th>
+                    <th className="p-3 text-start">{t("returnRate")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -395,10 +373,10 @@ export default function AdminReportsPage() {
                         <p className="text-xs text-muted-foreground">{merchant.email}</p>
                       </td>
                       <td className="p-3">{merchant.totalOrders}</td>
-                      <td className="p-3 font-medium text-emerald-600">{formatMoney(merchant.collectedFromCustomers)}</td>
-                      <td className="p-3 text-orange-600">{formatMoney(merchant.notCollected)}</td>
-                      <td className="p-3 text-green-600">{formatMoney(merchant.settledToMerchant)}</td>
-                      <td className="p-3 font-semibold text-sky-600">{formatMoney(merchant.owedToMerchant)}</td>
+                      <td className="p-3 font-medium text-emerald-600" dir="ltr">{money(merchant.collectedFromCustomers)}</td>
+                      <td className="p-3 text-orange-600" dir="ltr">{money(merchant.notCollected)}</td>
+                      <td className="p-3 text-green-600" dir="ltr">{money(merchant.settledToMerchant)}</td>
+                      <td className="p-3 font-semibold text-sky-600" dir="ltr">{money(merchant.owedToMerchant)}</td>
                       <td className="p-3">{merchant.successRate}%</td>
                       <td className="p-3">{merchant.cancellationRate}%</td>
                       <td className="p-3">{merchant.returnRate}%</td>
@@ -414,12 +392,12 @@ export default function AdminReportsPage() {
       <div className="grid gap-6 xl:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>تحليلات السائقين</CardTitle>
-            <CardDescription>الأداء والتحصيل النقدي والتنبيهات التشغيلية</CardDescription>
+            <CardTitle>{t("driverAnalytics")}</CardTitle>
+            <CardDescription>{t("driverAnalyticsDescription")}</CardDescription>
           </CardHeader>
           <CardContent>
             {drivers.length === 0 ? (
-              <p className="py-10 text-center text-sm text-muted-foreground">لا توجد بيانات سائقين في هذه الفترة</p>
+              <p className="py-10 text-center text-sm text-muted-foreground">{t("noDrivers")}</p>
             ) : (
               <div className="space-y-3">
                 {drivers.slice(0, 8).map((driver: any) => (
@@ -427,15 +405,15 @@ export default function AdminReportsPage() {
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <p className="font-semibold">{driver.name}</p>
-                        <p className="text-xs text-muted-foreground">{driver.deliveredShipments} تسليم من {driver.assignedShipments} طلب</p>
+                        <p className="text-xs text-muted-foreground">{t("driverDeliveredSummary", { delivered: driver.deliveredShipments, assigned: driver.assignedShipments })}</p>
                       </div>
-                      <Badge variant="secondary">{driver.successRate}% نجاح</Badge>
+                      <Badge variant="secondary">{driver.successRate}% {commonT("success")}</Badge>
                     </div>
                     <div className="mt-3 grid grid-cols-2 gap-3 text-xs sm:grid-cols-4">
-                      <div><span className="text-muted-foreground">الأرباح</span><p className="font-semibold">{formatMoney(driver.earnings)}</p></div>
-                      <div><span className="text-muted-foreground">محصل</span><p className="font-semibold text-emerald-600">{formatMoney(driver.cashCollected)}</p></div>
-                      <div><span className="text-muted-foreground">غير محصل</span><p className="font-semibold text-orange-600">{formatMoney(driver.cashNotCollected)}</p></div>
-                      <div><span className="text-muted-foreground">متوسط الوقت</span><p className="font-semibold">{driver.avgDeliveryHours} ساعة</p></div>
+                      <div><span className="text-muted-foreground">{t("earnings")}</span><p className="font-semibold" dir="ltr">{money(driver.earnings)}</p></div>
+                      <div><span className="text-muted-foreground">{t("collected")}</span><p className="font-semibold text-emerald-600" dir="ltr">{money(driver.cashCollected)}</p></div>
+                      <div><span className="text-muted-foreground">{t("notCollected")}</span><p className="font-semibold text-orange-600" dir="ltr">{money(driver.cashNotCollected)}</p></div>
+                      <div><span className="text-muted-foreground">{t("avgTime")}</span><p className="font-semibold">{driver.avgDeliveryHours} {commonT("hours")}</p></div>
                     </div>
                     {driver.alerts?.length > 0 && (
                       <div className="mt-3 flex flex-wrap gap-2">
@@ -455,8 +433,8 @@ export default function AdminReportsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2"><BarChart2 className="h-4 w-4" /> أنواع التوصيل</CardTitle>
-            <CardDescription>توزيع الطلبات حسب نوع الخدمة</CardDescription>
+            <CardTitle className="flex items-center gap-2"><BarChart2 className="h-4 w-4" /> {t("deliveryTypes")}</CardTitle>
+            <CardDescription>{t("deliveryTypesDescription")}</CardDescription>
           </CardHeader>
           <CardContent className="h-[360px]">
             {typeData.length === 0 ? <EmptyChart /> : <TypeDistributionChart data={typeData} />}

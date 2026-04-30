@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '../lib/api';
 import { User, AuthResponse } from '../lib/types';
+import { useLanguage } from './LanguageContext';
 
 interface AuthContextType {
   user: User | null;
@@ -19,6 +20,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
+  const { localizedPath } = useLanguage();
 
   useEffect(() => {
     const initAuth = async () => {
@@ -45,9 +47,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     localStorage.setItem('accessToken', data.accessToken);
     setUser(data.user);
     
-    if (data.user.role === 'ADMIN') router.push('/admin');
-    else if (data.user.role === 'DRIVER') router.push('/driver');
-    else router.push('/client');
+    if (data.user.role === 'ADMIN') router.push(localizedPath('/admin'));
+    else if (data.user.role === 'DRIVER') router.push(localizedPath('/driver'));
+    else router.push(localizedPath('/client'));
   };
 
   const register = async (userData: any) => {
@@ -55,7 +57,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     localStorage.setItem('accessToken', data.accessToken);
     setUser(data.user);
     // New registrations are CLIENT by default based on typical flows
-    router.push('/client');
+    router.push(localizedPath('/client'));
   };
 
   const logout = async () => {
@@ -66,7 +68,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     } finally {
       localStorage.removeItem('accessToken');
       setUser(null);
-      router.push('/login');
+      router.push(localizedPath('/login'));
     }
   };
 

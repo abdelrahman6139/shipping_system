@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useAuth } from "@/context/AuthContext"
+import { useLanguage } from "@/context/LanguageContext"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -15,6 +16,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const { login } = useAuth()
+  const { localizedPath } = useLanguage()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -95,7 +97,7 @@ export default function LoginPage() {
           <div className="mt-6 pt-5 border-t text-center">
             <p className="text-sm text-muted-foreground">
               لا تملك حساباً؟{" "}
-              <Link href="/register" className="text-primary font-semibold hover:underline underline-offset-4">
+              <Link href={localizedPath("/register")} className="text-primary font-semibold hover:underline underline-offset-4">
                 أنشئ حساباً الآن
               </Link>
             </p>

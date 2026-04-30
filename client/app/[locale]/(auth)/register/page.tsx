@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useAuth } from "@/context/AuthContext"
+import { useLanguage } from "@/context/LanguageContext"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -17,6 +18,7 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading]       = useState(false)
   const [phoneError, setPhoneError]     = useState("")
   const { register } = useAuth()
+  const { localizedPath } = useLanguage()
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target
@@ -141,7 +143,7 @@ export default function RegisterPage() {
           <div className="mt-6 pt-5 border-t text-center">
             <p className="text-sm text-muted-foreground">
               لديك حساب بالفعل؟{" "}
-              <Link href="/login" className="text-primary font-semibold hover:underline underline-offset-4">سجّل الدخول</Link>
+              <Link href={localizedPath("/login")} className="text-primary font-semibold hover:underline underline-offset-4">سجّل الدخول</Link>
             </p>
           </div>
         </div>

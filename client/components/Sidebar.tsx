@@ -17,7 +17,7 @@ interface SidebarProps {
 
 export default function Sidebar({ isMobileOpen, onMobileClose }: SidebarProps) {
   const { user, logout } = useAuth()
-  const { t } = useLanguage()
+  const { localizedPath, t } = useLanguage()
   const pathname = usePathname()
 
   if (!user) return null
@@ -61,9 +61,11 @@ export default function Sidebar({ isMobileOpen, onMobileClose }: SidebarProps) {
   const sections = getSections()
   const roleLabel = user.role === "ADMIN" ? t("admin") : user.role === "DRIVER" ? t("driver") : t("client")
 
+  const normalizedPathname = (pathname || "/").replace(/^\/(ar|en)(?=\/|$)/, "") || "/"
+
   const isActive = (href: string, exact: boolean) => {
-    if (exact) return pathname === href
-    return pathname.startsWith(href) && pathname !== href.split("/").slice(0, -1).join("/")
+    if (exact) return normalizedPathname === href
+    return normalizedPathname.startsWith(href) && normalizedPathname !== href.split("/").slice(0, -1).join("/")
   }
 
   const SidebarContent = () => (
@@ -103,7 +105,7 @@ export default function Sidebar({ isMobileOpen, onMobileClose }: SidebarProps) {
                 return (
                   <Link
                     key={link.href}
-                    href={link.href}
+                    href={localizedPath(link.href)}
                     onClick={onMobileClose}
                     className={cn(
                       "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-150",

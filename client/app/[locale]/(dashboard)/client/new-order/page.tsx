@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import api from "@/lib/api"
+import { useLanguage } from "@/context/LanguageContext"
 import {
   MapPin, Package, Truck, Zap, Clock,
   DollarSign, ArrowRight, CheckCircle, Info, Loader2,
@@ -76,6 +77,7 @@ function FieldError({ msg }: { msg?: string }) {
 
 export default function NewOrderPage() {
   const router = useRouter()
+  const { localizedPath } = useLanguage()
   const [isSubmitting, setIsSubmitting]       = useState(false)
   const [isPricing, setIsPricing]             = useState(false)
   const [calculatedPrice, setCalculatedPrice] = useState<number | null>(null)
@@ -229,7 +231,7 @@ export default function NewOrderPage() {
         addons:             selectedAddonRows,
       })
       toast.success("تم إنشاء الطلب بنجاح!")
-      router.push("/client/orders")
+      router.push(localizedPath("/client/orders"))
     } catch (err: any) {
       toast.error(err.response?.data?.error || "فشل إنشاء الطلب")
     } finally {

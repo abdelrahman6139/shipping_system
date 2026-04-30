@@ -8,6 +8,7 @@ import api from "@/lib/api"
 import { toast } from "sonner"
 import { connectSocket } from "@/lib/socket"
 import { useAuth } from "@/context/AuthContext"
+import { useLanguage } from "@/context/LanguageContext"
 import {
   Search, Eye, Download, MapPin, Truck, User, Calendar,
   DollarSign, Phone, UserCheck, Package, Clock,
@@ -192,6 +193,7 @@ function SkeletonCards() {
 /* ═══════════════════════════ PAGE ══════════════════════════════ */
 export default function AdminOrdersPage() {
   const { user } = useAuth()
+  const { localizedPath } = useLanguage()
   const router = useRouter()
 
   const [orders, setOrders]       = useState<Order[]>([])
@@ -367,7 +369,7 @@ export default function AdminOrdersPage() {
       toast.error("رقم الشحنة غير متوفر لهذا الطلب")
       return
     }
-    router.push(`/admin/waybill?shipmentNumber=${encodeURIComponent(order.shipmentNumber)}`)
+    router.push(localizedPath(`/admin/waybill?shipmentNumber=${encodeURIComponent(order.shipmentNumber)}`))
   }
 
   const orderGrandTotal = (order: Pick<Order, "grandTotal" | "totalPrice">) =>

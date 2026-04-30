@@ -1,7 +1,7 @@
 "use client"
 
 import { memo } from "react"
-import { useLocale } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
 import { formatDate, formatMoney, type ChartLocale } from "@/lib/chart-format"
 
@@ -13,8 +13,9 @@ type DayChart = {
 
 function DriverEarningsChart({ data }: { data: DayChart[] }) {
   const locale = useLocale() as ChartLocale
-  const driverShareLabel = locale === "ar" ? "حصة السائق" : "Driver share"
-  const orderValueLabel = locale === "ar" ? "قيمة الطلب" : "Order value"
+  const t = useTranslations("Common")
+  const driverShareLabel = t("driverShare")
+  const orderValueLabel = t("orderValue")
 
   return (
     <ResponsiveContainer width="100%" height="100%" minWidth={280} minHeight={200}>

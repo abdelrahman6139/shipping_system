@@ -34,8 +34,9 @@ api.interceptors.response.use(
         return api(originalRequest);
       } catch (refreshError) {
         localStorage.removeItem('accessToken');
-        if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/login')) {
-          window.location.href = '/login';
+        if (typeof window !== 'undefined' && !window.location.pathname.replace(/^\/(ar|en)(?=\/|$)/, '').startsWith('/login')) {
+          const isEnglishPath = /^\/en(?=\/|$)/.test(window.location.pathname);
+          window.location.href = isEnglishPath ? '/en/login' : '/login';
         }
         return Promise.reject(refreshError);
       }
