@@ -11,6 +11,8 @@ import { connectSocket } from "@/lib/socket"
 import { useAuth } from "@/context/AuthContext"
 import { useLanguage } from "@/context/LanguageContext"
 import { useRouter } from "next/navigation"
+import { useLocale, useTranslations } from "next-intl"
+import { formatMoney, type ChartLocale } from "@/lib/chart-format"
 import {
   Download, FileText, Search, MapPin, Truck, Calendar,
   DollarSign, Package, Phone, User, Plus, Loader2,
@@ -47,57 +49,43 @@ type Order = {
 type Pagination = { total: number; totalPages: number; page: number }
 
 /* ─────────────────────────── CONSTANTS ─────────────────────── */
-const STATUS_CFG: Record<string, { label: string; bg: string; text: string; dot: string; icon: any; step: number }> = {
-  PENDING:    { label: "قيد الانتظار",       bg: "bg-amber-50   dark:bg-amber-900/20",   text: "text-amber-700   dark:text-amber-400",   dot: "bg-amber-400",    icon: Clock,        step: 0 },
-  ASSIGNED:   { label: "تم التعيين",         bg: "bg-blue-50    dark:bg-blue-900/20",    text: "text-blue-700    dark:text-blue-400",    dot: "bg-blue-400",     icon: Truck,        step: 1 },
-  PICKED_UP:  { label: "تم الاستلام",        bg: "bg-violet-50  dark:bg-violet-900/20",  text: "text-violet-700  dark:text-violet-400",  dot: "bg-violet-400",   icon: Boxes,        step: 2 },
-  IN_TRANSIT: { label: "جاري التوصيل",       bg: "bg-indigo-50  dark:bg-indigo-900/20",  text: "text-indigo-700  dark:text-indigo-400",  dot: "bg-indigo-400",   icon: Truck,        step: 3 },
-  DELIVERED:  { label: "تم التسليم",        bg: "bg-emerald-50 dark:bg-emerald-900/20", text: "text-emerald-700 dark:text-emerald-400", dot: "bg-emerald-500", icon: PackageCheck, step: 4 },
-  COLLECTED:  { label: "تم التسليم",        bg: "bg-emerald-50 dark:bg-emerald-900/20", text: "text-emerald-700 dark:text-emerald-400", dot: "bg-emerald-500", icon: PackageCheck, step: 4 },
-  CANCELLED:  { label: "ملغي",              bg: "bg-red-50     dark:bg-red-900/20",     text: "text-red-700     dark:text-red-400",     dot: "bg-red-500",      icon: XCircle,      step: -1 },
-  RETURNED:   { label: "مرتجع",             bg: "bg-purple-50  dark:bg-purple-900/20",  text: "text-purple-700  dark:text-purple-400",  dot: "bg-purple-500",   icon: XCircle,      step: -1 },
-}
-
-const DELIVERY_LABEL: Record<string, string> = {
-  STANDARD: "عادي",
-  EXPRESS:  "سريع",
-  SAME_DAY: "نفس اليوم",
+const STATUS_CFG: Record<string, { bg: string; text: string; dot: string; icon: any; step: number }> = {
+  PENDING:    { bg: "bg-amber-50   dark:bg-amber-900/20",   text: "text-amber-700   dark:text-amber-400",   dot: "bg-amber-400",    icon: Clock,        step: 0 },
+  ASSIGNED:   { bg: "bg-blue-50    dark:bg-blue-900/20",    text: "text-blue-700    dark:text-blue-400",    dot: "bg-blue-400",     icon: Truck,        step: 1 },
+  PICKED_UP:  { bg: "bg-violet-50  dark:bg-violet-900/20",  text: "text-violet-700  dark:text-violet-400",  dot: "bg-violet-400",   icon: Boxes,        step: 2 },
+  IN_TRANSIT: { bg: "bg-indigo-50  dark:bg-indigo-900/20",  text: "text-indigo-700  dark:text-indigo-400",  dot: "bg-indigo-400",   icon: Truck,        step: 3 },
+  DELIVERED:  { bg: "bg-emerald-50 dark:bg-emerald-900/20", text: "text-emerald-700 dark:text-emerald-400", dot: "bg-emerald-500", icon: PackageCheck, step: 4 },
+  COLLECTED:  { bg: "bg-emerald-50 dark:bg-emerald-900/20", text: "text-emerald-700 dark:text-emerald-400", dot: "bg-emerald-500", icon: PackageCheck, step: 4 },
+  CANCELLED:  { bg: "bg-red-50     dark:bg-red-900/20",     text: "text-red-700     dark:text-red-400",     dot: "bg-red-500",      icon: XCircle,      step: -1 },
+  RETURNED:   { bg: "bg-purple-50  dark:bg-purple-900/20",  text: "text-purple-700  dark:text-purple-400",  dot: "bg-purple-500",   icon: XCircle,      step: -1 },
 }
 
 const STEPS = ["PENDING", "ASSIGNED", "PICKED_UP", "IN_TRANSIT", "DELIVERED"]
-const STEP_SHORT_LABEL = ["انتظار", "تعيين", "استلام", "توصيل", "تسليم"]
+const STATUS_FILTERS = ["ALL", "PENDING", "ASSIGNED", "PICKED_UP", "IN_TRANSIT", "DELIVERED", "CANCELLED"]
 
-const STATUS_FILTERS = [
-  { value: "ALL",        label: "الكل" },
-  { value: "PENDING",    label: "انتظار" },
-  { value: "ASSIGNED",   label: "معيّن" },
-  { value: "PICKED_UP",  label: "استُلم" },
-  { value: "IN_TRANSIT", label: "في الطريق" },
-  { value: "DELIVERED",  label: "تم التسليم" },
-  { value: "CANCELLED",  label: "ملغي" },
-]
-
-const COLLECTION_LABEL: Record<string, { title: string; detail: string; cls: string }> = {
-  NOT_COLLECTED: { title: "لم يحصل من العميل بعد", detail: "لا توجد مبالغ جاهزة للتسوية مع التاجر.", cls: "text-orange-700 dark:text-orange-400" },
-  DRIVER_COLLECTED: { title: "السائق حصل من العميل", detail: "المبلغ لم يصل للشركة ولم يسو للتاجر بعد.", cls: "text-sky-700 dark:text-sky-400" },
-  COMPANY_RECEIVED: { title: "الشركة استلمت المبلغ", detail: "المبلغ في انتظار التسوية مع التاجر.", cls: "text-violet-700 dark:text-violet-400" },
-  SETTLED_TO_MERCHANT: { title: "تمت التسوية مع التاجر", detail: "تم دفع مستحقات هذه الشحنة للتاجر.", cls: "text-emerald-700 dark:text-emerald-400" },
+const COLLECTION_STYLE: Record<string, { cls: string }> = {
+  NOT_COLLECTED: { cls: "text-orange-700 dark:text-orange-400" },
+  DRIVER_COLLECTED: { cls: "text-sky-700 dark:text-sky-400" },
+  COMPANY_RECEIVED: { cls: "text-violet-700 dark:text-violet-400" },
+  SETTLED_TO_MERCHANT: { cls: "text-emerald-700 dark:text-emerald-400" },
 }
 
 /* ─────────────────────────── COMPONENTS ────────────────────── */
 function StatusPill({ status }: { status: string }) {
+  const statusT = useTranslations("Status")
   const cfg = STATUS_CFG[status]
   if (!cfg) return <span className="rounded-full bg-muted px-2 py-0.5 text-xs">{status}</span>
   const Icon = cfg.icon
   return (
     <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${cfg.bg} ${cfg.text}`}>
       <Icon className="h-3 w-3 shrink-0" />
-      {cfg.label}
+      {statusT(status)}
     </span>
   )
 }
 
 function DeliveryPill({ type }: { type: string }) {
+  const deliveryT = useTranslations("DeliveryType")
   const colors: Record<string, string> = {
     STANDARD: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
     EXPRESS:  "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
@@ -105,16 +93,18 @@ function DeliveryPill({ type }: { type: string }) {
   }
   return (
     <span className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium ${colors[type] || "bg-muted text-muted-foreground"}`}>
-      {DELIVERY_LABEL[type] || type}
+      {deliveryT(type)}
     </span>
   )
 }
 
 function Timeline({ status }: { status: string }) {
+  const t = useTranslations("ClientOrders")
+  const statusT = useTranslations("Status")
   if (status === "CANCELLED") {
     return (
       <div className="flex items-center gap-2 rounded-lg border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/20 p-3 text-sm text-red-700 dark:text-red-400">
-        <XCircle className="h-4 w-4 shrink-0" /> تم إلغاء هذا الطلب
+        <XCircle className="h-4 w-4 shrink-0" /> {t("cancelledOrder")}
       </div>
     )
   }
@@ -138,7 +128,7 @@ function Timeline({ status }: { status: string }) {
               </div>
               <p className={`text-[9px] text-center leading-tight w-14 ${
                 active ? "font-bold text-primary" : done ? "text-primary/60" : "text-muted-foreground/40"
-              }`}>{STEP_SHORT_LABEL[i]}</p>
+              }`}>{statusT(s)}</p>
             </div>
             {i < STEPS.length - 1 && (
               <div className={`flex-1 h-0.5 mt-4 mx-0.5 rounded ${i < cur ? "bg-primary" : "bg-muted"}`} />
@@ -172,6 +162,11 @@ export default function ClientOrdersPage() {
   const { user } = useAuth()
   const { localizedPath } = useLanguage()
   const router = useRouter()
+  const t = useTranslations("ClientOrders")
+  const statusT = useTranslations("Status")
+  const collectionT = useTranslations("CollectionStatus")
+  const deliveryT = useTranslations("DeliveryType")
+  const locale = useLocale() as ChartLocale
 
   const [orders, setOrders]           = useState<Order[]>([])
   const [pagination, setPagination]   = useState<Pagination>({ total: 0, totalPages: 1, page: 1 })
@@ -202,7 +197,7 @@ export default function ClientOrdersPage() {
       setOrders(data.orders || [])
       setPagination(data.pagination || { total: 0, totalPages: 1, page })
     } catch {
-      toast.error("فشل تحميل الطلبات")
+      toast.error(t("errors.loadOrders"))
     } finally {
       setIsLoading(false)
     }
@@ -229,7 +224,7 @@ export default function ClientOrdersPage() {
       const { data } = await api.get(`/orders/${id}`)
       setSelected(data.order)
     } catch {
-      toast.error("فشل تحميل التفاصيل")
+      toast.error(t("errors.loadDetails"))
       setDetailOpen(false)
     } finally {
       setDetailLoading(false)
@@ -245,11 +240,13 @@ export default function ClientOrdersPage() {
       a.href = url
       a.download = `invoice-${orderId.slice(0,8)}.pdf`
       document.body.appendChild(a); a.click(); a.remove()
-    } catch { toast.error("فشل تنزيل الفاتورة") }
+    } catch { toast.error(t("errors.downloadInvoice")) }
   }
 
   const formatDate = (d: string) =>
-    new Date(d).toLocaleDateString("ar-EG", { year: "numeric", month: "short", day: "numeric" })
+    new Date(d).toLocaleDateString(locale === "ar" ? "ar-EG" : "en-GB", { year: "numeric", month: "short", day: "numeric" })
+
+  const money = useCallback((value: unknown) => formatMoney(value, locale), [locale])
 
   const orderGrandTotal = (order: Pick<Order, "grandTotal" | "totalPrice">) =>
     Number(order.grandTotal ?? order.totalPrice ?? 0)
@@ -267,13 +264,13 @@ export default function ClientOrdersPage() {
       {/* ── Header ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">طلباتي</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            {pagination.total > 0 ? `${pagination.total} طلب إجمالي` : "لا توجد طلبات بعد"}
+            {pagination.total > 0 ? t("totalOrders", { count: pagination.total }) : t("noOrdersYet")}
           </p>
         </div>
         <Button className="gap-2 shrink-0" onClick={() => router.push(localizedPath("/client/new-order"))}>
-          <Plus className="h-4 w-4" /> طلب جديد
+          <Plus className="h-4 w-4" /> {t("actions.newOrder")}
         </Button>
       </div>
 
@@ -282,7 +279,7 @@ export default function ClientOrdersPage() {
         <div className="relative">
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
           <Input
-            placeholder="ابحث برقم الطلب، اسم المستلم، الهاتف، الوجهة..."
+            placeholder={t("searchPlaceholder")}
             className="pr-10 h-11"
             value={search}
             onChange={e => setSearch(e.target.value)}
@@ -292,15 +289,15 @@ export default function ClientOrdersPage() {
         <div className="flex gap-2 flex-wrap">
           {STATUS_FILTERS.map(f => (
             <button
-              key={f.value}
-              onClick={() => { setFilter(f.value); setPage(1) }}
+              key={f}
+              onClick={() => { setFilter(f); setPage(1) }}
               className={`rounded-full px-3 py-1 text-xs font-medium border transition-colors ${
-                filterStatus === f.value
+                filterStatus === f
                   ? "bg-primary text-primary-foreground border-primary"
                   : "bg-background border-input text-muted-foreground hover:border-primary/50"
               }`}
             >
-              {f.label}
+              {t(`filters.${f}`)}
             </button>
           ))}
         </div>
@@ -312,13 +309,13 @@ export default function ClientOrdersPage() {
       ) : orders.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center rounded-xl border border-dashed">
           <Package className="h-12 w-12 text-muted-foreground/25 mb-4" />
-          <p className="font-semibold text-lg">لا توجد طلبات</p>
+          <p className="font-semibold text-lg">{t("empty.title")}</p>
           <p className="text-sm text-muted-foreground mt-1 mb-5">
-            {search || filterStatus !== "ALL" ? "جرب تعديل الفلتر أو البحث" : "أنشئ أول طلب شحن الآن"}
+            {search || filterStatus !== "ALL" ? t("empty.filtered") : t("empty.createFirst")}
           </p>
           {!search && filterStatus === "ALL" && (
             <Button onClick={() => router.push(localizedPath("/client/new-order"))} className="gap-2">
-              <Plus className="h-4 w-4" /> طلب شحن جديد
+              <Plus className="h-4 w-4" /> {t("actions.createShippingOrder")}
             </Button>
           )}
         </div>
@@ -329,13 +326,13 @@ export default function ClientOrdersPage() {
             <table className="w-full text-sm">
               <thead className="bg-muted/60 border-b">
                 <tr className="text-xs text-muted-foreground uppercase tracking-wide">
-                  <th className="px-4 py-3 text-right font-medium">الطلب</th>
-                  <th className="px-4 py-3 text-right font-medium">المستلم</th>
-                  <th className="px-4 py-3 text-right font-medium">الوجهة</th>
-                  <th className="px-4 py-3 text-right font-medium">نوع التوصيل</th>
-                  <th className="px-4 py-3 text-right font-medium">التاريخ</th>
-                  <th className="px-4 py-3 text-right font-medium">السعر</th>
-                  <th className="px-4 py-3 text-right font-medium">الحالة</th>
+                  <th className="px-4 py-3 text-right font-medium">{t("table.order")}</th>
+                  <th className="px-4 py-3 text-right font-medium">{t("table.receiver")}</th>
+                  <th className="px-4 py-3 text-right font-medium">{t("table.destination")}</th>
+                  <th className="px-4 py-3 text-right font-medium">{t("table.deliveryType")}</th>
+                  <th className="px-4 py-3 text-right font-medium">{t("table.date")}</th>
+                  <th className="px-4 py-3 text-right font-medium">{t("table.price")}</th>
+                  <th className="px-4 py-3 text-right font-medium">{t("table.status")}</th>
                   <th className="px-4 py-3" />
                 </tr>
               </thead>
@@ -363,16 +360,16 @@ export default function ClientOrdersPage() {
                       {formatDate(o.createdAt)}
                     </td>
                     <td className="px-4 py-3">
-                      <span className="font-bold text-primary">ج.م {orderGrandTotal(o).toFixed(2)}</span>
+                      <span className="font-bold text-primary">{money(orderGrandTotal(o))}</span>
                     </td>
                     <td className="px-4 py-3"><StatusPill status={o.status} /></td>
                     <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
                       <div className="flex justify-end gap-1">
-                        <Button variant="ghost" size="icon" className="h-8 w-8" title="تفاصيل"
+                        <Button variant="ghost" size="icon" className="h-8 w-8" title={t("actions.details")}
                           onClick={() => openDetail(o.id)}>
                           <FileText className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" title="الفاتورة"
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" title={t("actions.invoice")}
                           onClick={() => downloadInvoice(o.id)}>
                           <Download className="h-4 w-4" />
                         </Button>
@@ -423,11 +420,11 @@ export default function ClientOrdersPage() {
                 {/* Bottom */}
                 <div className="flex items-center justify-between border-t pt-2"
                   onClick={e => e.stopPropagation()}>
-                  <span className="text-lg font-bold text-primary">ج.م {orderGrandTotal(o).toFixed(2)}</span>
+                  <span className="text-lg font-bold text-primary">{money(orderGrandTotal(o))}</span>
                   <div className="flex gap-1">
                     <Button variant="outline" size="sm" className="h-8 text-xs gap-1"
                       onClick={e => { e.stopPropagation(); openDetail(o.id) }}>
-                      <FileText className="h-3.5 w-3.5" /> تفاصيل
+                      <FileText className="h-3.5 w-3.5" /> {t("actions.details")}
                     </Button>
                     <Button variant="ghost" size="icon" className="h-8 w-8 text-primary"
                       onClick={e => { e.stopPropagation(); downloadInvoice(o.id) }}>
@@ -443,17 +440,17 @@ export default function ClientOrdersPage() {
           {pagination.totalPages > 1 && (
             <div className="flex items-center justify-between pt-2">
               <p className="text-sm text-muted-foreground">
-                صفحة {page} من {pagination.totalPages}
-                <span className="text-muted-foreground/60 mr-2">({pagination.total} طلب)</span>
+                {t("pageOf", { page, totalPages: pagination.totalPages })}
+                <span className="text-muted-foreground/60 mr-2">({t("orderCount", { count: pagination.total })})</span>
               </p>
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" disabled={page <= 1}
                   onClick={() => setPage(p => Math.max(p-1,1))}>
-                  <ChevronRight className="h-4 w-4 ml-1" /> السابق
+                  <ChevronRight className="h-4 w-4 ml-1" /> {t("pagination.previous")}
                 </Button>
                 <Button variant="outline" size="sm" disabled={page >= pagination.totalPages}
                   onClick={() => setPage(p => p+1)}>
-                  التالي <ChevronLeft className="h-4 w-4 mr-1" />
+                  {t("pagination.next")} <ChevronLeft className="h-4 w-4 mr-1" />
                 </Button>
               </div>
             </div>
@@ -466,7 +463,7 @@ export default function ClientOrdersPage() {
         <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
           <DialogHeader className="pb-2">
             <DialogTitle className="flex items-center gap-2 text-base">
-              <Package className="h-5 w-5 text-primary" /> تفاصيل الطلب
+              <Package className="h-5 w-5 text-primary" /> {t("details.title")}
             </DialogTitle>
             {selected && (
               <DialogDescription className="font-mono text-xs">
@@ -484,22 +481,22 @@ export default function ClientOrdersPage() {
 
               {/* Status timeline */}
               <div className="rounded-xl border p-4 space-y-3">
-                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">مسار الشحنة</p>
+                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t("details.timeline")}</p>
                 <Timeline status={selected.status} />
               </div>
 
               {/* Collection / merchant settlement status */}
               {selected.status === "DELIVERED" && (() => {
-                const c = COLLECTION_LABEL[selected.collectionStatus || "NOT_COLLECTED"]
+                const c = COLLECTION_STYLE[selected.collectionStatus || "NOT_COLLECTED"]
                 return (
                   <div className="flex items-center gap-3 rounded-xl border bg-muted/30 p-4">
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-background">
                       <Banknote className={`h-5 w-5 ${c?.cls || "text-muted-foreground"}`} />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">التحصيل والتسوية</p>
-                      <p className={`text-sm font-semibold ${c?.cls || ""}`}>{c?.title || selected.collectionStatus}</p>
-                      <p className="mt-0.5 text-xs text-muted-foreground">{c?.detail}</p>
+                      <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t("details.collectionSettlement")}</p>
+                      <p className={`text-sm font-semibold ${c?.cls || ""}`}>{collectionT(selected.collectionStatus || "NOT_COLLECTED")}</p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">{t(`collectionDetails.${selected.collectionStatus || "NOT_COLLECTED"}`)}</p>
                     </div>
                   </div>
                 )
@@ -507,30 +504,30 @@ export default function ClientOrdersPage() {
 
               {/* Recipient card */}
               <div className="rounded-xl border p-4 bg-muted/30 space-y-3">
-                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">بيانات المستلم</p>
+                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t("details.receiverInfo")}</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                  <InfoRow icon={<User className="h-4 w-4 text-muted-foreground" />} label="الاسم" value={selected.recipientName || "غير محدد"} />
-                  <InfoRow icon={<Phone className="h-4 w-4 text-muted-foreground" />} label="الهاتف" value={selected.recipientPhone || "غير محدد"} dir="ltr" />
+                  <InfoRow icon={<User className="h-4 w-4 text-muted-foreground" />} label={t("details.name")} value={selected.recipientName || t("fallback.notSpecified")} />
+                  <InfoRow icon={<Phone className="h-4 w-4 text-muted-foreground" />} label={t("details.phone")} value={selected.recipientPhone || t("fallback.notSpecified")} dir="ltr" />
                   <div className="sm:col-span-2">
-                    <InfoRow icon={<MapPin className="h-4 w-4 text-red-500" />} label="عنوان التسليم" value={selected.destination} />
+                    <InfoRow icon={<MapPin className="h-4 w-4 text-red-500" />} label={t("details.deliveryAddress")} value={selected.destination} />
                   </div>
                 </div>
               </div>
 
               {/* Shipment details */}
               <div className="rounded-xl border p-4 space-y-3">
-                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">تفاصيل الشحنة</p>
+                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t("details.shipmentDetails")}</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                  <InfoRow icon={<MapPin className="h-4 w-4 text-green-500" />} label="عنوان الاستلام" value={selected.pickupAddress} />
-                  <InfoRow icon={<Building2 className="h-4 w-4 text-muted-foreground" />} label="المنطقة" value={zoneLabel(selected.zone)} />
-                  <InfoRow icon={<Truck className="h-4 w-4 text-muted-foreground" />} label="نوع التوصيل" value={DELIVERY_LABEL[selected.deliveryType] || selected.deliveryType} />
+                  <InfoRow icon={<MapPin className="h-4 w-4 text-green-500" />} label={t("details.pickupAddress")} value={selected.pickupAddress} />
+                  <InfoRow icon={<Building2 className="h-4 w-4 text-muted-foreground" />} label={t("details.zone")} value={zoneLabel(selected.zone)} />
+                  <InfoRow icon={<Truck className="h-4 w-4 text-muted-foreground" />} label={t("details.deliveryType")} value={deliveryT(selected.deliveryType)} />
                   {selected.shipmentNumber && (
-                    <InfoRow icon={<Package className="h-4 w-4 text-primary" />} label="رقم الشحنة" value={selected.shipmentNumber} />
+                    <InfoRow icon={<Package className="h-4 w-4 text-primary" />} label={t("details.shipmentNumber")} value={selected.shipmentNumber} />
                   )}
-                  <InfoRow icon={<Calendar className="h-4 w-4 text-muted-foreground" />} label="التاريخ" value={formatDate(selected.createdAt)} />
+                  <InfoRow icon={<Calendar className="h-4 w-4 text-muted-foreground" />} label={t("details.date")} value={formatDate(selected.createdAt)} />
                   {selected.packageDescription && (
                     <div className="sm:col-span-2">
-                      <InfoRow icon={<Package className="h-4 w-4 text-muted-foreground" />} label="وصف الطرد" value={selected.packageDescription} />
+                      <InfoRow icon={<Package className="h-4 w-4 text-muted-foreground" />} label={t("details.packageDescription")} value={selected.packageDescription} />
                     </div>
                   )}
                 </div>
@@ -539,28 +536,28 @@ export default function ClientOrdersPage() {
                 <div className="mt-2 rounded-lg bg-primary/5 border border-primary/20 px-4 py-3 space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground flex items-center gap-1.5">
-                      <DollarSign className="h-4 w-4 text-primary" /> إجمالي التحصيل COD
+                      <DollarSign className="h-4 w-4 text-primary" /> {t("details.codTotal")}
                     </span>
-                    <span className="text-2xl font-bold text-primary">ج.م {orderGrandTotal(selected).toFixed(2)}</span>
+                    <span className="text-2xl font-bold text-primary">{money(orderGrandTotal(selected))}</span>
                   </div>
                   <div className="grid grid-cols-2 gap-2 border-t border-primary/10 pt-2 text-xs">
                     <div className="flex justify-between gap-2">
-                      <span className="text-muted-foreground">سعر المنتج</span>
-                      <span className="font-semibold" dir="ltr">EGP {Number(selected.itemPrice || 0).toFixed(2)}</span>
+                      <span className="text-muted-foreground">{t("details.itemPrice")}</span>
+                      <span className="font-semibold" dir="ltr">{money(selected.itemPrice || 0)}</span>
                     </div>
                     <div className="flex justify-between gap-2">
-                      <span className="text-muted-foreground">الشحن</span>
-                      <span className="font-semibold" dir="ltr">EGP {Number(selected.deliveryFee || 0).toFixed(2)}</span>
+                      <span className="text-muted-foreground">{t("details.deliveryFee")}</span>
+                      <span className="font-semibold" dir="ltr">{money(selected.deliveryFee || 0)}</span>
                     </div>
                     {Number(selected.addonsTotal || 0) > 0 && (
                       <div className="flex justify-between gap-2">
-                        <span className="text-muted-foreground">الإضافات</span>
-                        <span className="font-semibold" dir="ltr">EGP {Number(selected.addonsTotal || 0).toFixed(2)}</span>
+                        <span className="text-muted-foreground">{t("details.addons")}</span>
+                        <span className="font-semibold" dir="ltr">{money(selected.addonsTotal || 0)}</span>
                       </div>
                     )}
                     {orderAddons(selected).length > 0 && (
                       <div className="col-span-2 text-muted-foreground">
-                        {orderAddons(selected).map(addon => `${addon.name}: ${Number(addon.amount || 0).toFixed(2)}`).join("، ")}
+                        {orderAddons(selected).map(addon => `${addon.name}: ${Number(addon.amount || 0).toFixed(2)}`).join(locale === "ar" ? "\u060C " : ", ")}
                       </div>
                     )}
                   </div>
@@ -570,7 +567,7 @@ export default function ClientOrdersPage() {
               {/* Driver */}
               {selected.driver && (
                 <div className="rounded-xl border border-blue-200 dark:border-blue-900 bg-blue-50 dark:bg-blue-950/20 p-4 space-y-2">
-                  <p className="text-xs font-bold uppercase tracking-wider text-blue-700 dark:text-blue-400">السائق المعيّن</p>
+                  <p className="text-xs font-bold uppercase tracking-wider text-blue-700 dark:text-blue-400">{t("details.assignedDriver")}</p>
                   <div className="flex items-center gap-3">
                     <div className="h-9 w-9 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center">
                       <User className="h-4 w-4 text-blue-700 dark:text-blue-400" />
@@ -591,7 +588,7 @@ export default function ClientOrdersPage() {
                   <div className="flex items-start gap-2">
                     <StickyNote className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
                     <div>
-                      <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">ملاحظات</p>
+                      <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">{t("details.notes")}</p>
                       <p className="text-sm">{selected.notes}</p>
                     </div>
                   </div>
@@ -600,7 +597,7 @@ export default function ClientOrdersPage() {
 
               {/* Action */}
               <Button variant="outline" className="w-full gap-2" onClick={() => downloadInvoice(selected.id)}>
-                <Download className="h-4 w-4" /> تنزيل الفاتورة PDF
+                <Download className="h-4 w-4" /> {t("actions.downloadInvoice")}
               </Button>
             </div>
           ) : null}

@@ -4,6 +4,8 @@ import { useEffect, useMemo, useRef, type ReactNode } from "react"
 import JsBarcode from "jsbarcode"
 import { QRCodeSVG } from "qrcode.react"
 import companyLogo from "@/app/images/logo.png"
+import { useLocale, useTranslations } from "next-intl"
+import { formatMoney, type ChartLocale } from "@/lib/chart-format"
 
 type Order = {
   id: string
@@ -39,29 +41,6 @@ const LABEL_HEIGHT = "130mm"
 const SHIPMENT_NUMBER_RE = /^SHP-[A-Z0-9]{6,20}$/i
 const FALLBACK = "-"
 
-const DELIVERY_LABELS: Record<string, string> = {
-  STANDARD: "Standard",
-  EXPRESS: "Express",
-  SAME_DAY: "Same day",
-}
-
-const STATUS_LABELS: Record<string, string> = {
-  PENDING: "Pending",
-  ASSIGNED: "Assigned",
-  PICKED_UP: "Picked up",
-  IN_TRANSIT: "In transit",
-  DELIVERED: "Delivered",
-  CANCELLED: "Cancelled",
-  RETURNED: "Returned",
-}
-
-const COLLECTION_LABELS: Record<string, string> = {
-  NOT_COLLECTED: "Not collected",
-  DRIVER_COLLECTED: "Driver collected",
-  COMPANY_RECEIVED: "Company received",
-  SETTLED_TO_MERCHANT: "Settled",
-}
-
 const noWrapStyle = {
   whiteSpace: "nowrap",
   wordBreak: "keep-all",
@@ -84,24 +63,19 @@ function safe(value?: string | number | null) {
   return text || FALLBACK
 }
 
-function fmtDate(value?: string) {
+function fmtDate(value: string | undefined, locale: ChartLocale) {
   if (!value) return FALLBACK
-  return new Date(value).toLocaleDateString("en-GB", {
+  return new Date(value).toLocaleDateString(locale === "ar" ? "ar-EG" : "en-GB", {
     year: "numeric",
     month: "short",
     day: "2-digit",
   })
 }
 
-function money(value?: number) {
-  const amount = Number(value ?? 0)
-  return amount.toLocaleString("en-US", { maximumFractionDigits: 2 })
-}
-
-function routeCode(zoneName?: string) {
+function routeCode(zoneName: string | undefined, fallback: string) {
   const name = safe(zoneName)
-  if (name === FALLBACK) return "ZONE / ROUTE"
-  return name.replace(/\s+/g, "").slice(0, 8).toUpperCase() || "ZONE / ROUTE"
+  if (name === FALLBACK) return fallback
+  return name.replace(/\s+/g, "").slice(0, 8).toUpperCase() || fallback
 }
 
 function NoWrap({
@@ -190,6 +164,11 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
 }
 
 export default function ShippingLabel({ order }: ShippingLabelProps) {
+  const t = useTranslations("ShippingLabel")
+  const statusT = useTranslations("Status")
+  const collectionT = useTranslations("CollectionStatus")
+  const deliveryT = useTranslations("DeliveryType")
+  const locale = useLocale() as ChartLocale
   const barcodeRef = useRef<SVGSVGElement>(null)
   const shipmentNumber = safe(order.shipmentNumber).toUpperCase()
   const hasValidShipmentNumber = SHIPMENT_NUMBER_RE.test(shipmentNumber)
@@ -202,18 +181,19 @@ export default function ShippingLabel({ order }: ShippingLabelProps) {
   const areaName = safe(order.zone?.name)
   const governorateName = safe(order.zone?.parent?.name)
   const zoneName = governorateName !== FALLBACK ? `${governorateName} / ${areaName}` : areaName
-  const deliveryType = DELIVERY_LABELS[order.deliveryType || ""] || safe(order.deliveryType)
-  const status = STATUS_LABELS[order.status || ""] || safe(order.status)
-  const collectionStatus = COLLECTION_LABELS[order.collectionStatus || ""] || safe(order.collectionStatus)
+  const deliveryType = order.deliveryType ? deliveryT(order.deliveryType) : safe(order.deliveryType)
+  const status = order.status ? statusT(order.status) : safe(order.status)
+  const collectionStatus = order.collectionStatus ? collectionT(order.collectionStatus) : safe(order.collectionStatus)
   const packageDescription = safe(order.packageDescription)
   const notes = safe(order.notes)
-  const createdAt = fmtDate(order.createdAt)
+  const createdAt = fmtDate(order.createdAt, locale)
   const grandTotal = Number(order.grandTotal ?? order.totalPrice ?? 0)
-  const cod = money(grandTotal)
-  const itemPrice = money(order.itemPrice)
-  const deliveryFee = money(order.deliveryFee)
-  const addonsTotal = money(order.addonsTotal)
-  const route = routeCode(areaName)
+  const cod = formatMoney(grandTotal, locale)
+  const itemPrice = formatMoney(order.itemPrice, locale)
+  const deliveryFee = formatMoney(order.deliveryFee, locale)
+  const addonsTotal = formatMoney(order.addonsTotal, locale)
+  const route = routeCode(areaName, t("zoneRoute"))
+  const dir = locale === "ar" ? "rtl" : "ltr"
 
   const qrValue = useMemo(
     () => (hasValidShipmentNumber ? `/track/${shipmentNumber}` : ""),
@@ -240,7 +220,7 @@ export default function ShippingLabel({ order }: ShippingLabelProps) {
     return (
       <div
         className="shipping-label"
-        dir="rtl"
+        dir={dir}
         style={{
           width: LABEL_WIDTH,
           height: LABEL_HEIGHT,
@@ -256,7 +236,7 @@ export default function ShippingLabel({ order }: ShippingLabelProps) {
           overflow: "hidden",
         }}
       >
-        رقم الشحنة غير متوفر لهذا الطلب
+        {t("missingShipmentNumber")}
       </div>
     )
   }
@@ -264,7 +244,7 @@ export default function ShippingLabel({ order }: ShippingLabelProps) {
   return (
     <div
       className="shipping-label"
-      dir="rtl"
+      dir={dir}
       data-shipment-number={shipmentNumber}
       data-barcode-value={shipmentNumber}
       data-qr-value={qrValue}
@@ -357,7 +337,7 @@ export default function ShippingLabel({ order }: ShippingLabelProps) {
           >
             <QRCodeSVG className="qr" value={qrValue} size={130} level="H" includeMargin style={{ width: "100%", height: "100%" }} />
           </div>
-          <span style={{ fontSize: "6.8pt", fontWeight: 900, lineHeight: 1, whiteSpace: "nowrap" }}>Scan to track</span>
+          <span style={{ fontSize: "6.8pt", fontWeight: 900, lineHeight: 1, whiteSpace: "nowrap" }}>{t("scanToTrack")}</span>
         </div>
 
         <div style={{ display: "grid", gridTemplateRows: "19mm 1fr", gap: "1.2mm", minWidth: 0, overflow: "hidden" }}>
@@ -375,8 +355,8 @@ export default function ShippingLabel({ order }: ShippingLabelProps) {
               overflow: "hidden",
             }}
           >
-            <span style={{ fontSize: "7pt", fontWeight: 800 }}>COD</span>
-            <strong style={{ fontSize: "19pt", lineHeight: 1 }}>EGP {cod}</strong>
+            <span style={{ fontSize: "7pt", fontWeight: 800 }}>{t("cod")}</span>
+            <strong style={{ fontSize: "19pt", lineHeight: 1 }}>{cod}</strong>
           </div>
 
           <div
@@ -393,11 +373,11 @@ export default function ShippingLabel({ order }: ShippingLabelProps) {
             }}
           >
             <div style={{ minWidth: 0 }}>
-              <span style={{ display: "block", fontSize: "6.4pt", fontWeight: 800, color: "#555" }}>Service</span>
+              <span style={{ display: "block", fontSize: "6.4pt", fontWeight: 800, color: "#555" }}>{t("service")}</span>
               <strong style={{ fontSize: "9.8pt", ...textClamp(1), lineHeight: 1.05 }}>{deliveryType}</strong>
             </div>
             <div style={{ minWidth: 0 }}>
-              <span style={{ display: "block", fontSize: "6.4pt", fontWeight: 800, color: "#555" }}>Route</span>
+              <span style={{ display: "block", fontSize: "6.4pt", fontWeight: 800, color: "#555" }}>{t("route")}</span>
               <NoWrap value={route} size="9.2pt" weight={900} />
             </div>
           </div>
@@ -405,20 +385,20 @@ export default function ShippingLabel({ order }: ShippingLabelProps) {
       </section>
 
       <section style={{ display: "grid", gridTemplateRows: "25mm 15mm", gap: "1.1mm", minHeight: 0, direction: "rtl" }}>
-        <Section title="Receiver">
+        <Section title={t("receiver")}>
           <div style={{ display: "grid", gap: "0.8mm", minWidth: 0 }}>
             <strong style={{ fontSize: "14pt", fontWeight: 900, ...textClamp(1) }}>{receiverName}</strong>
             <NoWrap value={receiverPhone} size="9.5pt" weight={900} />
             <div style={{ fontSize: "8.2pt", fontWeight: 800, ...textClamp(2) }}>{receiverAddress}</div>
-            <Field label="Zone"><span style={textClamp(1)}>{zoneName}</span></Field>
+            <Field label={t("zone")}><span style={textClamp(1)}>{zoneName}</span></Field>
           </div>
         </Section>
 
-        <Section title="Merchant">
+        <Section title={t("merchant")}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 20mm", gap: "1.2mm", minWidth: 0 }}>
             <div style={{ minWidth: 0 }}>
-              <Field label="Name"><span style={textClamp(1)}>{merchantName}</span></Field>
-              <Field label="Pickup"><span style={textClamp(1)}>{pickupAddress}</span></Field>
+              <Field label={t("name")}><span style={textClamp(1)}>{merchantName}</span></Field>
+              <Field label={t("pickup")}><span style={textClamp(1)}>{pickupAddress}</span></Field>
             </div>
             <NoWrap value={merchantPhone} size="7.4pt" weight={900} />
           </div>
@@ -440,17 +420,17 @@ export default function ShippingLabel({ order }: ShippingLabelProps) {
         }}
       >
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1mm", minWidth: 0 }}>
-          <Field label="Status"><span style={textClamp(1)}>{status}</span></Field>
-          <Field label="Payment"><span style={textClamp(1)}>{collectionStatus}</span></Field>
+          <Field label={t("status")}><span style={textClamp(1)}>{status}</span></Field>
+          <Field label={t("payment")}><span style={textClamp(1)}>{collectionStatus}</span></Field>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0.8mm", minWidth: 0 }}>
-          <Field label="Item"><NoWrap value={itemPrice} size="6.5pt" weight={900} /></Field>
-          <Field label="Ship"><NoWrap value={deliveryFee} size="6.5pt" weight={900} /></Field>
-          <Field label="Add"><NoWrap value={addonsTotal} size="6.5pt" weight={900} /></Field>
+          <Field label={t("item")}><NoWrap value={itemPrice} size="6.5pt" weight={900} /></Field>
+          <Field label={t("ship")}><NoWrap value={deliveryFee} size="6.5pt" weight={900} /></Field>
+          <Field label={t("add")}><NoWrap value={addonsTotal} size="6.5pt" weight={900} /></Field>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "20mm 1fr", gap: "1mm", minWidth: 0 }}>
           <NoWrap value={createdAt} size="6.8pt" weight={900} />
-          <span style={textClamp(1)}>Pkg: {packageDescription} | Notes: {notes}</span>
+          <span style={textClamp(1)}>{t("footer", { packageDescription, notes })}</span>
         </div>
       </footer>
     </div>

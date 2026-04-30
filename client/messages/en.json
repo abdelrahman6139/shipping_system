@@ -160,5 +160,497 @@
       "In Transit": "In transit",
       "Delivered": "Delivered"
     }
+  },
+  "Orders": {
+    "title": "Order Management",
+    "subtitle": "Track shipments, assign drivers, and manage statuses.",
+    "confirmTerminalChange": "This order is in a terminal status. Do you want to change it?",
+    "cancelledOrder": "This order was cancelled",
+    "stats": {
+      "total": "Total orders"
+    },
+    "searchPlaceholder": "Search by order number, client, receiver, or destination...",
+    "results": "{count} results",
+    "orderCount": "{count} orders",
+    "pageOf": "Page {page} of {totalPages}",
+    "receiverPrefix": "Receiver:",
+    "filters": {
+      "ALL": "All",
+      "PENDING": "Pending",
+      "ASSIGNED": "Assigned",
+      "PICKED_UP": "Picked up",
+      "IN_TRANSIT": "In transit",
+      "DELIVERED": "Delivered",
+      "CANCELLED": "Cancelled"
+    },
+    "table": {
+      "order": "Order No.",
+      "client": "Client",
+      "receiver": "Receiver",
+      "destination": "Destination",
+      "delivery": "Delivery",
+      "date": "Date",
+      "price": "Price",
+      "status": "Status"
+    },
+    "emptyFiltered": "No orders match this filter",
+    "empty": "No orders",
+    "pagination": {
+      "previous": "Previous",
+      "next": "Next"
+    },
+    "actions": {
+      "view": "View",
+      "details": "Details",
+      "downloadInvoice": "Download invoice",
+      "printWaybill": "Print waybill",
+      "cancel": "Cancel order"
+    },
+    "details": {
+      "title": "Order Details",
+      "timeline": "Shipment path",
+      "collectionSettlement": "Collection and settlement",
+      "collectionHint": "Driver collection from the customer is not merchant settlement.",
+      "changeStatus": "Change status",
+      "client": "Client",
+      "driver": "Driver",
+      "notAssigned": "Not assigned yet",
+      "reassignDriver": "Reassign driver",
+      "assignDriver": "Assign driver",
+      "chooseDriver": "Choose a driver...",
+      "assign": "Assign",
+      "receiverInfo": "Receiver information",
+      "addresses": "Addresses",
+      "pickup": "Pickup",
+      "delivery": "Delivery",
+      "shipmentDetails": "Shipment details",
+      "shipmentNumber": "Shipment number",
+      "zone": "Zone",
+      "deliveryType": "Delivery type",
+      "packageDescription": "Package description",
+      "cancellationReason": "Cancellation reason",
+      "returnReason": "Return reason",
+      "date": "Date",
+      "codTotal": "Total COD collection",
+      "itemPrice": "Product price",
+      "deliveryFee": "Shipping",
+      "addons": "Add-ons",
+      "notes": "Notes"
+    },
+    "errors": {
+      "loadOrders": "Failed to load orders",
+      "loadDetails": "Failed to load details",
+      "updateStatus": "Failed to update status",
+      "updateCollection": "Failed to update collection status",
+      "assignDriver": "Failed to assign driver",
+      "cancelOrder": "Failed to cancel order",
+      "downloadInvoice": "Failed to download invoice",
+      "noShipmentNumber": "Shipment number is not available for this order",
+      "exportExcel": "Failed to export Excel file"
+    },
+    "success": {
+      "statusUpdated": "Status updated",
+      "collectionUpdated": "Collection status updated",
+      "driverAssigned": "Driver assigned",
+      "orderCancelled": "Order cancelled"
+    }
+  },
+  "Waybill": {
+    "title": "Shipping Waybill",
+    "subtitle": "Search for an order or scan it with the camera to view and print the waybill.",
+    "searchTitle": "Search by shipment number or scan",
+    "scanning": "Scanning...",
+    "cameraHint": "Point the camera at the barcode",
+    "emptyTitle": "Search for an order to show the waybill",
+    "emptySubtitle": "Enter the shipment number or scan the shipment barcode with the camera",
+    "shipmentLabel": "Waybill {shipmentNumber}",
+    "printHint": "Printing uses vertical 80?130 mm size. Make sure the printer is set to this size.",
+    "actions": {
+      "search": "Search",
+      "stopCamera": "Stop camera",
+      "scanCamera": "Scan with camera",
+      "newSearch": "New search",
+      "print": "Print waybill"
+    },
+    "errors": {
+      "uuid": "Use the shipment number, not the internal order ID",
+      "invalidShipment": "Enter a valid shipment number starting with SHP-",
+      "notFound": "No order was found with this number",
+      "missingFields": "The waybill cannot be shown before completing: {fields}",
+      "loadOrder": "Failed to load order",
+      "noCamera": "No camera is available",
+      "cameraFailed": "Failed to start camera"
+    },
+    "success": {
+      "found": "Order found"
+    },
+    "required": {
+      "shipmentNumber": "Shipment number",
+      "recipientName": "Receiver name",
+      "recipientPhone": "Receiver phone",
+      "destination": "Receiver address"
+    }
+  },
+  "ShippingLabel": {
+    "zoneRoute": "ZONE / ROUTE",
+    "missingShipmentNumber": "Shipment number is not available for this order",
+    "scanToTrack": "Scan to track",
+    "cod": "COD",
+    "service": "Service",
+    "route": "Route",
+    "receiver": "Receiver",
+    "zone": "Zone",
+    "merchant": "Merchant",
+    "name": "Name",
+    "pickup": "Pickup",
+    "status": "Status",
+    "payment": "Payment",
+    "item": "Item",
+    "ship": "Ship",
+    "add": "Add",
+    "footer": "Pkg: {packageDescription} | Notes: {notes}"
+  },
+  "NewOrder": {
+    "title": "Create New Shipping Order",
+    "subtitle": "Enter receiver and delivery details, then calculate the price before submitting.",
+    "optional": "(optional)",
+    "legal": "By submitting, you agree to the service terms and delivery policy.",
+    "sections": {
+      "receiver": "Receiver details",
+      "pickupPackage": "Pickup and package details",
+      "priceAddons": "Product value and add-ons",
+      "deliveryOptions": "Delivery options"
+    },
+    "fields": {
+      "recipientName": "Receiver name",
+      "recipientPhone": "Receiver phone",
+      "destination": "Delivery address",
+      "pickupAddress": "Pickup address",
+      "packageDescription": "Package contents description",
+      "notes": "Notes for driver",
+      "itemPrice": "Product price",
+      "optionalAddons": "Optional add-ons",
+      "deliverySpeed": "Delivery speed",
+      "deliveryZone": "Delivery zone"
+    },
+    "placeholders": {
+      "recipientName": "Example: Ahmed Mohamed",
+      "destination": "Example: Tahrir Street, next to National Bank, 2nd floor, Apt 5",
+      "pickupAddress": "Example: Maadi, Street 9, Building 4",
+      "packageDescription": "Example: Dell laptop (fragile), two textbooks...",
+      "notes": "Example: Call 15 minutes before arrival. Do not ring the bell..."
+    },
+    "delivery": {
+      "STANDARD": {
+        "label": "Standard delivery",
+        "sublabel": "3?5 business days"
+      },
+      "EXPRESS": {
+        "label": "Express delivery",
+        "sublabel": "Within 1?2 days"
+      },
+      "SAME_DAY": {
+        "label": "Same day",
+        "sublabel": "Maximum 6 hours"
+      }
+    },
+    "addons": {
+      "fragile_package": "Fragile packaging",
+      "express_handling": "Express handling",
+      "return_service": "Return service"
+    },
+    "zones": {
+      "none": "No zones have been added yet. Contact admin.",
+      "governorate": "Governorate",
+      "chooseGovernorate": "Choose governorate...",
+      "area": "Area / district",
+      "chooseArea": "Choose area...",
+      "noChildrenFallback": "No sub-areas exist. Governorate pricing will be applied."
+    },
+    "summary": {
+      "title": "Order summary",
+      "receiver": "Receiver",
+      "zone": "Zone",
+      "deliveryType": "Delivery type",
+      "itemPrice": "Product price",
+      "deliveryFee": "Shipping",
+      "addons": "Add-ons",
+      "totalCost": "Total cost",
+      "estimatedTotal": "Estimated total cost",
+      "priceCalculated": "Price calculated",
+      "calculateHint": "Choose the zone and delivery type, then calculate the price"
+    },
+    "actions": {
+      "calculatePrice": "Calculate price",
+      "calculating": "Calculating...",
+      "recalculate": "Recalculate",
+      "recalculatePrice": "Recalculate price",
+      "creating": "Creating...",
+      "submit": "Confirm and submit order"
+    },
+    "validation": {
+      "recipientName": "Enter receiver name (at least 2 characters)",
+      "recipientPhone": "Invalid phone number. Enter an Egyptian number, e.g. 01012345678",
+      "destination": "Enter delivery address (at least 5 characters)",
+      "pickupAddress": "Enter pickup address (at least 5 characters)",
+      "zone": "Choose delivery zone",
+      "itemPrice": "Enter a product price greater than zero"
+    },
+    "errors": {
+      "loadZones": "Failed to load zones",
+      "calculatePrice": "Failed to calculate price. Make sure a pricing rule exists for the zone.",
+      "calculateFirst": "Please calculate the price first",
+      "createOrder": "Failed to create order"
+    },
+    "success": {
+      "created": "Order created successfully!"
+    }
+  },
+  "ClientOrders": {
+    "title": "My Orders",
+    "totalOrders": "{count} total orders",
+    "noOrdersYet": "No orders yet",
+    "searchPlaceholder": "Search by order number, receiver, phone, or destination...",
+    "cancelledOrder": "This order was cancelled",
+    "orderCount": "{count} orders",
+    "pageOf": "Page {page} of {totalPages}",
+    "filters": {
+      "ALL": "All",
+      "PENDING": "Pending",
+      "ASSIGNED": "Assigned",
+      "PICKED_UP": "Picked up",
+      "IN_TRANSIT": "In transit",
+      "DELIVERED": "Delivered",
+      "CANCELLED": "Cancelled"
+    },
+    "table": {
+      "order": "Order",
+      "receiver": "Receiver",
+      "destination": "Destination",
+      "deliveryType": "Delivery type",
+      "date": "Date",
+      "price": "Price",
+      "status": "Status"
+    },
+    "actions": {
+      "newOrder": "New order",
+      "createShippingOrder": "Create shipping order",
+      "details": "Details",
+      "invoice": "Invoice",
+      "downloadInvoice": "Download invoice PDF"
+    },
+    "empty": {
+      "title": "No orders",
+      "filtered": "Try changing the filter or search",
+      "createFirst": "Create your first shipping order now"
+    },
+    "pagination": {
+      "previous": "Previous",
+      "next": "Next"
+    },
+    "details": {
+      "title": "Order Details",
+      "timeline": "Shipment path",
+      "collectionSettlement": "Collection and settlement",
+      "receiverInfo": "Receiver information",
+      "name": "Name",
+      "phone": "Phone",
+      "deliveryAddress": "Delivery address",
+      "shipmentDetails": "Shipment details",
+      "pickupAddress": "Pickup address",
+      "zone": "Zone",
+      "deliveryType": "Delivery type",
+      "shipmentNumber": "Shipment number",
+      "date": "Date",
+      "packageDescription": "Package description",
+      "codTotal": "Total COD collection",
+      "itemPrice": "Product price",
+      "deliveryFee": "Shipping",
+      "addons": "Add-ons",
+      "assignedDriver": "Assigned driver",
+      "notes": "Notes"
+    },
+    "fallback": {
+      "notSpecified": "Not specified"
+    },
+    "collectionDetails": {
+      "NOT_COLLECTED": "No amounts are ready for merchant settlement.",
+      "DRIVER_COLLECTED": "The amount has not reached the company and is not settled to the merchant yet.",
+      "COMPANY_RECEIVED": "The amount is waiting for merchant settlement.",
+      "SETTLED_TO_MERCHANT": "Merchant dues for this shipment have been paid."
+    },
+    "errors": {
+      "loadOrders": "Failed to load orders",
+      "loadDetails": "Failed to load details",
+      "downloadInvoice": "Failed to download invoice"
+    }
+  },
+  "Tickets": {
+    "title": "Support Tickets",
+    "subtitle": "Contact support for help with your shipments.",
+    "myTickets": "My tickets",
+    "loading": "Loading...",
+    "empty": "No support tickets.",
+    "newTicket": "Open a new ticket",
+    "responseTime": "We usually reply within two hours.",
+    "messagesLoading": "Loading messages...",
+    "noMessages": "No messages yet.",
+    "replyPlaceholder": "Write your message...",
+    "send": "Send",
+    "resolvedMessage": "This ticket has been resolved.",
+    "status": {
+      "OPEN": "Open",
+      "IN_PROGRESS": "In progress",
+      "RESOLVED": "Resolved"
+    },
+    "form": {
+      "subject": "Subject",
+      "subjectPlaceholder": "Example: Shipment damage",
+      "relatedOrder": "Related order (optional)",
+      "noRelatedOrder": "No related order",
+      "message": "Message",
+      "messagePlaceholder": "Please describe the issue in detail...",
+      "submitting": "Sending...",
+      "submit": "Send ticket"
+    },
+    "roles": {
+      "admin": "Admin",
+      "you": "You"
+    },
+    "success": {
+      "created": "Support ticket created successfully",
+      "replySent": "Reply sent"
+    },
+    "errors": {
+      "createFailed": "Failed to create ticket",
+      "loadMessages": "Failed to load messages",
+      "replyFailed": "Failed to send reply"
+    }
+  },
+  "Driver": {
+    "title": "Driver Dashboard",
+    "subtitle": "Manage your route and assigned orders",
+    "activeBadge": "? Active",
+    "fromPrefix": "From:",
+    "toPrefix": "To:",
+    "orderCount": "{count} orders",
+    "pageOf": "Page {page} of {totalPages}",
+    "cancelledOrder": "? This order is cancelled",
+    "collectionRecordedHint": "Cash collection from the customer has been recorded. Merchant settlement is handled by admin.",
+    "stats": {
+      "active": "In delivery",
+      "cashCollected": "Cash with driver",
+      "cashNotCollected": "Not collected"
+    },
+    "filters": {
+      "ALL": "All",
+      "ASSIGNED": "Assigned",
+      "PICKED_UP": "Picked up",
+      "IN_TRANSIT": "In transit",
+      "DELIVERED": "Delivered"
+    },
+    "searchPlaceholder": "Search by destination, receiver name, or phone...",
+    "empty": {
+      "title": "No orders",
+      "filtered": "Try changing the filter or search",
+      "noAssigned": "No orders are currently assigned to you"
+    },
+    "pagination": {
+      "previous": "Previous",
+      "next": "Next"
+    },
+    "actions": {
+      "updating": "Updating...",
+      "confirmPickup": "Confirm package pickup",
+      "startTransit": "Start delivery trip",
+      "confirmDelivery": "Confirm delivery to receiver",
+      "markCashCollected": "Record cash collected from customer",
+      "details": "Details"
+    },
+    "details": {
+      "title": "Order Details",
+      "currentStatus": "Current status",
+      "receiverInfo": "Receiver information",
+      "deliveryRoute": "Delivery route",
+      "pickupFrom": "Pickup from",
+      "deliverTo": "Deliver to",
+      "shipmentDetails": "Shipment details",
+      "zone": "Zone",
+      "deliveryType": "Delivery type",
+      "shipmentNumber": "Shipment number",
+      "packageDescription": "Package description",
+      "orderDate": "Order date",
+      "codToCollect": "COD to collect",
+      "itemPrice": "Product price",
+      "deliveryFee": "Shipping",
+      "addons": "Add-ons",
+      "notes": "Notes",
+      "clientInfo": "Client information"
+    },
+    "success": {
+      "statusUpdated": "Status updated successfully",
+      "cashCollected": "Customer cash collection recorded"
+    },
+    "errors": {
+      "loadOrders": "Failed to load orders",
+      "loadDetails": "Failed to load details",
+      "updateStatus": "Failed to update status",
+      "collectionFailed": "Failed to record collection"
+    }
+  },
+  "DriverEarnings": {
+    "title": "Earnings and Financial Ledger",
+    "subtitle": "Complete summary for every collected order: what the customer paid, your share, and the company share.",
+    "retry": "Retry",
+    "chartTitle": "Daily earnings versus order value",
+    "historyTitle": "Completed orders ledger",
+    "orderCount": "{count} orders",
+    "yourShare": "Your share",
+    "yourSharePercent": "Your share ({pct}%)",
+    "companyShare": "Company share",
+    "driver": "Driver",
+    "company": "Company",
+    "periods": {
+      "all": "All",
+      "day": "Today",
+      "week": "Last 7 days",
+      "month": "This month"
+    },
+    "errors": {
+      "notDriver": "Unauthorized. Sign in with a driver account.",
+      "loadData": "Failed to load data",
+      "loadEarnings": "Failed to load earnings data"
+    },
+    "notDriver": {
+      "title": "This page is only for driver accounts",
+      "description": "You are signed in as {role}. Go to the correct dashboard for your account."
+    },
+    "summary": {
+      "totalOrderValue": "Total order value",
+      "totalOrderValueSub": "Collected from customers",
+      "driverShare": "Driver share (you)",
+      "driverShareSub": "What you keep",
+      "companyShare": "Company share",
+      "companyShareSub": "Transferred to company"
+    },
+    "kpi": {
+      "deliveries": "Deliveries count",
+      "completedOrders": "Completed orders",
+      "averageEarning": "Average earning",
+      "perOrder": "Per order",
+      "bestDay": "Best day",
+      "noBestDay": "No data yet",
+      "shareRatio": "Share ratio",
+      "ofTotalOrders": "Of total orders"
+    },
+    "empty": {
+      "title": "No completed orders",
+      "description": "Earnings will appear here after orders are delivered and collected."
+    },
+    "commission": {
+      "percentage": "{value}% of order value",
+      "zoneFixed": "Fixed amount by zone",
+      "fixed": "Fixed amount {amount}"
+    }
   }
 }

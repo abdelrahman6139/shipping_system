@@ -12,9 +12,12 @@ import api from "@/lib/api"
 import { toast } from "sonner"
 import { MessageSquarePlus, TicketIcon, Send, User, ChevronRight } from "lucide-react"
 import { useAuth } from "@/context/AuthContext"
+import { useLocale, useTranslations } from "next-intl"
 
 export default function ClientTicketsPage() {
   const { user: currentUser } = useAuth()
+  const t = useTranslations("Tickets")
+  const locale = useLocale()
   const [tickets, setTickets] = useState([])
   const [orders, setOrders] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -31,20 +34,11 @@ export default function ClientTicketsPage() {
   const [replyLoading, setReplyLoading] = useState(false)
   const [messagesLoading, setMessagesLoading] = useState(false)
 
-  const getTicketStatusLabel = (status: string) => {
-    switch (status) {
-      case "OPEN": return "مفتوحة"
-      case "IN_PROGRESS": return "قيد المعالجة"
-      case "RESOLVED": return "تم الحل"
-      default: return status
-    }
-  }
-
   const getStatusBadge = (status: string) => {
     switch(status) {
-      case 'OPEN': return <Badge variant="destructive" className="bg-red-100 text-red-800 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-500">مفتوحة</Badge>
-      case 'IN_PROGRESS': return <Badge variant="secondary" className="bg-blue-100 text-blue-800 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400">قيد المعالجة</Badge>
-      case 'RESOLVED': return <Badge variant="secondary" className="bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-500">تم الحل</Badge>
+      case 'OPEN': return <Badge variant="destructive" className="bg-red-100 text-red-800 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-500">{t("status.OPEN")}</Badge>
+      case 'IN_PROGRESS': return <Badge variant="secondary" className="bg-blue-100 text-blue-800 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400">{t("status.IN_PROGRESS")}</Badge>
+      case 'RESOLVED': return <Badge variant="secondary" className="bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-500">{t("status.RESOLVED")}</Badge>
       default: return <Badge variant="outline">{status}</Badge>
     }
   }
@@ -85,13 +79,13 @@ export default function ClientTicketsPage() {
     setIsSubmitting(true)
     try {
       await api.post('/tickets', { subject, message, ...(orderId ? { orderId } : {}) })
-      toast.success("تم إنشاء تذكرة الدعم بنجاح")
+      toast.success(t("success.created"))
       setSubject("")
       setMessage("")
       setOrderId("")
       fetchTickets()
     } catch (e: any) {
-      toast.error(getErrorMessage(e, "فشل إنشاء التذكرة"))
+      toast.error(getErrorMessage(e, t("errors.createFailed")))
     } finally {
       setIsSubmitting(false)
     }
@@ -106,7 +100,7 @@ export default function ClientTicketsPage() {
       setTicketMessages(data.ticket?.messages || [])
       setSelectedTicket(data.ticket)
     } catch {
-      toast.error("فشل تحميل الرسائل")
+      toast.error(t("errors.loadMessages"))
     } finally {
       setMessagesLoading(false)
     }
@@ -117,12 +111,12 @@ export default function ClientTicketsPage() {
     setReplyLoading(true)
     try {
       await api.post(`/tickets/${selectedTicket.id}/messages`, { message: replyMessage })
-      toast.success("تم إرسال الرد")
+      toast.success(t("success.replySent"))
       setReplyMessage("")
       const { data } = await api.get(`/tickets/${selectedTicket.id}`)
       setTicketMessages(data.ticket?.messages || [])
     } catch (e: any) {
-      toast.error(e.response?.data?.error || "فشل إرسال الرد")
+      toast.error(e.response?.data?.error || t("errors.replyFailed"))
     } finally {
       setReplyLoading(false)
     }
@@ -131,8 +125,8 @@ export default function ClientTicketsPage() {
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">تذاكر الدعم</h2>
-        <p className="text-muted-foreground">تواصل مع الدعم للمساعدة في شحناتك.</p>
+        <h2 className="text-2xl font-bold tracking-tight">{t("title")}</h2>
+        <p className="text-muted-foreground">{t("subtitle")}</p>
       </div>
 
       <div className="grid md:grid-cols-[1fr_300px] gap-6 items-start">
@@ -140,16 +134,16 @@ export default function ClientTicketsPage() {
           <Card>
             <CardHeader className="bg-primary/5 border-b">
               <CardTitle className="flex items-center gap-2">
-                <TicketIcon className="w-5 h-5"/> تذاكري
+                <TicketIcon className="w-5 h-5"/> {t("myTickets")}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               {isLoading ? (
-                <div className="p-6 text-center text-muted-foreground">جاري التحميل...</div>
+                <div className="p-6 text-center text-muted-foreground">{t("loading")}</div>
               ) : tickets.length === 0 ? (
                 <div className="p-12 text-center flex flex-col items-center">
                   <MessageSquarePlus className="w-12 h-12 text-muted-foreground opacity-20 mb-4"/>
-                  <span className="text-muted-foreground">لا توجد تذاكر دعم.</span>
+                  <span className="text-muted-foreground">{t("empty")}</span>
                 </div>
               ) : (
                 <div className="divide-y">
@@ -162,7 +156,7 @@ export default function ClientTicketsPage() {
                       <div>
                         <h4 className="font-medium">{ticket.subject}</h4>
                         <p className="text-xs text-muted-foreground mt-1">
-                          {new Date(ticket.createdAt).toLocaleString()}
+                          {new Date(ticket.createdAt).toLocaleString(locale === "ar" ? "ar-EG" : "en-GB")}
                         </p>
                       </div>
                       <div className="flex items-center gap-2">
@@ -180,30 +174,30 @@ export default function ClientTicketsPage() {
         <div>
           <Card className="sticky top-20">
             <CardHeader>
-              <CardTitle className="text-lg">فتح تذكرة جديدة</CardTitle>
-              <CardDescription>عادةً نرد خلال ساعتين.</CardDescription>
+              <CardTitle className="text-lg">{t("newTicket")}</CardTitle>
+              <CardDescription>{t("responseTime")}</CardDescription>
             </CardHeader>
             <form onSubmit={handleSubmit}>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="subject">العنوان</Label>
+                  <Label htmlFor="subject">{t("form.subject")}</Label>
                   <Input 
                     id="subject" 
                     value={subject} 
                     onChange={e => setSubject(e.target.value)}
-                    placeholder="مثال: تلف في الشحنة" 
+                    placeholder={t("form.subjectPlaceholder")}
                     required 
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="orderId">طلب مرتبط (اختياري)</Label>
+                  <Label htmlFor="orderId">{t("form.relatedOrder")}</Label>
                   <select
                     id="orderId"
                     value={orderId}
                     onChange={e => setOrderId(e.target.value)}
                     className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
                   >
-                    <option value="">بدون طلب مرتبط</option>
+                    <option value="">{t("form.noRelatedOrder")}</option>
                     {orders.map((order) => (
                       <option key={order.id} value={order.id}>
                         {(order.shipmentNumber || order.id.slice(0, 8))} - {order.destination}
@@ -212,12 +206,12 @@ export default function ClientTicketsPage() {
                   </select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="message">الرسالة</Label>
+                  <Label htmlFor="message">{t("form.message")}</Label>
                   <Textarea 
                     id="message" 
                     value={message}
                     onChange={e => setMessage(e.target.value)}
-                    placeholder="يرجى وصف المشكلة بالتفصيل..." 
+                    placeholder={t("form.messagePlaceholder")}
                     rows={5} 
                     required 
                   />
@@ -225,7 +219,7 @@ export default function ClientTicketsPage() {
               </CardContent>
               <CardFooter>
                 <Button type="submit" className="w-full" disabled={isSubmitting}>
-                  {isSubmitting ? "جاري الإرسال..." : "إرسال التذكرة"}
+                  {isSubmitting ? t("form.submitting") : t("form.submit")}
                 </Button>
               </CardFooter>
             </form>
@@ -242,15 +236,15 @@ export default function ClientTicketsPage() {
               {selectedTicket && getStatusBadge(selectedTicket.status)}
             </DialogTitle>
             <DialogDescription>
-              #{selectedTicket?.id?.slice(0, 8)} • {selectedTicket && new Date(selectedTicket.createdAt).toLocaleString()}
+              #{selectedTicket?.id?.slice(0, 8)} - {selectedTicket && new Date(selectedTicket.createdAt).toLocaleString(locale === "ar" ? "ar-EG" : "en-GB")}
             </DialogDescription>
           </DialogHeader>
 
           <div className="flex-1 overflow-y-auto max-h-[350px] space-y-3 border rounded-lg p-3 bg-muted/20">
             {messagesLoading ? (
-              <div className="text-center text-muted-foreground py-8">جاري تحميل الرسائل...</div>
+              <div className="text-center text-muted-foreground py-8">{t("messagesLoading")}</div>
             ) : ticketMessages.length === 0 ? (
-              <div className="text-center text-muted-foreground py-8">لا توجد رسائل بعد.</div>
+              <div className="text-center text-muted-foreground py-8">{t("noMessages")}</div>
             ) : (
               ticketMessages.map((msg: any) => {
                 const isMe = msg.senderId === currentUser?.id
@@ -261,12 +255,12 @@ export default function ClientTicketsPage() {
                         <User className="h-3 w-3 text-muted-foreground" />
                         <span className="text-xs font-medium">{msg.sender?.name}</span>
                         <Badge variant="outline" className="text-[9px] px-1 py-0 h-4">
-                          {msg.sender?.role === 'ADMIN' ? 'مشرف' : 'أنت'}
+                          {msg.sender?.role === 'ADMIN' ? t("roles.admin") : t("roles.you")}
                         </Badge>
                       </div>
                       <p className="text-sm">{msg.message}</p>
                       <p className="text-[10px] text-muted-foreground mt-1">
-                        {new Date(msg.createdAt).toLocaleString()}
+                        {new Date(msg.createdAt).toLocaleString(locale === "ar" ? "ar-EG" : "en-GB")}
                       </p>
                     </div>
                   </div>
@@ -278,7 +272,7 @@ export default function ClientTicketsPage() {
           {selectedTicket?.status !== 'RESOLVED' ? (
             <div className="flex gap-2">
               <Textarea
-                placeholder="اكتب رسالتك..."
+                placeholder={t("replyPlaceholder")}
                 value={replyMessage}
                 onChange={(e) => setReplyMessage(e.target.value)}
                 rows={2}
@@ -286,12 +280,12 @@ export default function ClientTicketsPage() {
               />
               <Button onClick={handleReply} disabled={replyLoading || !replyMessage.trim()} className="self-end gap-1">
                 <Send className="h-4 w-4" />
-                {replyLoading ? "..." : "إرسال"}
+                {replyLoading ? "..." : t("send")}
               </Button>
             </div>
           ) : (
             <div className="text-center text-sm text-muted-foreground bg-green-50 dark:bg-green-900/20 rounded-lg p-3">
-              تم حل هذه التذكرة.
+              {t("resolvedMessage")}
             </div>
           )}
         </DialogContent>

@@ -11,6 +11,8 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 import { useAuth } from "@/context/AuthContext"
+import { useLocale, useTranslations } from "next-intl"
+import { formatMoney, type ChartLocale } from "@/lib/chart-format"
 
 const DriverEarningsChart = dynamic(() => import("@/components/driver/DriverEarningsChart"), {
   ssr: false,
@@ -60,36 +62,15 @@ type EarningsResponse = {
 }
 
 /* ─────────────── CONSTANTS ──────────── */
-const PERIOD_OPTIONS: { value: Period; label: string }[] = [
-  { value: "all",   label: "الكل" },
-  { value: "day",   label: "اليوم" },
-  { value: "week",  label: "آخر 7 أيام" },
-  { value: "month", label: "هذا الشهر" },
-]
-
-const DELIVERY_LABEL: Record<string, string> = {
-  STANDARD: "عادي",
-  EXPRESS:  "سريع",
-  SAME_DAY: "نفس اليوم",
-}
+const PERIOD_OPTIONS: Period[] = ["all", "day", "week", "month"]
 
 /* ─────────────── HELPERS ────────────── */
-function fmt(value: number) {
-  return `ج.م ${Number(value || 0).toFixed(2)}`
+function fmtDate(date: string, locale: ChartLocale) {
+  return new Date(date).toLocaleDateString(locale === "ar" ? "ar-EG" : "en-GB", { year: "numeric", month: "short", day: "numeric" })
 }
 
-function fmtDate(date: string) {
-  return new Date(date).toLocaleDateString("ar-EG", { year: "numeric", month: "short", day: "numeric" })
-}
-
-function fmtTime(date: string) {
-  return new Date(date).toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" })
-}
-
-function commissionLabel(type: string, value: number) {
-  if (type === "PERCENTAGE") return `${value}% من قيمة الطلب`
-  if (type === "ZONE_FIXED") return `مبلغ ثابت حسب المنطقة`
-  return `مبلغ ثابت ${fmt(value)}`
+function fmtTime(date: string, locale: ChartLocale) {
+  return new Date(date).toLocaleTimeString(locale === "ar" ? "ar-EG" : "en-GB", { hour: "2-digit", minute: "2-digit" })
 }
 
 /* ─────────────── SUB-COMPONENTS ──────── */
@@ -137,6 +118,16 @@ function Skeleton() {
 /* ─────────────── PAGE ───────────────── */
 export default function DriverEarningsPage() {
   const { user, isLoading: isAuthLoading } = useAuth()
+  const t = useTranslations("DriverEarnings")
+  const commonT = useTranslations("Common")
+  const deliveryT = useTranslations("DeliveryType")
+  const locale = useLocale() as ChartLocale
+  const money = useCallback((value: unknown) => formatMoney(value, locale), [locale])
+  const commissionLabel = useCallback((type: string, value: number) => {
+    if (type === "PERCENTAGE") return t("commission.percentage", { value })
+    if (type === "ZONE_FIXED") return t("commission.zoneFixed")
+    return t("commission.fixed", { amount: money(value) })
+  }, [money, t])
 
   const [period, setPeriod]           = useState<Period>("all")
   const [earnings, setEarnings]       = useState<EarningItem[]>([])
@@ -187,13 +178,13 @@ export default function DriverEarningsPage() {
       })
     } catch (err: any) {
       const code = err?.response?.status
-      setError(code === 403 ? "غير مصرح. سجّل الدخول بحساب سائق." : (err?.response?.data?.error || "فشل تحميل البيانات"))
-      toast.error("فشل تحميل بيانات الأرباح")
+      setError(code === 403 ? t("errors.notDriver") : (err?.response?.data?.error || t("errors.loadData")))
+      toast.error(t("errors.loadEarnings"))
     } finally {
       setIsLoading(false)
       setIsRefreshing(false)
     }
-  }, [period, user])
+  }, [period, t, user])
 
   useEffect(() => {
     if (!isAuthLoading) fetchEarnings(true)
@@ -205,8 +196,8 @@ export default function DriverEarningsPage() {
       <div className="flex items-center gap-3 rounded-xl border border-amber-300 bg-amber-50 p-5 dark:border-amber-800 dark:bg-amber-950/20">
         <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0" />
         <div>
-          <p className="font-semibold text-amber-800 dark:text-amber-300">هذه الصفحة مخصصة لحسابات السائقين فقط</p>
-          <p className="mt-1 text-sm text-amber-700 dark:text-amber-400">أنت مسجل الدخول كـ {user?.role}. انتقل إلى لوحة حسابك المناسبة.</p>
+          <p className="font-semibold text-amber-800 dark:text-amber-300">{t("notDriver.title")}</p>
+          <p className="mt-1 text-sm text-amber-700 dark:text-amber-400">{t("notDriver.description", { role: user?.role || "-" })}</p>
         </div>
       </div>
     )
@@ -219,15 +210,15 @@ export default function DriverEarningsPage() {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">الأرباح والسجل المالي</h1>
-          <p className="mt-0.5 text-sm text-muted-foreground">ملخص كامل لكل طلب حصّلته — ما دفعه العميل، حصتك، وحصة الشركة.</p>
+          <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
+          <p className="mt-0.5 text-sm text-muted-foreground">{t("subtitle")}</p>
         </div>
         <button
           onClick={() => fetchEarnings(false)}
           disabled={isRefreshing || isLoading}
           className="flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium bg-background hover:bg-muted transition-colors disabled:opacity-50"
         >
-          <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`} /> تحديث
+          <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`} /> {commonT("refresh")}
         </button>
       </div>
 
@@ -235,16 +226,16 @@ export default function DriverEarningsPage() {
       <div className="flex flex-wrap gap-2">
         {PERIOD_OPTIONS.map((opt) => (
           <button
-            key={opt.value}
-            onClick={() => setPeriod(opt.value)}
+            key={opt}
+            onClick={() => setPeriod(opt)}
             disabled={isLoading}
             className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
-              period === opt.value
+              period === opt
                 ? "border-primary bg-primary text-primary-foreground"
                 : "border-input bg-background text-muted-foreground hover:border-primary/40"
             }`}
           >
-            {opt.label}
+            {t(`periods.${opt}`)}
           </button>
         ))}
       </div>
@@ -257,7 +248,7 @@ export default function DriverEarningsPage() {
             <span>{error}</span>
           </div>
           <button onClick={() => fetchEarnings(false)} className="rounded-lg border px-3 py-1 text-xs font-medium hover:bg-muted transition-colors">
-            إعادة المحاولة
+            {t("retry")}
           </button>
         </div>
       )}
@@ -273,13 +264,13 @@ export default function DriverEarningsPage() {
           <div className="rounded-xl border bg-card overflow-hidden">
             <div className="grid grid-cols-3 divide-x divide-x-reverse">
               {[
-                { label: "إجمالي قيمة الطلبات",  value: summary.totalOrderValue,    sub: "ما حصّلته من العملاء", color: "text-foreground", bg: "" },
-                { label: "حصة السائق (أنت)",      value: summary.totalDriverEarning, sub: "ما تحتفظ به",            color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50/50 dark:bg-emerald-950/20" },
-                { label: "حصة الشركة",             value: summary.totalCompanyProfit, sub: "يُحوَّل للشركة",          color: "text-blue-600 dark:text-blue-400",      bg: "bg-blue-50/50 dark:bg-blue-950/20" },
+                { label: t("summary.totalOrderValue"),  value: summary.totalOrderValue,    sub: t("summary.totalOrderValueSub"), color: "text-foreground", bg: "" },
+                { label: t("summary.driverShare"),      value: summary.totalDriverEarning, sub: t("summary.driverShareSub"), color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50/50 dark:bg-emerald-950/20" },
+                { label: t("summary.companyShare"),     value: summary.totalCompanyProfit, sub: t("summary.companyShareSub"), color: "text-blue-600 dark:text-blue-400",      bg: "bg-blue-50/50 dark:bg-blue-950/20" },
               ].map((col) => (
                 <div key={col.label} className={`flex flex-col items-center justify-center p-5 text-center ${col.bg}`}>
                   <p className="text-xs text-muted-foreground mb-1">{col.label}</p>
-                  <p className={`text-2xl font-bold ${col.color}`}>{fmt(col.value)}</p>
+                  <p className={`text-2xl font-bold ${col.color}`}>{money(col.value)}</p>
                   <p className="text-[11px] text-muted-foreground mt-0.5">{col.sub}</p>
                 </div>
               ))}
@@ -288,18 +279,18 @@ export default function DriverEarningsPage() {
 
           {/* KPI cards row */}
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <KpiCard label="عدد التسليمات"  value={`${summary.deliveriesCount}`} sub="طلب مكتمل"    icon={Truck}      />
-            <KpiCard label="متوسط حصتك"     value={fmt(summary.averageEarning)} sub="لكل طلب"     icon={TrendingUp} />
+            <KpiCard label={t("kpi.deliveries")} value={`${summary.deliveriesCount}`} sub={t("kpi.completedOrders")} icon={Truck} />
+            <KpiCard label={t("kpi.averageEarning")} value={money(summary.averageEarning)} sub={t("kpi.perOrder")} icon={TrendingUp} />
             <KpiCard
-              label="أفضل يوم"
-              value={summary.bestDay ? fmt(summary.bestDay.driverEarning) : "—"}
-              sub={summary.bestDay ? fmtDate(summary.bestDay.date) : "لا يوجد بعد"}
+              label={t("kpi.bestDay")}
+              value={summary.bestDay ? money(summary.bestDay.driverEarning) : "—"}
+              sub={summary.bestDay ? fmtDate(summary.bestDay.date, locale) : t("kpi.noBestDay")}
               icon={CalendarDays}
             />
             <KpiCard
-              label="نسبة حصتك"
+              label={t("kpi.shareRatio")}
               value={summary.totalOrderValue > 0 ? `${((summary.totalDriverEarning / summary.totalOrderValue) * 100).toFixed(1)}%` : "—"}
-              sub="من إجمالي الطلبات"
+              sub={t("kpi.ofTotalOrders")}
               icon={ArrowUpRight}
             />
           </div>
@@ -308,15 +299,15 @@ export default function DriverEarningsPage() {
 
       {/* ── Chart ── */}
       <div className="rounded-xl border bg-card p-5 shadow-sm">
-        <p className="font-semibold text-sm mb-4">أرباحك اليومية مقابل قيمة الطلبات</p>
+        <p className="font-semibold text-sm mb-4">{t("chartTitle")}</p>
         <div className="h-[260px]">
           {isLoading ? (
             <div className="flex h-full items-center justify-center gap-2 text-sm text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin" /> جاري التحميل...
+              <Loader2 className="h-4 w-4 animate-spin" /> {commonT("loading")}
             </div>
           ) : chartData.length === 0 ? (
             <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-              لا توجد بيانات في هذه الفترة.
+              {commonT("noDataForPeriod")}
             </div>
           ) : (
             <DriverEarningsChart data={chartData} />
@@ -328,8 +319,8 @@ export default function DriverEarningsPage() {
       <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
         <div className="px-5 py-4 border-b flex items-center gap-2">
           <ShoppingBag className="h-4 w-4 text-muted-foreground" />
-          <p className="font-semibold text-sm">سجل الطلبات المنجزة</p>
-          {!isLoading && <span className="mr-auto text-xs text-muted-foreground">{earnings.length} طلب</span>}
+          <p className="font-semibold text-sm">{t("historyTitle")}</p>
+          {!isLoading && <span className="mr-auto text-xs text-muted-foreground">{t("orderCount", { count: earnings.length })}</span>}
         </div>
 
         {isLoading ? (
@@ -337,8 +328,8 @@ export default function DriverEarningsPage() {
         ) : earnings.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <Banknote className="h-10 w-10 text-muted-foreground/20 mb-3" />
-            <p className="font-semibold">لا توجد طلبات مكتملة</p>
-            <p className="text-sm text-muted-foreground mt-1">ستظهر هنا الأرباح بعد تسليم الطلبات وتحصيلها.</p>
+            <p className="font-semibold">{t("empty.title")}</p>
+            <p className="text-sm text-muted-foreground mt-1">{t("empty.description")}</p>
           </div>
         ) : (
           <div className="divide-y">
@@ -353,11 +344,11 @@ export default function DriverEarningsPage() {
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="font-mono text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
-                          #{e.orderId.slice(0,8).toUpperCase()}
+                          #{String(e.orderId || e.id || "-").slice(0,8).toUpperCase()}
                         </span>
                         {e.order?.deliveryType && (
                           <span className="text-[11px] font-medium text-muted-foreground">
-                            {DELIVERY_LABEL[e.order.deliveryType] || e.order.deliveryType}
+                            {deliveryT(e.order.deliveryType)}
                           </span>
                         )}
                       </div>
@@ -379,14 +370,14 @@ export default function DriverEarningsPage() {
                           </span>
                         )}
                         <span className="flex items-center gap-1">
-                          <CalendarDays className="h-3 w-3" /> {fmtDate(e.date)} {fmtTime(e.date)}
+                          <CalendarDays className="h-3 w-3" /> {fmtDate(e.date, locale)} {fmtTime(e.date, locale)}
                         </span>
                       </div>
                     </div>
                     {/* Driver earning badge */}
                     <div className="text-right shrink-0">
-                      <div className="text-lg font-bold text-emerald-600 dark:text-emerald-400">+{fmt(driverCut)}</div>
-                      <div className="text-[11px] text-muted-foreground">حصتك ({pct}%)</div>
+                      <div className="text-lg font-bold text-emerald-600 dark:text-emerald-400">+{money(driverCut)}</div>
+                      <div className="text-[11px] text-muted-foreground">{t("yourSharePercent", { pct })}</div>
                     </div>
                   </div>
 
@@ -394,16 +385,16 @@ export default function DriverEarningsPage() {
                   <div className="rounded-lg border bg-muted/20 p-3">
                     <div className="grid grid-cols-3 gap-2 text-center text-xs">
                       <div>
-                        <p className="text-muted-foreground mb-1">قيمة الطلب</p>
-                        <p className="font-bold">{fmt(orderTotal)}</p>
+                        <p className="text-muted-foreground mb-1">{commonT("orderValue")}</p>
+                        <p className="font-bold">{money(orderTotal)}</p>
                       </div>
                       <div className="border-x">
-                        <p className="text-muted-foreground mb-1">حصتك</p>
-                        <p className="font-bold text-emerald-600 dark:text-emerald-400">{fmt(driverCut)}</p>
+                        <p className="text-muted-foreground mb-1">{t("yourShare")}</p>
+                        <p className="font-bold text-emerald-600 dark:text-emerald-400">{money(driverCut)}</p>
                       </div>
                       <div>
-                        <p className="text-muted-foreground mb-1">حصة الشركة</p>
-                        <p className="font-bold text-blue-600 dark:text-blue-400">{fmt(companyCut)}</p>
+                        <p className="text-muted-foreground mb-1">{t("companyShare")}</p>
+                        <p className="font-bold text-blue-600 dark:text-blue-400">{money(companyCut)}</p>
                       </div>
                     </div>
                     {/* Visual split bar */}
@@ -420,8 +411,8 @@ export default function DriverEarningsPage() {
                       </div>
                     )}
                     <div className="flex justify-between mt-1.5 text-[10px] text-muted-foreground">
-                      <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-sm bg-emerald-400" /> السائق</span>
-                      <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-sm bg-blue-400" /> الشركة</span>
+                      <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-sm bg-emerald-400" /> {t("driver")}</span>
+                      <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-sm bg-blue-400" /> {t("company")}</span>
                     </div>
                     <p className="mt-2 text-[11px] text-center text-muted-foreground">
                       {commissionLabel(e.commissionType, e.commissionValue)}

@@ -10,6 +10,7 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { useLocale, useTranslations } from "next-intl"
 
 /* ─────────────── Types ─────────────── */
 type Order = {
@@ -39,8 +40,6 @@ type Order = {
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 const SHIPMENT_NUMBER_RE = /^SHP-[A-Z0-9]{6,20}$/i
-const UUID_MESSAGE = "استخدم رقم الشحنة وليس معرف الطلب الداخلي"
-const INVALID_SHIPMENT_MESSAGE = "أدخل رقم شحنة صحيح يبدأ بـ SHP-"
 
 const normalizeShipmentInput = (value: string) => {
   const q = value.trim()
@@ -60,26 +59,21 @@ const getQueryShipmentNumber = (searchParams: ReturnType<typeof useSearchParams>
   searchParams.get("id") ||
   ""
 
-const requiredFieldLabels: Record<string, string> = {
-  shipmentNumber: "رقم الشحنة",
-  recipientName: "اسم المستلم",
-  recipientPhone: "هاتف المستلم",
-  destination: "عنوان المستلم",
-}
-
 const missingWaybillFields = (order: Order) =>
   ([
     ["shipmentNumber", order.shipmentNumber],
     ["recipientName", order.recipientName],
     ["recipientPhone", order.recipientPhone],
     ["destination", order.destination],
-  ] as const)
+    ] as const)
     .filter(([, value]) => !String(value || "").trim())
-    .map(([key]) => requiredFieldLabels[key])
+    .map(([key]) => key)
 
 /* ══════════════════════════════ PAGE ═══════════════════════════════════ */
 export default function WaybillPage() {
   const searchParams = useSearchParams()
+  const t = useTranslations("Waybill")
+  const locale = useLocale()
   const [order,         setOrder]         = useState<Order | null>(null)
   const [loading,       setLoading]       = useState(false)
   const [searchInput,   setSearchInput]   = useState("")
@@ -109,14 +103,14 @@ export default function WaybillPage() {
     setValidationError("")
     if (UUID_RE.test(q)) {
       setOrder(null)
-      setValidationError(UUID_MESSAGE)
-      toast.error(UUID_MESSAGE)
+      setValidationError(t("errors.uuid"))
+      toast.error(t("errors.uuid"))
       return
     }
     if (!isShipmentNumber(q)) {
       setOrder(null)
-      setValidationError(INVALID_SHIPMENT_MESSAGE)
-      toast.error(INVALID_SHIPMENT_MESSAGE)
+      setValidationError(t("errors.invalidShipment"))
+      toast.error(t("errors.invalidShipment"))
       return
     }
 
@@ -129,7 +123,7 @@ export default function WaybillPage() {
       const list: Order[] = data.orders || []
 
       if (list.length === 0) {
-        toast.error("لم يُعثر على طلب بهذا الرقم")
+        toast.error(t("errors.notFound"))
         setLoading(false)
         return
       }
@@ -140,7 +134,7 @@ export default function WaybillPage() {
       )
 
       if (!exact) {
-        toast.error("لم يُعثر على طلب بهذا الرقم")
+        toast.error(t("errors.notFound"))
         setLoading(false)
         return
       }
@@ -150,20 +144,21 @@ export default function WaybillPage() {
       const detailOrder: Order = detail.data.order
       const missing = missingWaybillFields(detailOrder)
       if (missing.length > 0) {
-        const message = `لا يمكن عرض البوليصة قبل استكمال: ${missing.join("، ")}`
+        const missingLabels = missing.map((key) => t(`required.${key}`)).join(locale === "ar" ? "\u060C " : ", ")
+        const message = t("errors.missingFields", { fields: missingLabels })
         setValidationError(message)
         toast.error(message)
         return
       }
       await ensureShippingLabel()
       setOrder(detailOrder)
-      toast.success("تم العثور على الطلب")
+      toast.success(t("success.found"))
     } catch {
-      toast.error("فشل تحميل الطلب")
+      toast.error(t("errors.loadOrder"))
     } finally {
       setLoading(false)
     }
-  }, [ensureShippingLabel])
+  }, [ensureShippingLabel, locale, t])
 
   /* ─── Start camera scanner ─── */
   const startScanner = useCallback(async () => {
@@ -178,7 +173,7 @@ export default function WaybillPage() {
       readerRef.current = reader
 
       const devices = await reader.listVideoInputDevices()
-      if (devices.length === 0) throw new Error("لا توجد كاميرا متاحة")
+      if (devices.length === 0) throw new Error(t("errors.noCamera"))
 
       /* Prefer rear camera */
       const deviceId = devices.find(d =>
@@ -204,12 +199,12 @@ export default function WaybillPage() {
       )
       setScannerReady(true)
     } catch (e: any) {
-      setCameraError(e.message || "فشل تشغيل الكاميرا")
+      setCameraError(e.message || t("errors.cameraFailed"))
       setScannerOn(false)
       setScanning(false)
-      toast.error(e.message || "فشل تشغيل الكاميرا")
+      toast.error(e.message || t("errors.cameraFailed"))
     }
-  }, [fetchOrder])
+  }, [fetchOrder, t])
 
   /* ─── Stop camera ─── */
   const stopScanner = useCallback(() => {
@@ -231,10 +226,10 @@ export default function WaybillPage() {
       if (isShipmentNumber(normalized) || UUID_RE.test(normalized)) {
         fetchOrder(normalized)
       } else {
-        setValidationError(INVALID_SHIPMENT_MESSAGE)
+        setValidationError(t("errors.invalidShipment"))
       }
     }
-  }, [fetchOrder, searchParams])
+  }, [fetchOrder, searchParams, t])
 
   /* ─── Print ─── */
   const handlePrint = () => {
@@ -304,24 +299,24 @@ export default function WaybillPage() {
       `}</style>
 
       {/* ══════════════ SCREEN UI ══════════════ */}
-      <div className="space-y-6 pb-10 max-w-5xl mx-auto" dir="rtl">
+      <div className="space-y-6 pb-10 max-w-5xl mx-auto" dir={locale === "ar" ? "rtl" : "ltr"}>
 
         {/* Header */}
         <div className="no-print flex items-start justify-between flex-wrap gap-3">
           <div>
             <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
               <ScanLine className="h-6 w-6 text-primary" />
-              بوليصة الشحن
+              {t("title")}
             </h1>
             <p className="text-sm text-muted-foreground mt-0.5">
-              ابحث عن طلب أو امسحه بالكاميرا لعرض وطباعة البوليصة
+              {t("subtitle")}
             </p>
           </div>
         </div>
 
         {/* ── Search + Scanner controls ── */}
         <div className="no-print rounded-xl border bg-card shadow-sm p-5 space-y-4">
-          <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">بحث برقم الشحنة أو المسح الضوئي</p>
+          <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">{t("searchTitle")}</p>
 
           <div className="flex gap-2">
             <div className="relative flex-1">
@@ -344,7 +339,7 @@ export default function WaybillPage() {
               disabled={loading || !searchInput.trim()}
             >
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
-              بحث
+              {t("actions.search")}
             </Button>
           </div>
 
@@ -363,12 +358,12 @@ export default function WaybillPage() {
               onClick={scannerOn ? stopScanner : startScanner}
             >
               {scannerOn ? <CameraOff className="h-4 w-4" /> : <Camera className="h-4 w-4" />}
-              {scannerOn ? "إيقاف الكاميرا" : "مسح بالكاميرا"}
+              {scannerOn ? t("actions.stopCamera") : t("actions.scanCamera")}
             </Button>
             {scanning && (
               <span className="text-xs text-muted-foreground flex items-center gap-1 animate-pulse">
                 <span className="h-2 w-2 rounded-full bg-red-500 inline-block" />
-                جارٍ المسح...
+                {t("scanning")}
               </span>
             )}
             {cameraError && (
@@ -395,7 +390,7 @@ export default function WaybillPage() {
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                 <div className="w-2/3 h-0.5 bg-red-500 opacity-80 animate-bounce shadow-[0_0_8px_red]" />
                 <p className="text-white text-xs mt-2 bg-black/50 px-2 py-1 rounded">
-                  وجّه الكاميرا نحو الباركود
+                  {t("cameraHint")}
                 </p>
               </div>
               <Button
@@ -421,8 +416,8 @@ export default function WaybillPage() {
         {!loading && !order && (
           <div className="no-print flex flex-col items-center py-20 text-center rounded-xl border border-dashed">
             <Package className="h-14 w-14 text-muted-foreground/20 mb-4" />
-            <p className="font-medium text-muted-foreground">ابحث عن طلب لعرض البوليصة</p>
-            <p className="text-sm text-muted-foreground/60 mt-1">أدخل رقم الشحنة أو امسح باركود الشحنة بالكاميرا</p>
+            <p className="font-medium text-muted-foreground">{t("emptyTitle")}</p>
+            <p className="text-sm text-muted-foreground/60 mt-1">{t("emptySubtitle")}</p>
           </div>
         )}
 
@@ -433,7 +428,7 @@ export default function WaybillPage() {
             <div className="no-print flex items-center justify-between flex-wrap gap-3">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-semibold">
-                  بوليصة الشحنة {order.shipmentNumber}
+                  {t("shipmentLabel", { shipmentNumber: order.shipmentNumber || "" })}
                 </span>
               </div>
               <div className="flex gap-2">
@@ -444,7 +439,7 @@ export default function WaybillPage() {
                   onClick={() => { setOrder(null); setSearchInput(""); setValidationError("") }}
                 >
                   <RefreshCw className="h-3.5 w-3.5" />
-                  بحث جديد
+                  {t("actions.newSearch")}
                 </Button>
                 <Button
                   size="sm"
@@ -452,7 +447,7 @@ export default function WaybillPage() {
                   onClick={handlePrint}
                 >
                   <Printer className="h-4 w-4" />
-                  طباعة البوليصة
+                  {t("actions.print")}
                 </Button>
               </div>
             </div>
@@ -477,7 +472,7 @@ export default function WaybillPage() {
 
             {/* Print hint */}
             <p className="no-print text-center text-xs text-muted-foreground">
-              سيتم الطباعة بحجم 80×130 مم عمودي — تأكد من ضبط الطابعة على هذا الحجم
+              {t("printHint")}
             </p>
           </div>
         )}

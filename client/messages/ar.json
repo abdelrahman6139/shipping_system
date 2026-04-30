@@ -160,5 +160,497 @@
       "In Transit": "قيد التوصيل",
       "Delivered": "تم التسليم"
     }
+  },
+  "Orders": {
+    "title": "إدارة الطلبات",
+    "subtitle": "تابع جميع الشحنات وعيّن السائقين وأدر الحالات",
+    "confirmTerminalChange": "هذا الطلب في حالة نهائية. هل تريد تغيير الحالة؟",
+    "cancelledOrder": "تم إلغاء هذا الطلب",
+    "stats": {
+      "total": "إجمالي الطلبات"
+    },
+    "searchPlaceholder": "ابحث برقم الطلب أو اسم العميل أو المستلم أو الوجهة...",
+    "results": "{count} نتيجة",
+    "orderCount": "{count} طلب",
+    "pageOf": "صفحة {page} من {totalPages}",
+    "receiverPrefix": "المستلم:",
+    "filters": {
+      "ALL": "الكل",
+      "PENDING": "انتظار",
+      "ASSIGNED": "معيّن",
+      "PICKED_UP": "استُلم",
+      "IN_TRANSIT": "في الطريق",
+      "DELIVERED": "تم التسليم",
+      "CANCELLED": "ملغي"
+    },
+    "table": {
+      "order": "رقم الطلب",
+      "client": "العميل",
+      "receiver": "المستلم",
+      "destination": "الوجهة",
+      "delivery": "التوصيل",
+      "date": "التاريخ",
+      "price": "السعر",
+      "status": "الحالة"
+    },
+    "emptyFiltered": "لا توجد طلبات تطابق هذا الفلتر",
+    "empty": "لا توجد طلبات",
+    "pagination": {
+      "previous": "السابق",
+      "next": "التالي"
+    },
+    "actions": {
+      "view": "عرض",
+      "details": "التفاصيل",
+      "downloadInvoice": "تنزيل الفاتورة",
+      "printWaybill": "طباعة البوليصة",
+      "cancel": "إلغاء الطلب"
+    },
+    "details": {
+      "title": "تفاصيل الطلب",
+      "timeline": "مسار الشحنة",
+      "collectionSettlement": "التحصيل والتسوية",
+      "collectionHint": "تحصيل السائق من العميل لا يعني التسوية مع التاجر.",
+      "changeStatus": "تغيير الحالة",
+      "client": "العميل",
+      "driver": "السائق",
+      "notAssigned": "لم يتم التعيين بعد",
+      "reassignDriver": "إعادة تعيين سائق",
+      "assignDriver": "تعيين سائق",
+      "chooseDriver": "اختر سائقاً...",
+      "assign": "تعيين",
+      "receiverInfo": "بيانات المستلم",
+      "addresses": "العناوين",
+      "pickup": "الاستلام",
+      "delivery": "التسليم",
+      "shipmentDetails": "تفاصيل الشحنة",
+      "shipmentNumber": "رقم الشحنة",
+      "zone": "المنطقة",
+      "deliveryType": "نوع التوصيل",
+      "packageDescription": "وصف الطرد",
+      "cancellationReason": "سبب الإلغاء",
+      "returnReason": "سبب الإرجاع",
+      "date": "التاريخ",
+      "codTotal": "إجمالي التحصيل COD",
+      "itemPrice": "سعر المنتج",
+      "deliveryFee": "الشحن",
+      "addons": "الإضافات",
+      "notes": "ملاحظات"
+    },
+    "errors": {
+      "loadOrders": "فشل تحميل الطلبات",
+      "loadDetails": "فشل تحميل التفاصيل",
+      "updateStatus": "فشل تحديث الحالة",
+      "updateCollection": "فشل تحديث حالة التحصيل",
+      "assignDriver": "فشل تعيين السائق",
+      "cancelOrder": "فشل إلغاء الطلب",
+      "downloadInvoice": "فشل تنزيل الفاتورة",
+      "noShipmentNumber": "رقم الشحنة غير متوفر لهذا الطلب",
+      "exportExcel": "فشل تصدير ملف Excel"
+    },
+    "success": {
+      "statusUpdated": "تم تحديث الحالة",
+      "collectionUpdated": "تم تحديث حالة التحصيل",
+      "driverAssigned": "تم تعيين السائق",
+      "orderCancelled": "تم إلغاء الطلب"
+    }
+  },
+  "Waybill": {
+    "title": "بوليصة الشحن",
+    "subtitle": "ابحث عن طلب أو امسحه بالكاميرا لعرض وطباعة البوليصة",
+    "searchTitle": "بحث برقم الشحنة أو المسح الضوئي",
+    "scanning": "جارٍ المسح...",
+    "cameraHint": "وجّه الكاميرا نحو الباركود",
+    "emptyTitle": "ابحث عن طلب لعرض البوليصة",
+    "emptySubtitle": "أدخل رقم الشحنة أو امسح باركود الشحنة بالكاميرا",
+    "shipmentLabel": "بوليصة الشحنة {shipmentNumber}",
+    "printHint": "سيتم الطباعة بحجم 80×130 مم عمودي — تأكد من ضبط الطابعة على هذا الحجم",
+    "actions": {
+      "search": "بحث",
+      "stopCamera": "إيقاف الكاميرا",
+      "scanCamera": "مسح بالكاميرا",
+      "newSearch": "بحث جديد",
+      "print": "طباعة البوليصة"
+    },
+    "errors": {
+      "uuid": "استخدم رقم الشحنة وليس معرف الطلب الداخلي",
+      "invalidShipment": "أدخل رقم شحنة صحيح يبدأ بـ SHP-",
+      "notFound": "لم يُعثر على طلب بهذا الرقم",
+      "missingFields": "لا يمكن عرض البوليصة قبل استكمال: {fields}",
+      "loadOrder": "فشل تحميل الطلب",
+      "noCamera": "لا توجد كاميرا متاحة",
+      "cameraFailed": "فشل تشغيل الكاميرا"
+    },
+    "success": {
+      "found": "تم العثور على الطلب"
+    },
+    "required": {
+      "shipmentNumber": "رقم الشحنة",
+      "recipientName": "اسم المستلم",
+      "recipientPhone": "هاتف المستلم",
+      "destination": "عنوان المستلم"
+    }
+  },
+  "ShippingLabel": {
+    "zoneRoute": "ZONE / ROUTE",
+    "missingShipmentNumber": "رقم الشحنة غير متوفر لهذا الطلب",
+    "scanToTrack": "امسح للتتبع",
+    "cod": "COD",
+    "service": "الخدمة",
+    "route": "المسار",
+    "receiver": "المستلم",
+    "zone": "المنطقة",
+    "merchant": "التاجر",
+    "name": "الاسم",
+    "pickup": "الاستلام",
+    "status": "الحالة",
+    "payment": "الدفع",
+    "item": "منتج",
+    "ship": "شحن",
+    "add": "إضافات",
+    "footer": "الطرد: {packageDescription} | ملاحظات: {notes}"
+  },
+  "NewOrder": {
+    "title": "إنشاء طلب شحن جديد",
+    "subtitle": "أدخل بيانات المستلم وعنوان التسليم، ثم احتسب السعر قبل الإرسال.",
+    "optional": "(اختياري)",
+    "legal": "بالإرسال توافق على شروط الخدمة وسياسة التوصيل.",
+    "sections": {
+      "receiver": "بيانات المستلم",
+      "pickupPackage": "عنوان الاستلام وتفاصيل الطرد",
+      "priceAddons": "قيمة المنتج والإضافات",
+      "deliveryOptions": "خيارات التوصيل"
+    },
+    "fields": {
+      "recipientName": "اسم المستلم",
+      "recipientPhone": "رقم هاتف المستلم",
+      "destination": "عنوان التسليم",
+      "pickupAddress": "عنوان الاستلام",
+      "packageDescription": "وصف محتويات الطرد",
+      "notes": "ملاحظات للسائق",
+      "itemPrice": "سعر المنتج",
+      "optionalAddons": "إضافات اختيارية",
+      "deliverySpeed": "سرعة التوصيل",
+      "deliveryZone": "منطقة التوصيل"
+    },
+    "placeholders": {
+      "recipientName": "مثال: أحمد محمد",
+      "destination": "مثال: شارع التحرير، بجوار البنك الأهلي، الدور الثاني، شقة 5",
+      "pickupAddress": "مثال: حي المعادي، شارع 9، المبنى رقم 4",
+      "packageDescription": "مثال: جهاز لابتوب Dell (قابل للكسر)، كتابان دراسيان...",
+      "notes": "مثال: اتصل قبل الوصول بـ 15 دقيقة — لا تدق الجرس..."
+    },
+    "delivery": {
+      "STANDARD": {
+        "label": "توصيل عادي",
+        "sublabel": "3–5 أيام عمل"
+      },
+      "EXPRESS": {
+        "label": "توصيل سريع",
+        "sublabel": "خلال 1–2 يوم"
+      },
+      "SAME_DAY": {
+        "label": "نفس اليوم",
+        "sublabel": "الحد الأقصى 6 ساعات"
+      }
+    },
+    "addons": {
+      "fragile_package": "تغليف قابل للكسر",
+      "express_handling": "مناولة سريعة",
+      "return_service": "خدمة إرجاع"
+    },
+    "zones": {
+      "none": "لا توجد مناطق مضافة بعد — تواصل مع الإدارة",
+      "governorate": "المحافظة",
+      "chooseGovernorate": "اختر المحافظة...",
+      "area": "الحي / المنطقة",
+      "chooseArea": "اختر الحي...",
+      "noChildrenFallback": "لا توجد مناطق فرعية، سيتم تطبيق تسعير المحافظة"
+    },
+    "summary": {
+      "title": "ملخص الطلب",
+      "receiver": "المستلم",
+      "zone": "المنطقة",
+      "deliveryType": "نوع التوصيل",
+      "itemPrice": "سعر المنتج",
+      "deliveryFee": "الشحن",
+      "addons": "الإضافات",
+      "totalCost": "إجمالي التكلفة",
+      "estimatedTotal": "إجمالي التكلفة المقدرة",
+      "priceCalculated": "السعر محتسب",
+      "calculateHint": "اختر المنطقة ونوع التوصيل ثم اضغط احتساب السعر"
+    },
+    "actions": {
+      "calculatePrice": "احتساب السعر",
+      "calculating": "جاري الاحتساب...",
+      "recalculate": "إعادة الاحتساب",
+      "recalculatePrice": "إعادة احتساب السعر",
+      "creating": "جاري الإنشاء...",
+      "submit": "تأكيد وإرسال الطلب"
+    },
+    "validation": {
+      "recipientName": "أدخل اسم المستلم (حرفان على الأقل)",
+      "recipientPhone": "رقم الهاتف غير صحيح — أدخل رقم مصري (مثال: 01012345678)",
+      "destination": "أدخل عنوان التسليم (5 أحرف على الأقل)",
+      "pickupAddress": "أدخل عنوان الاستلام (5 أحرف على الأقل)",
+      "zone": "اختر منطقة التوصيل",
+      "itemPrice": "أدخل سعر المنتج بقيمة أكبر من صفر"
+    },
+    "errors": {
+      "loadZones": "فشل تحميل المناطق",
+      "calculatePrice": "فشل احتساب السعر — تأكد من وجود قاعدة تسعير للمنطقة",
+      "calculateFirst": "يرجى احتساب السعر أولاً",
+      "createOrder": "فشل إنشاء الطلب"
+    },
+    "success": {
+      "created": "تم إنشاء الطلب بنجاح!"
+    }
+  },
+  "ClientOrders": {
+    "title": "طلباتي",
+    "totalOrders": "{count} طلب إجمالي",
+    "noOrdersYet": "لا توجد طلبات بعد",
+    "searchPlaceholder": "ابحث برقم الطلب، اسم المستلم، الهاتف، الوجهة...",
+    "cancelledOrder": "تم إلغاء هذا الطلب",
+    "orderCount": "{count} طلب",
+    "pageOf": "صفحة {page} من {totalPages}",
+    "filters": {
+      "ALL": "الكل",
+      "PENDING": "انتظار",
+      "ASSIGNED": "معيّن",
+      "PICKED_UP": "استُلم",
+      "IN_TRANSIT": "في الطريق",
+      "DELIVERED": "تم التسليم",
+      "CANCELLED": "ملغي"
+    },
+    "table": {
+      "order": "الطلب",
+      "receiver": "المستلم",
+      "destination": "الوجهة",
+      "deliveryType": "نوع التوصيل",
+      "date": "التاريخ",
+      "price": "السعر",
+      "status": "الحالة"
+    },
+    "actions": {
+      "newOrder": "طلب جديد",
+      "createShippingOrder": "طلب شحن جديد",
+      "details": "تفاصيل",
+      "invoice": "الفاتورة",
+      "downloadInvoice": "تنزيل الفاتورة PDF"
+    },
+    "empty": {
+      "title": "لا توجد طلبات",
+      "filtered": "جرب تعديل الفلتر أو البحث",
+      "createFirst": "أنشئ أول طلب شحن الآن"
+    },
+    "pagination": {
+      "previous": "السابق",
+      "next": "التالي"
+    },
+    "details": {
+      "title": "تفاصيل الطلب",
+      "timeline": "مسار الشحنة",
+      "collectionSettlement": "التحصيل والتسوية",
+      "receiverInfo": "بيانات المستلم",
+      "name": "الاسم",
+      "phone": "الهاتف",
+      "deliveryAddress": "عنوان التسليم",
+      "shipmentDetails": "تفاصيل الشحنة",
+      "pickupAddress": "عنوان الاستلام",
+      "zone": "المنطقة",
+      "deliveryType": "نوع التوصيل",
+      "shipmentNumber": "رقم الشحنة",
+      "date": "التاريخ",
+      "packageDescription": "وصف الطرد",
+      "codTotal": "إجمالي التحصيل COD",
+      "itemPrice": "سعر المنتج",
+      "deliveryFee": "الشحن",
+      "addons": "الإضافات",
+      "assignedDriver": "السائق المعيّن",
+      "notes": "ملاحظات"
+    },
+    "fallback": {
+      "notSpecified": "غير محدد"
+    },
+    "collectionDetails": {
+      "NOT_COLLECTED": "لا توجد مبالغ جاهزة للتسوية مع التاجر.",
+      "DRIVER_COLLECTED": "المبلغ لم يصل للشركة ولم يسو للتاجر بعد.",
+      "COMPANY_RECEIVED": "المبلغ في انتظار التسوية مع التاجر.",
+      "SETTLED_TO_MERCHANT": "تم دفع مستحقات هذه الشحنة للتاجر."
+    },
+    "errors": {
+      "loadOrders": "فشل تحميل الطلبات",
+      "loadDetails": "فشل تحميل التفاصيل",
+      "downloadInvoice": "فشل تنزيل الفاتورة"
+    }
+  },
+  "Tickets": {
+    "title": "تذاكر الدعم",
+    "subtitle": "تواصل مع الدعم للمساعدة في شحناتك.",
+    "myTickets": "تذاكري",
+    "loading": "جاري التحميل...",
+    "empty": "لا توجد تذاكر دعم.",
+    "newTicket": "فتح تذكرة جديدة",
+    "responseTime": "عادةً نرد خلال ساعتين.",
+    "messagesLoading": "جاري تحميل الرسائل...",
+    "noMessages": "لا توجد رسائل بعد.",
+    "replyPlaceholder": "اكتب رسالتك...",
+    "send": "إرسال",
+    "resolvedMessage": "تم حل هذه التذكرة.",
+    "status": {
+      "OPEN": "مفتوحة",
+      "IN_PROGRESS": "قيد المعالجة",
+      "RESOLVED": "تم الحل"
+    },
+    "form": {
+      "subject": "العنوان",
+      "subjectPlaceholder": "مثال: تلف في الشحنة",
+      "relatedOrder": "طلب مرتبط (اختياري)",
+      "noRelatedOrder": "بدون طلب مرتبط",
+      "message": "الرسالة",
+      "messagePlaceholder": "يرجى وصف المشكلة بالتفصيل...",
+      "submitting": "جاري الإرسال...",
+      "submit": "إرسال التذكرة"
+    },
+    "roles": {
+      "admin": "مشرف",
+      "you": "أنت"
+    },
+    "success": {
+      "created": "تم إنشاء تذكرة الدعم بنجاح",
+      "replySent": "تم إرسال الرد"
+    },
+    "errors": {
+      "createFailed": "فشل إنشاء التذكرة",
+      "loadMessages": "فشل تحميل الرسائل",
+      "replyFailed": "فشل إرسال الرد"
+    }
+  },
+  "Driver": {
+    "title": "لوحة السائق",
+    "subtitle": "أدر مسارك وتابع طلباتك المعيّنة",
+    "activeBadge": "● نشط",
+    "fromPrefix": "من:",
+    "toPrefix": "إلى:",
+    "orderCount": "{count} طلب",
+    "pageOf": "صفحة {page} من {totalPages}",
+    "cancelledOrder": "✗ هذا الطلب ملغي",
+    "collectionRecordedHint": "تم تسجيل تحصيل الكاش من العميل. التسوية مع التاجر تتم من الإدارة.",
+    "stats": {
+      "active": "جاري التوصيل",
+      "cashCollected": "كاش مع السائق",
+      "cashNotCollected": "غير محصل"
+    },
+    "filters": {
+      "ALL": "الكل",
+      "ASSIGNED": "معيّن",
+      "PICKED_UP": "استُلم",
+      "IN_TRANSIT": "في الطريق",
+      "DELIVERED": "تم التسليم"
+    },
+    "searchPlaceholder": "ابحث بالوجهة أو اسم المستلم أو رقم الهاتف...",
+    "empty": {
+      "title": "لا توجد طلبات",
+      "filtered": "جرب تعديل الفلتر أو البحث",
+      "noAssigned": "لا توجد طلبات معيّنة لك حالياً"
+    },
+    "pagination": {
+      "previous": "السابق",
+      "next": "التالي"
+    },
+    "actions": {
+      "updating": "جاري التحديث...",
+      "confirmPickup": "تأكيد استلام الطرد",
+      "startTransit": "بدء رحلة التوصيل",
+      "confirmDelivery": "تأكيد التسليم للمستلم",
+      "markCashCollected": "تسجيل تحصيل الكاش من العميل",
+      "details": "التفاصيل"
+    },
+    "details": {
+      "title": "تفاصيل الطلب",
+      "currentStatus": "الحالة الحالية",
+      "receiverInfo": "بيانات المستلم",
+      "deliveryRoute": "مسار التوصيل",
+      "pickupFrom": "الاستلام من",
+      "deliverTo": "التوصيل إلى",
+      "shipmentDetails": "تفاصيل الشحنة",
+      "zone": "المنطقة",
+      "deliveryType": "نوع التوصيل",
+      "shipmentNumber": "رقم الشحنة",
+      "packageDescription": "وصف الطرد",
+      "orderDate": "تاريخ الطلب",
+      "codToCollect": "COD المطلوب تحصيله",
+      "itemPrice": "سعر المنتج",
+      "deliveryFee": "الشحن",
+      "addons": "الإضافات",
+      "notes": "ملاحظات",
+      "clientInfo": "بيانات العميل"
+    },
+    "success": {
+      "statusUpdated": "تم تحديث الحالة بنجاح",
+      "cashCollected": "تم تسجيل تحصيل الكاش من العميل"
+    },
+    "errors": {
+      "loadOrders": "فشل تحميل الطلبات",
+      "loadDetails": "فشل تحميل التفاصيل",
+      "updateStatus": "فشل تحديث الحالة",
+      "collectionFailed": "فشل تسجيل التحصيل"
+    }
+  },
+  "DriverEarnings": {
+    "title": "الأرباح والسجل المالي",
+    "subtitle": "ملخص كامل لكل طلب حصّلته — ما دفعه العميل، حصتك، وحصة الشركة.",
+    "retry": "إعادة المحاولة",
+    "chartTitle": "أرباحك اليومية مقابل قيمة الطلبات",
+    "historyTitle": "سجل الطلبات المنجزة",
+    "orderCount": "{count} طلب",
+    "yourShare": "حصتك",
+    "yourSharePercent": "حصتك ({pct}%)",
+    "companyShare": "حصة الشركة",
+    "driver": "السائق",
+    "company": "الشركة",
+    "periods": {
+      "all": "الكل",
+      "day": "اليوم",
+      "week": "آخر 7 أيام",
+      "month": "هذا الشهر"
+    },
+    "errors": {
+      "notDriver": "غير مصرح. سجّل الدخول بحساب سائق.",
+      "loadData": "فشل تحميل البيانات",
+      "loadEarnings": "فشل تحميل بيانات الأرباح"
+    },
+    "notDriver": {
+      "title": "هذه الصفحة مخصصة لحسابات السائقين فقط",
+      "description": "أنت مسجل الدخول كـ {role}. انتقل إلى لوحة حسابك المناسبة."
+    },
+    "summary": {
+      "totalOrderValue": "إجمالي قيمة الطلبات",
+      "totalOrderValueSub": "ما حصّلته من العملاء",
+      "driverShare": "حصة السائق (أنت)",
+      "driverShareSub": "ما تحتفظ به",
+      "companyShare": "حصة الشركة",
+      "companyShareSub": "يُحوَّل للشركة"
+    },
+    "kpi": {
+      "deliveries": "عدد التسليمات",
+      "completedOrders": "طلب مكتمل",
+      "averageEarning": "متوسط حصتك",
+      "perOrder": "لكل طلب",
+      "bestDay": "أفضل يوم",
+      "noBestDay": "لا يوجد بعد",
+      "shareRatio": "نسبة حصتك",
+      "ofTotalOrders": "من إجمالي الطلبات"
+    },
+    "empty": {
+      "title": "لا توجد طلبات مكتملة",
+      "description": "ستظهر هنا الأرباح بعد تسليم الطلبات وتحصيلها."
+    },
+    "commission": {
+      "percentage": "{value}% من قيمة الطلب",
+      "zoneFixed": "مبلغ ثابت حسب المنطقة",
+      "fixed": "مبلغ ثابت {amount}"
+    }
   }
 }
